@@ -35,7 +35,7 @@ export async function updateWelcomePolicy(db: Database, policy: WelcomePolicy, a
   const amount = millisecondsForMinutes(policy.welcomeMinutes);
   if (policy.welcomeEnabled && !amount) throw new ServiceError('welcome_minutes_required');
   return transaction(db, async sql => {
-    await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-welcome-minutes'))");
+    await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-welcome-minutes'))");
     const before = policyFromRow((await sql.query('SELECT * FROM minute_policy WHERE singleton FOR UPDATE')).rows[0]);
     if (before.version !== policy.version) throw new ServiceError('policy_changed_review_again', 409);
     const after = {version:policy.version+1,welcomeEnabled:policy.welcomeEnabled,welcomeMinutes:policy.welcomeMinutes};

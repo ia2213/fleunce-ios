@@ -1,10 +1,10 @@
 # Android hosted conversation integration
 
-The Android conversation flow can use a signed-in member’s Mural minutes through the experimental hosted service. Personal API keys remain the default. This implementation does not enable public trials, purchases, or guest funding.
+The Android conversation flow can use a signed-in member’s Fleunce minutes through the experimental hosted service. Personal API keys remain the default. This implementation does not enable public trials, purchases, or guest funding.
 
 ## Native wiring
 
-`MuralViewModel.conversationProvider` selects `PERSONAL_KEY` or `HOSTED_MINUTES`. The account/minutes UI must call `selectConversationProvider` after an explicit choice and `refreshHostedReadiness` after login or balance changes. Hosted readiness requires a valid member session, an enabled server capability, and a positive available balance. Creation checks these again. A failure never selects another provider.
+`FleunceViewModel.conversationProvider` selects `PERSONAL_KEY` or `HOSTED_MINUTES`. The account/minutes UI must call `selectConversationProvider` after an explicit choice and `refreshHostedReadiness` after login or balance changes. Hosted readiness requires a valid member session, an enabled server capability, and a positive available balance. Creation checks these again. A failure never selects another provider.
 
 Before account switching, sign-out, account deletion, or revocation, call the suspending `prepareForAccountChange()` and continue only when it returns `true`. Call it even when `accountChangeBlocked` is false so any remaining post-session helpers are canceled. The guard remains set until known leases are closed, current-session reconciliation confirms closure, and the server reports zero reserved milliseconds. The member token must remain available until then. `pendingHostedOwnerAccountID` supplies the expected account for restricted reauthentication; the account controller must reject a different account before replacing storage. An expired token may require renewal for the same account before reconciliation can finish.
 

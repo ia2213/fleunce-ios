@@ -33,7 +33,7 @@ export async function startGuestMinutes(db: Database, proof: unknown, attestor: 
   if (!/^[A-Za-z0-9:_-]{8,200}$/.test(verified.deviceReference)) throw new ServiceError('invalid_trial_proof', 403);
   const token = randomBytes(32).toString('base64url');
   return transaction(db, async sql => {
-    await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-welcome-minutes'))");
+    await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-welcome-minutes'))");
     const policy = (await sql.query('SELECT * FROM minute_policy WHERE singleton')).rows[0];
     const claim = (await sql.query(`SELECT c.*,a.is_guest,a.deleted_at FROM minute_welcome_claims c
       JOIN accounts a ON a.id=c.account_id WHERE proof_reference=$1`, [verified.deviceReference])).rows[0];
@@ -116,7 +116,7 @@ export async function linkGuestMinutes(db:Database,member:string,guestToken?:str
   if(!guestToken&&!deferPending)throw new ServiceError('invalid_guest_session',401);
   const tokenHash=guestToken?hashToken(guestToken):undefined;
   return transaction(db,async sql=>{
-    await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-welcome-minutes'))");
+    await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-welcome-minutes'))");
     if(!tokenHash){
       const intent=(await sql.query(`SELECT * FROM minute_guest_link_intents
         WHERE member_account_id=$1 AND guest_account_id=$2`,[member,guestAccountID])).rows[0];
@@ -171,7 +171,7 @@ export async function finalizeDeferredGuestLinks(db:Database,limit=25){
     ORDER BY i.created_at,i.guest_account_id LIMIT $1`,[limit])).rows;
   let completed=0;
   for(const intent of candidates)await transaction(db,async sql=>{
-    await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-welcome-minutes'))");
+    await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-welcome-minutes'))");
     const result=await finishIntent(sql,intent);if(!result.pending&&!result.alreadyLinked)completed++;
   });
   return {examined:candidates.length,completed};

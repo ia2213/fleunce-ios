@@ -13,7 +13,7 @@ if (databaseURL && !new URL(databaseURL).pathname.endsWith('_test')) throw new E
 const integration = (name: string, fn: () => Promise<void>) => test(name, { skip: !databaseURL && 'Set TEST_DATABASE_URL.' }, fn);
 // Deliberately synthetic amounts. These fixtures are not launch prices or merchant configuration.
 function product(provider: PurchaseProvider = 'stripe', overrides: Partial<MinuteProduct> = {}): MinuteProduct {
-  return { provider, environment: 'test', merchant: provider === 'stripe' ? 'acct_synthetic' : 'chat.mural.synthetic',
+  return { provider, environment: 'test', merchant: provider === 'stripe' ? 'acct_synthetic' : 'chat.fleunce.synthetic',
     sku: 'synthetic-thirty', providerProduct: provider === 'stripe' ? 'price_synthetic' : 'synthetic_thirty',
     minutes: 30, currency: 'usd', totalMinor: 997, ...overrides };
 }
@@ -306,7 +306,7 @@ integration('restricted runtime can fulfill and reverse but cannot rewrite order
       GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA ${f.schema} TO ${role}`);
     for (const path of ['minute-runtime-grants.sql', 'minute-purchase-runtime-grants.sql']) {
       const grants = await readFile(new URL(`../operations/${path}`, import.meta.url), 'utf8');
-      await f.db.query(grants.replaceAll('mural_runtime', role));
+      await f.db.query(grants.replaceAll('fleunce_runtime', role));
     }
     const url = new URL(databaseURL!); url.searchParams.set('options', `-c search_path=${f.schema} -c role=${role}`);
     runtime = connectDatabase(url.toString());

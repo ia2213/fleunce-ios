@@ -7,15 +7,15 @@ Source reviewed on 12 September 2026. This describes the direct-to-OpenAI BYOK b
 | Data | Where it lives or goes | Source |
 | --- | --- | --- |
 | Conversations, vocabulary, evidence, language preferences and interests | Local SwiftData archive; selected text and learning context go to OpenAI for conversation and teaching | `App/Storage.swift`, `App/ConversationCoordinator.swift`, `apps/ios/Core/TeachingPolicy.swift` |
-| Microphone audio | Streamed to OpenAI over WebRTC during a live conversation; no raw-audio file written by Mural | `App/LiveTransport.swift` |
+| Microphone audio | Streamed to OpenAI over WebRTC during a live conversation; no raw-audio file written by Fleunce | `App/LiveTransport.swift` |
 | Meaning subtitles and lookup text | Selected text sent to OpenAI; translations cached in the local conversation | `App/APIClient.swift`, `App/ConversationCoordinator.swift` |
 | Topic search requests | Sent to OpenAI’s web-search tool; topic summaries and source URLs saved locally | `App/APIClient.swift`, `App/ConversationCoordinator.swift` |
 | API key | Device-only Keychain item; used as authorization only for OpenAI requests; absent from learning exports | `App/Storage.swift`, `App/APIClient.swift` |
-| Learning backup | A user-selected JSON export can leave the sandbox through Files or the share destination; no automatic Mural upload | `App/LibraryViews.swift` |
+| Learning backup | A user-selected JSON export can leave the sandbox through Files or the share destination; no automatic Fleunce upload | `App/LibraryViews.swift` |
 | Legacy migration backup | Protected file in Application Support on upgraded installations; removed by Delete all learning | `App/Storage.swift` |
 | Debug verification | Content-free local diagnostics, only in an explicitly invoked Debug verification run | `App/AudioVerification.swift` |
 
-The current iPhone build does not connect to a Mural account database. It has no ad SDK, analytics SDK, tracking identifier collection, CloudKit sync or saved raw audio. Account and server foundations exist in source but remain disabled. Ordinary iOS device backups are controlled by the user and Apple; local storage does not mean that a user-created backup can never leave the phone.
+The current iPhone build does not connect to a Fleunce account database. It has no ad SDK, analytics SDK, tracking identifier collection, CloudKit sync or saved raw audio. Account and server foundations exist in source but remain disabled. Ordinary iOS device backups are controlled by the user and Apple; local storage does not mean that a user-created backup can never leave the phone.
 
 ## Provider retention
 
@@ -30,9 +30,9 @@ Apple’s definition includes relevant third-party retention, not only the app o
 | Audio Data | Collected; App Functionality; linked to user; no tracking | Sent to a provider using the user’s OpenAI account; default retention applies |
 | Other User Content | Collected; App Functionality; linked to user; no tracking | Transcripts, interests and learning context sent through the same account |
 | Search History | Collected; App Functionality; linked to user; no tracking | Current-topic searches are sent to the provider |
-| User ID / Other Usage Data | Verify provider handling before final answers | The API credential identifies a provider project; provider billing records exist, but Mural sends no separate Mural user ID |
+| User ID / Other Usage Data | Verify provider handling before final answers | The API credential identifies a provider project; provider billing records exist, but Fleunce sends no separate Fleunce user ID |
 | Device identifiers, contacts, location, advertising, purchases | No collection by the current app | Recheck when adding authentication, payment or abuse-prevention services |
-| Customer Support | Reassess with the chosen support channel | No in-app support form currently sends content to Mural’s operator |
+| Customer Support | Reassess with the chosen support channel | No in-app support form currently sends content to Fleunce’s operator |
 
 The first-party manifest conservatively declares audio, text and search as linked because requests use the learner’s provider account. It declares no tracking. Final App Store answers must include any additional provider or future backend processing confirmed during release review. Do not use a blanket “we don’t save anything” promise for the whole service.
 

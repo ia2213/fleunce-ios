@@ -4,9 +4,9 @@ This procedure enables native Google sign-in independently of payments, free tri
 
 ## Configure the identity provider
 
-Create a Google **iOS** OAuth client for the app's bundle ID and use that same client ID as `GOOGLE_CLIENT_ID` on the server and as the native authorization audience. The current Mural app uses bundle ID `no.william.mural`; its public client ID is `1034240936303-gernpir75rp4uvc8m5imrhrs18npma5n.apps.googleusercontent.com`, in project `mural-508413`. This installed-app PKCE flow needs no Google client secret on the backend. [Google iOS backend authentication](https://developers.google.com/identity/sign-in/ios/backend-auth)
+Create a Google **iOS** OAuth client for the app's bundle ID and use that same client ID as `GOOGLE_CLIENT_ID` on the server and as the native authorization audience. The current Fleunce app uses bundle ID `no.william.fleunce`; its public client ID is `1034240936303-gernpir75rp4uvc8m5imrhrs18npma5n.apps.googleusercontent.com`, in project `fleunce-508413`. This installed-app PKCE flow needs no Google client secret on the backend. [Google iOS backend authentication](https://developers.google.com/identity/sign-in/ios/backend-auth)
 
-Mural's Google project is External/In production as of September 12, 2026, with verified and published branding. It requests only `openid` and `email`. For a separate development project, note that Testing is not an invitation-only gate for these basic identity scopes. Workspace policies can still block authorization. [Google OAuth app states](https://developers.google.com/identity/protocols/oauth2/production-readiness/overview)
+Fleunce's Google project is External/In production as of September 12, 2026, with verified and published branding. It requests only `openid` and `email`. For a separate development project, note that Testing is not an invitation-only gate for these basic identity scopes. Workspace policies can still block authorization. [Google OAuth app states](https://developers.google.com/identity/protocols/oauth2/production-readiness/overview)
 
 For Apple later, configure the native client/bundle ID and Sign in with Apple capability, then supply `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID` and `APPLE_PRIVATE_KEY_PATH`. Mount the `.p8` key read-only in the API container. Startup imports it as an ES256 key before offering Apple signup. A successful local key import does not verify portal configuration; complete a real sign-in and deletion test before enabling the app button. The backend must be able to exchange a fresh Apple code and revoke the returned token. [Apple token revocation](https://developer.apple.com/documentation/signinwithapplerestapi/revoke-tokens)
 
@@ -17,8 +17,8 @@ Build the reviewed source, take the normal encrypted backup, and run migrations 
 Preserve the runtime role's existing table permissions and grant:
 
 ```sql
-GRANT SELECT, INSERT, UPDATE, DELETE ON auth_rate_limits TO mural_runtime;
-GRANT DELETE ON accounts, wallets TO mural_runtime;
+GRANT SELECT, INSERT, UPDATE, DELETE ON auth_rate_limits TO fleunce_runtime;
+GRANT DELETE ON accounts, wallets TO fleunce_runtime;
 ```
 
 The runtime role also needs its existing SELECT/INSERT/UPDATE privileges on accounts, wallets, identities, auth_challenges and auth_sessions; DELETE on identities, auth_challenges and auth_sessions; and SELECT on ledger, reservations, checkout_orders, usage_records and hosted_sessions for safe deletion checks. Do not grant modification or deletion of the ledger. The migration role retains schema ownership.
@@ -51,8 +51,8 @@ The API hostname currently reaches Caddy directly through a DNS-only A record. K
 }
 handle @foundation {
   reverse_proxy api:8080 {
-    header_up X-Mural-Client-IP {remote_host}
-    header_up X-Mural-Proxy-Token {$ACCOUNTS_PROXY_TOKEN}
+    header_up X-Fleunce-Client-IP {remote_host}
+    header_up X-Fleunce-Proxy-Token {$ACCOUNTS_PROXY_TOKEN}
   }
 }
 @accountRead {
@@ -69,20 +69,20 @@ handle @foundation {
 }
 handle @accountRead {
   reverse_proxy api:8080 {
-    header_up X-Mural-Client-IP {remote_host}
-    header_up X-Mural-Proxy-Token {$ACCOUNTS_PROXY_TOKEN}
+    header_up X-Fleunce-Client-IP {remote_host}
+    header_up X-Fleunce-Proxy-Token {$ACCOUNTS_PROXY_TOKEN}
   }
 }
 handle @accountPost {
   reverse_proxy api:8080 {
-    header_up X-Mural-Client-IP {remote_host}
-    header_up X-Mural-Proxy-Token {$ACCOUNTS_PROXY_TOKEN}
+    header_up X-Fleunce-Client-IP {remote_host}
+    header_up X-Fleunce-Proxy-Token {$ACCOUNTS_PROXY_TOKEN}
   }
 }
 handle @accountDelete {
   reverse_proxy api:8080 {
-    header_up X-Mural-Client-IP {remote_host}
-    header_up X-Mural-Proxy-Token {$ACCOUNTS_PROXY_TOKEN}
+    header_up X-Fleunce-Client-IP {remote_host}
+    header_up X-Fleunce-Proxy-Token {$ACCOUNTS_PROXY_TOKEN}
   }
 }
 ```

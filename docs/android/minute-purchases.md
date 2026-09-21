@@ -4,7 +4,7 @@ The Android purchase foundation is implemented but disabled by default. It does 
 
 ## Application integration
 
-`MinutePurchaseViewModel.enabled` checks the explicit build flag, HTTPS API configuration, valid `test` or `live` environment, and permanent Android package. Build properties are `mural.minutePurchasesEnabled` (default `false`) and `mural.minutePurchaseEnvironment` (default `test`). They generate `MINUTE_PURCHASES_ENABLED` and `MINUTE_PURCHASE_ENVIRONMENT`; the isolated `uiTest` variant always forces `false` and `test`. No local configuration was changed to enable them.
+`MinutePurchaseViewModel.enabled` checks the explicit build flag, HTTPS API configuration, valid `test` or `live` environment, and permanent Android package. Build properties are `fleunce.minutePurchasesEnabled` (default `false`) and `fleunce.minutePurchaseEnvironment` (default `test`). They generate `MINUTE_PURCHASES_ENABLED` and `MINUTE_PURCHASE_ENVIRONMENT`; the isolated `uiTest` variant always forces `false` and `test`. No local configuration was changed to enable them.
 
 The app shell first calls `purchases.bindAccountState(account.state, account.transitionBusy)`. Both flows belong to the retained `AccountViewModel`; they must survive activity recreation and contain no Activity references. `transitionBusy` covers sign-out, deletion and the Google account chooser. The shell also sends `onAccountChanged` synchronously when an account transition starts, then observes the combined account and transition flows for later changes.
 
@@ -60,7 +60,7 @@ The current approved catalog is a pinned currency/amount contract. Play's `forma
 
 The minute-pack sheet, lifecycle recovery, member-only upgrade handoff, account balance refresh and localized notices are wired. Hosted conversations and guest allowances use their existing wallet interfaces; this component does not create a second wallet.
 
-Run the official Play test flow using the permanent `chat.mural.android` package and a license tester. The isolated `.uitest` package is intentionally rejected by this adapter. Confirm approval, decline, cancellation, pending completion, interrupted purchase, reinstall recovery, account switching, duplicate callbacks, server consumption, refund and void reconciliation. Test supported regional price/tax combinations. Non-license users on a test track can be charged, so those are not substitutes for the configured license tester.
+Run the official Play test flow using the permanent `chat.fleunce.android` package and a license tester. The isolated `.uitest` package is intentionally rejected by this adapter. Confirm approval, decline, cancellation, pending completion, interrupted purchase, reinstall recovery, account switching, duplicate callbacks, server consumption, refund and void reconciliation. Test supported regional price/tax combinations. Non-license users on a test track can be charged, so those are not substitutes for the configured license tester.
 
 The purchase layer now has 39 JVM tests: 13 controller/model tests, 8 HTTP contract tests, 1 SDK response mapping test, 9 membership/capability tests and 8 delayed-launch regressions. The 8 new launch tests and 9 membership tests passed in the latest 38-test focused run. The launch tests suspend a real controller order request, then exercise backgrounding, rotation, sign-out, account replacement, transition completion and a late busy update before the flow collector runs.
 

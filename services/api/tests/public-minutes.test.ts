@@ -42,7 +42,7 @@ async function fixture(daily=150,total=300) {
   const hosted=new HostedVoice(db,provider,{publicMinuteAccess:true,billingUnit:'milliseconds',accountAllowlist:new Set(),lifetimeFundingCapNano:0n,helpers});
   await hosted.start();
   const proxy={hmacKey:'c'.repeat(64),proxyToken:'d'.repeat(64),allowLocalLoopback:false};
-  const headers={'x-mural-client-ip':'192.0.2.41','x-mural-proxy-token':proxy.proxyToken};
+  const headers={'x-fleunce-client-ip':'192.0.2.41','x-fleunce-proxy-token':proxy.proxyToken};
   const app=createApp({db,auth:{googleClientID:'synthetic-client'},hosted,hostedHelpers:helpers,
     guestMinuteAttestor:new InstallationGuestMinuteAttestor(),accounts:{admission:new AuthAdmission(db,proxy)}});
   return {db,hosted,helpers,app,headers,get creates(){return creates;},get helperCalls(){return helperCalls;},set failCreate(value:boolean){failCreate=value;},

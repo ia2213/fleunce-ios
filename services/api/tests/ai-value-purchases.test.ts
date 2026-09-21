@@ -116,7 +116,7 @@ integration('the actual runtime role creates, fulfills and refunds AI orders wit
     await f.db.query(`CREATE ROLE ${role};GRANT USAGE ON SCHEMA ${f.schema} TO ${role};GRANT SELECT,UPDATE ON accounts TO ${role}`);
     for(const file of ['minute-runtime-grants.sql','minute-purchase-runtime-grants.sql','actual-value-runtime-grants.sql']){
       const grants=await readFile(new URL(`../operations/${file}`,import.meta.url),'utf8');
-      await f.db.query(grants.replaceAll('mural_runtime',role));
+      await f.db.query(grants.replaceAll('fleunce_runtime',role));
     }
     const url=new URL(f.url);url.searchParams.set('options',`-c search_path=${f.schema} -c role=${role}`);
     runtime=connectDatabase(url.toString());

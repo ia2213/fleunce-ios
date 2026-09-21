@@ -21,7 +21,7 @@ export async function updateWelcomeFunding(db: Database, policy: WelcomeFundingP
     ![policy.dailyBudgetMinor, policy.lifetimeBudgetMinor].every(value => Number.isSafeInteger(value) && value >= 0 && value <= 100_000_000) ||
     policy.dailyBudgetMinor > policy.lifetimeBudgetMinor) throw new ServiceError('invalid_funding_policy');
   return transaction(db, async sql => {
-    await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-welcome-minutes'))");
+    await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-welcome-minutes'))");
     const before = policyFromRow((await sql.query('SELECT * FROM welcome_funding_policy WHERE singleton FOR UPDATE')).rows[0]);
     if (before.version !== policy.version) throw new ServiceError('policy_changed_review_again', 409);
     const after = { ...policy, version: policy.version + 1 };
@@ -35,7 +35,7 @@ export async function updateWelcomeFunding(db: Database, policy: WelcomeFundingP
 
 /** Called inside the minute grant transaction; the reservation survives use, deletion and sign-in. */
 export async function reserveWelcomeFunding(sql: PoolClient, account: string, allowance: number) {
-  await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-welcome-minutes'))");
+  await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-welcome-minutes'))");
   const policy = (await sql.query('SELECT * FROM welcome_funding_policy WHERE singleton')).rows[0];
   const reserve = (BigInt(allowance) * BigInt(policy.reserve_cost_per_minute_minor) + 59_999n) / 60_000n;
   const totals = (await sql.query(`SELECT COALESCE(sum(reserve_cost_minor),0) AS lifetime,

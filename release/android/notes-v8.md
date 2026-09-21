@@ -7,6 +7,6 @@ Conversations start more gently and follow your answers more naturally. A quiet 
 - Vocabulary and learning records retain valid evidence more reliably.
 - Connection, credit and service errors offer clearer guidance. The reason a conversation ended stays visible.
 
-Install **Mural-Android-direct-v8.apk** over your current direct-download preview to keep your history and settings. This release updates the direct download; it does not change the Play submission.
+Install **Fleunce-Android-direct-v8.apk** over your current direct-download preview to keep your history and settings. This release updates the direct download; it does not change the Play submission.
 
 Thanks to **[Boris (@Borisserz)](https://github.com/Borisserz)** for the caption, translation and reliability fixes, and **[William (@Chuloo)](https://github.com/Chuloo)** for the conversation improvements, integration, testing and release.

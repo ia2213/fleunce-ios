@@ -1,6 +1,6 @@
 import Foundation
 import AVFoundation
-import MuralCore
+import FleunceCore
 
 enum ConnectionState: Equatable { case idle, connecting, active, closing, ended, failed }
 
@@ -159,7 +159,7 @@ final class NativeSynthesizer: NSObject, AVSpeechSynthesizerDelegate, Sendable {
         let initialResult = try await api.respond(instructions: instructions, input: "Start conversation")
         guard attempt == token else { throw CancellationError() }
         let sessionID = UUID().uuidString
-        onEvent?(["type": "mural.session.created", "session": ["id": sessionID]])
+        onEvent?(["type": "fleunce.session.created", "session": ["id": sessionID]])
         started = true
         onEvent?(["type": "session.started", "session": ["id": sessionID]])
         
@@ -175,7 +175,7 @@ final class NativeSynthesizer: NSObject, AVSpeechSynthesizerDelegate, Sendable {
     
     private func startRecording() {
         guard !closing else { return }
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("mural_mic_\(UUID().uuidString).m4a")
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("fleunce_mic_\(UUID().uuidString).m4a")
         audioURL = url
         
         let settings: [String: Any] = [
@@ -346,7 +346,7 @@ final class NativeSynthesizer: NSObject, AVSpeechSynthesizerDelegate, Sendable {
         case microphone, connection, timeout
         var errorDescription: String? {
             switch self {
-            case .microphone: "Allow microphone access in iPhone Settings → Mural to start a conversation."
+            case .microphone: "Allow microphone access in iPhone Settings → Fleunce to start a conversation."
             case .connection: "The voice connection couldn’t be established. Check your connection and try again."
             case .timeout: "The voice connection took too long. Please try again."
             }

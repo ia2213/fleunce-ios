@@ -1,5 +1,5 @@
 import SwiftUI
-import MuralCore
+import FleunceCore
 
 /// Keeps Han text selectable and word links intact, with an optional reading below it.
 struct PinyinHelp: View {
@@ -17,7 +17,7 @@ struct PinyinHelp: View {
                     Text(reading).font(.callout).textSelection(.enabled)
                         .accessibilityIdentifier("pinyin-reading")
                 }
-            }.foregroundStyle(MuralColor.secondary)
+            }.foregroundStyle(FleunceColor.secondary)
         }
     }
 }

@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDisplayName</key>
-	<string>Mural Widgets</string>
+	<string>Fleunce Widgets</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER).widget</string>
 	<key>CFBundleExecutable</key>

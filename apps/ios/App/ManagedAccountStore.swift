@@ -1,6 +1,6 @@
 import Foundation
 import Observation
-import MuralCore
+import FleunceCore
 
 @MainActor @Observable
 final class ManagedAccountStore {
@@ -73,7 +73,7 @@ final class ManagedAccountStore {
             guard gate.accepts(token) else { return }
             try keychain.remove()
             self.session = nil; profile = nil
-            if remoteFailed { message = "Signed out on this iPhone. We couldn’t reach Mural to revoke other sessions; they expire within 24 hours." }
+            if remoteFailed { message = "Signed out on this iPhone. We couldn’t reach Fleunce to revoke other sessions; they expire within 24 hours." }
         }
     }
     func deleteAccount() {
@@ -90,7 +90,7 @@ final class ManagedAccountStore {
             self.session = nil; profile = nil
             do { try keychain.remove() }
             catch {
-                message = "Account deleted. Mural couldn’t clear its local secure sign-in record. Unlock this iPhone and reopen Account to clear it."
+                message = "Account deleted. Fleunce couldn’t clear its local secure sign-in record. Unlock this iPhone and reopen Account to clear it."
                 return
             }
             message = "Account deleted. Your learning history remains on this iPhone."
@@ -120,7 +120,7 @@ final class ManagedAccountStore {
     }
     private static func message(for error: Error) -> String {
         switch error as? ManagedAccountError {
-        case .secureStorage: "Mural couldn’t update this iPhone’s secure account storage. Unlock the iPhone and try again."
+        case .secureStorage: "Fleunce couldn’t update this iPhone’s secure account storage. Unlock the iPhone and try again."
         case .server("unresolved_billing"): "Your account has a balance, pending payment or active usage. Contact hi@hackmamba.io to resolve it before deleting your account."
         case .server("sign_in_required"): "Please sign in again. Your learning history is still on this iPhone."
         case .server("rate_limit"): "Please try again later."
@@ -130,7 +130,7 @@ final class ManagedAccountStore {
             "This sign-in option is unavailable. Please try again later."
         case .invalidCallback, .invalidResponse, .server("invalid_challenge"):
             "Sign-in couldn’t be verified. Please start again."
-        default: "Mural couldn’t complete that request. Check your connection and try again."
+        default: "Fleunce couldn’t complete that request. Check your connection and try again."
         }
     }
 }

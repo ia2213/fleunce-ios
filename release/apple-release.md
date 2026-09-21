@@ -1,4 +1,4 @@
-# How to release Mural through Apple
+# How to release Fleunce through Apple
 
 Use this checklist for the uploaded build, not just the source checkout. Requirements were checked against Apple’s official documentation on 12 September 2026.
 
@@ -10,9 +10,9 @@ The current completed work and remaining credentials, code and verification task
 - [x] Confirm the operator as **Hackmamba Inc., incorporated in the United States**. William Imoh and hi@hackmamba.io are confirmed contacts. Use the copyright holder recorded in [LICENSE](../LICENSE); the App Store seller name follows the enrolled account.
 - [ ] Obtain the App Review telephone privately and confirm the enrolled Apple seller entity when membership is active.
 - [ ] Register the existing app identifier with the distribution team, if available. Keep the installed personal build’s signing and bundle identifier stable until an explicit migration is planned.
-- [ ] Create Mural’s App Store Connect app record and choose the bundle ID, SKU and primary metadata language. Confirm name availability there.
+- [ ] Create Fleunce’s App Store Connect app record and choose the bundle ID, SKU and primary metadata language. Confirm name availability there.
 - [ ] Accept current developer agreements. Complete business/trader, banking and tax fields that apply to the selected distribution and payment model.
-- [x] Add persistent Settings links to `https://mural.chat/privacy/`, `https://mural.chat/terms/` and `https://mural.chat/support/`. The onboarding and existing-user consent screens also link to privacy.
+- [x] Add persistent Settings links to `https://fleunce.chat/privacy/`, `https://fleunce.chat/terms/` and `https://fleunce.chat/support/`. The onboarding and existing-user consent screens also link to privacy.
 - [x] Verify all three URLs over HTTPS without login. Privacy, terms and support returned HTTP 200 on September 12, 2026; the support page links to hi@hackmamba.io.
 - [ ] Decide the review-access route. The current BYOK build needs a provisioned review credential or a working managed-access flow. A reviewer should not need to buy their own OpenAI access. Never embed a shared key in the app or commit review credentials.
 
@@ -23,7 +23,7 @@ The current completed work and remaining credentials, code and verification task
 - [ ] Verify archive compatibility with existing learning data and confirm **Delete all conversations and learning** also removes the legacy migration backup. User-exported files remain under the user’s control.
 - [ ] Increment the build number for each upload. Confirm the public version, minimum iOS version, icon, portrait support and release configuration.
 - [ ] Archive for **Any iOS Device** with the distribution team. Run Xcode’s archive validation and inspect the generated privacy report.
-- [ ] Verify both `Mural.app/PrivacyInfo.xcprivacy` and the embedded WebRTC framework’s manifest. Inspect Apple’s upload diagnostics for missing required-reason declarations or SDK signing issues. The presence of a source manifest alone does not validate an archive. [Apple privacy manifests](https://developer.apple.com/documentation/bundleresources/describing-use-of-required-reason-api), [SDK requirements](https://developer.apple.com/support/third-party-SDK-requirements/)
+- [ ] Verify both `Fleunce.app/PrivacyInfo.xcprivacy` and the embedded WebRTC framework’s manifest. Inspect Apple’s upload diagnostics for missing required-reason declarations or SDK signing issues. The presence of a source manifest alone does not validate an archive. [Apple privacy manifests](https://developer.apple.com/documentation/bundleresources/describing-use-of-required-reason-api), [SDK requirements](https://developer.apple.com/support/third-party-SDK-requirements/)
 - [ ] Confirm third-party notices match the shipped WebRTC artifact and all redistributable components.
 - [ ] Recheck export compliance. The current `ITSAppUsesNonExemptEncryption = false` is a build declaration, not a completed legal determination for every future dependency.
 
@@ -42,7 +42,7 @@ Apple allows up to 10,000 external testers per app; the first external build rec
 - [ ] Complete the listing fields in [the metadata draft](app-store-metadata.md), including description, keywords, category, support URL, copyright and review contact. [Required properties](https://developer.apple.com/help/app-store-connect/reference/app-information/required-localizable-and-editable-properties/)
 - [x] Prepare four **1320 × 2868** PNGs without transparency in [screenshots/en-US](screenshots/en-US/README.md). They show the current core interface with Spanish sample content. Recapture if these screens change before upload. Apple accepts one to ten screenshots per set; the current target is iPhone-only. [Screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/)
 - [ ] Complete the age-rating questionnaire from actual AI conversation and search behavior. Do not assume a child rating because this is an education app.
-- [ ] Complete App Privacy using [the data inventory](app-privacy.md), including relevant third-party processing. Do not select “Data Not Collected” merely because Mural’s operator has no conversation database.
+- [ ] Complete App Privacy using [the data inventory](app-privacy.md), including relevant third-party processing. Do not select “Data Not Collected” merely because Fleunce’s operator has no conversation database.
 - [ ] Make only accessibility claims verified on the release build. Check VoiceOver labels, Dynamic Type, Reduce Motion, contrast, touch targets and keyboard behavior.
 - [ ] Confirm every supported region, availability date and price. Remove unavailable CTA links and draft placeholders from the app and website.
 - [ ] Submit the build with full review access and explanatory notes. Keep required services available through review. [App Review preparation](https://developer.apple.com/app-store/review/guidelines/)

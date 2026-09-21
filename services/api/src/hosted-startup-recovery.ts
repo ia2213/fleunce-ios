@@ -14,7 +14,7 @@ export async function recoverHostedStartup(db: Database, input: {
       input.reason.trim().length<3 || input.reason.length>500 || /[\x00-\x1f]/.test(input.actor+input.reason))
     throw new ServiceError('invalid_startup_recovery');
   return transaction(db, async sql => {
-    await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-hosted-funding-cap'))");
+    await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-hosted-funding-cap'))");
     await lockMinuteWallet(sql,input.accountID,false);
     const existing=(await sql.query('SELECT * FROM hosted_startup_recoveries WHERE session_id=$1',[input.sessionID])).rows[0];
     if (existing) {

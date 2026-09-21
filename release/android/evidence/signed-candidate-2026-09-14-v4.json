@@ -3,18 +3,18 @@
   "recordedAt": "2026-09-14T08:48:13.005394+00:00",
   "status": "Version 4 free-trial/BYOK preview signed and locally verified; paid checkout disabled. No Play upload or live test performed by this audit.",
   "artifact": {
-    "filename": "Mural-Android-release-2026-09-14-v4.aab",
+    "filename": "Fleunce-Android-release-2026-09-14-v4.aab",
     "location": "Hej/deliverables (outside repository)",
     "bytes": 33050159,
     "sha256": "8e408404ac2c9cf397eeceac0e0d71b245b8d24884169df2b424729bc62a8946",
     "unsignedSHA256": "fb60d628758da304b93268b5ff43f769890091257c298e92dc525fb09d903b92"
   },
   "previewAPK": {
-    "filename": "Mural-Android-preview-2026-09-14-v4.apk",
+    "filename": "Fleunce-Android-preview-2026-09-14-v4.apk",
     "bytes": 63496043,
     "sha256": "4f0b5eb731c6bb9508a853d3d46976916ba0bf244830161facb68bbcb6d18373",
     "manifest": {
-      "package": "chat.mural.android",
+      "package": "chat.fleunce.android",
       "versionCode": 4,
       "versionName": "0.1",
       "minSdk": 26,
@@ -25,7 +25,7 @@
       "usesCleartextTraffic": false
     },
     "buildType": "debug",
-    "apiOrigin": "https://api.mural.chat",
+    "apiOrigin": "https://api.fleunce.chat",
     "minutePurchasesEnabled": false,
     "minutePurchaseEnvironment": "test",
     "signatureVerified": true,
@@ -45,7 +45,7 @@
       "scope": "Known credential files and high-confidence secret patterns only; not proof that every possible credential format is absent."
     },
     "requiredNotices": {
-      "Mural-LICENSE.txt": true,
+      "Fleunce-LICENSE.txt": true,
       "Apache-2.0.txt": true,
       "Nunito-OFL.txt": true,
       "THIRD-PARTY-NOTICES.txt": true,
@@ -89,7 +89,7 @@
     "sourceUnchangedAtPackagingVerification": true
   },
   "buildConfiguration": {
-    "package": "chat.mural.android",
+    "package": "chat.fleunce.android",
     "versionCode": 4,
     "versionName": "0.1",
     "buildType": "release",
@@ -98,7 +98,7 @@
     "targetSdk": 36,
     "minutePurchasesEnabled": false,
     "minutePurchaseEnvironment": "test",
-    "apiOrigin": "https://api.mural.chat",
+    "apiOrigin": "https://api.fleunce.chat",
     "googleServerClientID": "1034240936303-v182map9ntca934qc10i2ql3366onue7.apps.googleusercontent.com",
     "confirmedFrom": "Manifest and actual BuildConfig DEX in bundletool-generated base-master APK"
   },

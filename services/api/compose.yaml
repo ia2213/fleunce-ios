@@ -2,13 +2,13 @@ services:
   database:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: mural
-      POSTGRES_USER: mural
+      POSTGRES_DB: fleunce
+      POSTGRES_USER: fleunce
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a unique database password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mural -d mural"]
+      test: ["CMD-SHELL", "pg_isready -U fleunce -d fleunce"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -21,7 +21,7 @@ services:
   migrate:
     build: .
     environment:
-      DATABASE_URL: postgresql://mural:${POSTGRES_PASSWORD}@database:5432/mural
+      DATABASE_URL: postgresql://fleunce:${POSTGRES_PASSWORD}@database:5432/fleunce
     command: ["node", "dist/src/migrate.js"]
     depends_on:
       database:
@@ -29,7 +29,7 @@ services:
   api:
     build: .
     environment:
-      DATABASE_URL: postgresql://mural:${POSTGRES_PASSWORD}@database:5432/mural
+      DATABASE_URL: postgresql://fleunce:${POSTGRES_PASSWORD}@database:5432/fleunce
       PUBLIC_ORIGIN: https://${API_DOMAIN:?Set the API domain}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_ANDROID_SERVER_CLIENT_ID: ${GOOGLE_ANDROID_SERVER_CLIENT_ID:-}

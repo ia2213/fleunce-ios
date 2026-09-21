@@ -123,7 +123,7 @@ def check_branding(root: Path, spec: dict) -> dict:
     catalog = json.loads((icon_set / "Contents.json").read_text())
     references = [item["filename"] for item in catalog["images"] if item.get("filename")]
     require(references and set(references) == {branding["iosIconFile"]},
-            "iOS AppIcon catalog no longer uses only the declared Mural source")
+            "iOS AppIcon catalog no longer uses only the declared Fleunce source")
     android_icon = below(root, branding["androidIconFile"])
     ios_info, android_info = png_info(ios_icon), png_info(android_icon)
     require(ios_info["width"] == 1024 and ios_info["height"] == 1024, "Canonical iOS launcher artwork must be 1024 × 1024")
@@ -139,7 +139,7 @@ def check_branding(root: Path, spec: dict) -> dict:
     adaptive_path = Path(branding["androidAdaptiveIcon"])
     expected_icon = "@mipmap/" + adaptive_path.stem
     require(app is not None and app.get(ANDROID + "icon") == expected_icon and app.get(ANDROID + "roundIcon") == expected_icon,
-            "Android manifest no longer references the inspected Mural launcher icon")
+            "Android manifest no longer references the inspected Fleunce launcher icon")
     adaptive = xml("androidAdaptiveIcon")
     require(adaptive.tag == "adaptive-icon", "Expected the inspected Android adaptive icon")
     foreground_ref = adaptive.find("foreground")
@@ -148,7 +148,7 @@ def check_branding(root: Path, spec: dict) -> dict:
     foreground = xml("androidForeground")
     bitmaps = list(foreground.iter("bitmap"))
     require(len(bitmaps) == 1 and bitmaps[0].get(ANDROID + "src") == "@drawable/" + android_icon.stem,
-            "Android foreground no longer references the exact Mural artwork")
+            "Android foreground no longer references the exact Fleunce artwork")
     return {"iosIconSource": branding["iosIconSet"] + "/" + branding["iosIconFile"],
             "androidIconSource": branding["androidIconFile"], "identicalIconSHA256": ios_info["sha256"],
             "androidAdaptiveIconSHA256": sha256(below(root, branding["androidAdaptiveIcon"])),
@@ -255,7 +255,7 @@ def check_aab(path: Path, licenses: list[str]) -> dict:
                     libraries[name]["bytes"] = info.file_size
                 except InvalidRelease as error:
                     raise InvalidRelease(f"{name}: {error}") from error
-        require("arm64-v8a" in abis and bool(libraries), "Mural AAB must include arm64-v8a native libraries")
+        require("arm64-v8a" in abis and bool(libraries), "Fleunce AAB must include arm64-v8a native libraries")
         secret_scan = check_embedded_secrets(bundle)
         signatures = sorted(name for name in names if re.match(r"^META-INF/[^/]+\.(?:SF|RSA|DSA|EC)$", name, re.I))
         for notice in licenses:

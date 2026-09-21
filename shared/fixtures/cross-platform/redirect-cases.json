@@ -1,5 +1,5 @@
 {
-  "description": "TeachingPolicy.shouldRedirectSpeech cases shared by MuralCore and the Android core.",
+  "description": "TeachingPolicy.shouldRedirectSpeech cases shared by FleunceCore and the Android core.",
   "cases": [
     {"language": "zh", "detected": "zh", "confidence": 0.99, "redirect": false},
     {"language": "zh", "detected": "zh-Hans", "confidence": 0.99, "redirect": false},

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "recordedAt": "2026-09-14T11:01:46.338968+00:00",
-  "filename": "Mural-Android-review-v4.apk",
+  "filename": "Fleunce-Android-review-v4.apk",
   "bytes": 59200633,
   "sha256": "e02248efb13a1403d7a2e80c5d0902dcc05f08e5ee4a080cde8485619308ffdb",
   "source": {
@@ -10,7 +10,7 @@
     "packaging": "Universal APK derived from the sealed release bundle and signed for the existing review installation."
   },
   "manifest": {
-    "package": "chat.mural.android",
+    "package": "chat.fleunce.android",
     "versionCode": 4,
     "versionName": "0.1",
     "minSdk": 26,

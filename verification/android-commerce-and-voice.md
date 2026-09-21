@@ -4,7 +4,7 @@ Verified on 13 September 2026 during the Android release work. The checks below 
 
 ## Real Stripe sandbox
 
-The new minute-purchase adapter created a 30-minute test pack in Mural's dedicated Stripe sandbox. The $3.00 USD amount was a test fixture, not an approved launch price. No real money, production accounts or production database records were involved.
+The new minute-purchase adapter created a 30-minute test pack in Fleunce's dedicated Stripe sandbox. The $3.00 USD amount was a test fixture, not an approved launch price. No real money, production accounts or production database records were involved.
 
 Checkout was completed in Stripe's hosted form with its documented test card and synthetic contact details. Genuine signed notifications reached the new `/v1/webhooks/stripe/minutes` route. The checks confirmed:
 
@@ -31,7 +31,7 @@ This confirms the provider's server-control path on this account. It does not es
 
 The shared voice controller now supports either legacy money reservations or minute reservations. Eighteen HTTP/WebSocket integration tests passed against an isolated local PostgreSQL database, including exact minute settlement, guest balances without money wallets, short remainders, setup delay, duplicate creates, uncertain creation, final-usage regression, recovery, cutoff overrun, refunds during speech and sign-out. Voice admission reserves teaching funding in the same transaction, so an unfunded helper budget cannot leave a billed voice session running.
 
-The original controlled tests used exact connected-time charging. That policy is superseded for new hosted-minute sessions by the owner's approved 15-second minimum. Final charges are capped by the reserved balance; existing sessions keep their original policy. A cancellation before any provider attempt costs zero. Unknown creation or missing final usage keeps the hold, and Mural still absorbs provider cutoff overrun.
+The original controlled tests used exact connected-time charging. That policy is superseded for new hosted-minute sessions by the owner's approved 15-second minimum. Final charges are capped by the reserved balance; existing sessions keep their original policy. A cancellation before any provider attempt costs zero. Unknown creation or missing final usage keeps the hold, and Fleunce still absorbs provider cutoff overrun.
 
 Teaching requests now earn their funding and request limits from authoritative charged time. Closing a short conversation immediately releases the unearned portion of its teaching reservation, while retaining its earned post-conversation allowance and any uncertain provider holds. This prevents repeated short starts from spending the full ten-minute teaching budget on every connection. Public activation still requires funded grant commitments, an overrun reserve and provider reconciliation.
 

@@ -12,9 +12,9 @@ import { PlayMinuteProvider } from './play-minute-provider.js';
 import { GooglePlayHTTPTransport, GoogleServiceAccountTokens, type PlayTransport } from './google-play-transport.js';
 import { MinuteCommerceRunner, PlayVoidReconciler, type CommerceRunnerOptions } from './minute-commerce-runner.js';
 
-export const permanentAndroidPackage = 'chat.mural.android';
+export const permanentAndroidPackage = 'chat.fleunce.android';
 type Environment = Readonly<Record<string, string | undefined>>;
-const prefix = 'MURAL_MINUTE_';
+const prefix = 'FLEUNCE_MINUTE_';
 const invalid = () => new ServiceError('minute_commerce_configuration_invalid', 503);
 const object = (value: unknown): Record<string, any> => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw invalid();

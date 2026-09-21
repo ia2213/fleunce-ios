@@ -1,6 +1,6 @@
 # Guest conversations on Android
 
-A fresh installation starts with Mural-hosted conversations after language selection, subtitle selection, and AI consent. Google sign-in is optional. Existing installations with a saved personal API key keep that provider; an explicit provider preference always wins. Saving a key selects the personal-key provider, and the account sheet lets guests switch back to Mural minutes.
+A fresh installation starts with Fleunce-hosted conversations after language selection, subtitle selection, and AI consent. Google sign-in is optional. Existing installations with a saved personal API key keep that provider; an explicit provider preference always wins. Saving a key selects the personal-key provider, and the account sheet lets guests switch back to Fleunce minutes.
 
 The consent screen includes an 18-or-older confirmation in English and Spanish. It does not collect a date of birth or add an onboarding step.
 
@@ -38,12 +38,12 @@ The member purchase controller still reads only member credentials and validates
 
 Access problems open a warm sheet rather than adding scrolling status text to the conversation canvas. It offers Google sign-in, retry, and personal-key settings. Purchase entry appears only when the existing purchase capability is configured and enabled.
 
-The fixed-minute pack implementation remains disabled. Its historical test prices and screenshots are synthetic fixtures, not approved offers. Paid pricing is being revised to actual AI cost plus processing costs and the 15% Mural fee, with estimated conversation minutes. Do not enable the existing fixed-pack catalog as the final paid product.
+The fixed-minute pack implementation remains disabled. Its historical test prices and screenshots are synthetic fixtures, not approved offers. Paid pricing is being revised to actual AI cost plus processing costs and the 15% Fleunce fee, with estimated conversation minutes. Do not enable the existing fixed-pack catalog as the final paid product.
 
 ## Verification
 
 Local controller tests cover guest access without a member, restart, paused grants, bearer renewal, identity mismatch, spent allowance, additive wallet transfer, uncertain response replay, member mismatch, unresolved reservations, corrupted identity, concurrent calls, expired-token recovery, and the duplicate-trial result.
 
-HTTP tests use a local mock server. They check the anonymous grant body, strict response bounds, unavailable versus error states, member-authenticated transfer, exact outcomes, and redirect rejection. Device tests use only `chat.mural.android.uitest` to check separate encrypted storage, wrong-origin rejection, access-sheet actions, and the adult confirmation.
+HTTP tests use a local mock server. They check the anonymous grant body, strict response bounds, unavailable versus error states, member-authenticated transfer, exact outcomes, and redirect rejection. Device tests use only `chat.fleunce.android.uitest` to check separate encrypted storage, wrong-origin rejection, access-sheet actions, and the adult confirmation.
 
 The current combined JVM run passes 227 tests with no failures, errors, or skips. Android lint reports zero errors. The complete isolated device suite passes all 40 tests; live public guest access and Google transfer require the matching server deployment before release verification.

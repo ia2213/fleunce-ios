@@ -20,10 +20,10 @@ async function fixture() {
   const vault = new MinuteReceiptVault(db, 'recovery-key', new Map([['recovery-key', randomBytes(32)]]));
   let purchase: any, order: any, calls = 0, consumes = 0;
   const token = `synthetic-recovery-token.${randomUUID()}`;
-  const play = new PlayMinuteProvider(db, vault, { packageName: 'chat.mural.android', bindingKey: Buffer.alloc(32, 7),
+  const play = new PlayMinuteProvider(db, vault, { packageName: 'chat.fleunce.android', bindingKey: Buffer.alloc(32, 7),
     currencyExponents: { usd: 2 }, purchasesEnabled: true }, {
-    purchase: async (merchant, actualToken) => { calls++; assert.equal(merchant, 'chat.mural.android'); assert.equal(actualToken, token); return clone(purchase); },
-    order: async (merchant, id) => { calls++; assert.equal(merchant, 'chat.mural.android'); assert.equal(id, order.orderId); return clone(order); },
+    purchase: async (merchant, actualToken) => { calls++; assert.equal(merchant, 'chat.fleunce.android'); assert.equal(actualToken, token); return clone(purchase); },
+    order: async (merchant, id) => { calls++; assert.equal(merchant, 'chat.fleunce.android'); assert.equal(id, order.orderId); return clone(order); },
     consume: async () => { consumes++; purchase.productLineItem[0].productOfferDetails.consumptionState = 'CONSUMPTION_STATE_CONSUMED'; },
     voided: async () => ({}),
   });

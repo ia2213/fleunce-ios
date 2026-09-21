@@ -31,7 +31,7 @@ export function reportNetwork(headers: IncomingHttpHeaders, remoteAddress: strin
   try { network = trustedClientNetwork(headers, remoteAddress, config.proxyToken, config.allowLocalLoopback); }
   catch { throw new ServiceError('ai_reports_unavailable', 503); }
   return createHmac('sha256', Buffer.from(config.hmacKey, 'hex'))
-    .update(`mural-ai-report\n${now.toISOString().slice(0, 10)}\n${network}`).digest('hex') as TrustedFeedbackNetwork;
+    .update(`fleunce-ai-report\n${now.toISOString().slice(0, 10)}\n${network}`).digest('hex') as TrustedFeedbackNetwork;
 }
 
 // This catches common credential shapes; the UI still asks the user to review

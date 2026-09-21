@@ -46,9 +46,9 @@ class AndroidReleaseTests(unittest.TestCase):
 
     def test_metadata_handles_non_ascii_and_rejects_long_or_unfinished_copy(self):
         path = self.root / "title.txt"
-        path.write_text("Mural: Bokmål\n")
+        path.write_text("Fleunce: Bokmål\n")
         self.assertEqual(release.check_text(path, 30, True)["characters"], 13)
-        for text in ("x" * 31, "Mural\nPractice", "Mural [REQUIRED: title]", " Mural", "Mural\t"):
+        for text in ("x" * 31, "Fleunce\nPractice", "Fleunce [REQUIRED: title]", " Fleunce", "Fleunce\t"):
             path.write_text(text)
             with self.subTest(text=text), self.assertRaises(release.InvalidRelease):
                 release.check_text(path, 30, True)
@@ -64,39 +64,39 @@ class AndroidReleaseTests(unittest.TestCase):
     def branding(self):
         icon_set = self.root / "ios/AppIcon.appiconset"
         icon_set.mkdir(parents=True)
-        (icon_set / "Contents.json").write_text(json.dumps({"images": [{"filename": "MuralIcon.png"}]}))
-        png(icon_set / "MuralIcon.png", 1024, 1024, 6)
-        android_icon = self.root / "android/mural_icon.png"
+        (icon_set / "Contents.json").write_text(json.dumps({"images": [{"filename": "FleunceIcon.png"}]}))
+        png(icon_set / "FleunceIcon.png", 1024, 1024, 6)
+        android_icon = self.root / "android/fleunce_icon.png"
         android_icon.parent.mkdir()
-        android_icon.write_bytes((icon_set / "MuralIcon.png").read_bytes())
+        android_icon.write_bytes((icon_set / "FleunceIcon.png").read_bytes())
         namespace = 'xmlns:android="http://schemas.android.com/apk/res/android"'
-        (self.root / "android/AndroidManifest.xml").write_text(f'<manifest {namespace}><application android:icon="@mipmap/ic_mural" android:roundIcon="@mipmap/ic_mural"/></manifest>')
-        (self.root / "android/ic_mural.xml").write_text(f'<adaptive-icon {namespace}><foreground android:drawable="@drawable/ic_mural_foreground"/></adaptive-icon>')
-        (self.root / "android/ic_mural_foreground.xml").write_text(f'<inset {namespace} android:inset="10%"><bitmap android:src="@drawable/mural_icon"/></inset>')
+        (self.root / "android/AndroidManifest.xml").write_text(f'<manifest {namespace}><application android:icon="@mipmap/ic_fleunce" android:roundIcon="@mipmap/ic_fleunce"/></manifest>')
+        (self.root / "android/ic_fleunce.xml").write_text(f'<adaptive-icon {namespace}><foreground android:drawable="@drawable/ic_fleunce_foreground"/></adaptive-icon>')
+        (self.root / "android/ic_fleunce_foreground.xml").write_text(f'<inset {namespace} android:inset="10%"><bitmap android:src="@drawable/fleunce_icon"/></inset>')
         (self.root / "ios/Design.swift").write_text("struct Brand {}")
         (self.root / "android/Design.kt").write_text("fun Brand() {}")
-        return {"branding": {"iosIconSet": "ios/AppIcon.appiconset", "iosIconFile": "MuralIcon.png",
-                "androidIconFile": "android/mural_icon.png", "androidManifest": "android/AndroidManifest.xml",
-                "androidAdaptiveIcon": "android/ic_mural.xml", "androidForeground": "android/ic_mural_foreground.xml",
+        return {"branding": {"iosIconSet": "ios/AppIcon.appiconset", "iosIconFile": "FleunceIcon.png",
+                "androidIconFile": "android/fleunce_icon.png", "androidManifest": "android/AndroidManifest.xml",
+                "androidAdaptiveIcon": "android/ic_fleunce.xml", "androidForeground": "android/ic_fleunce_foreground.xml",
                 "iosDesignSource": "ios/Design.swift", "androidDesignSource": "android/Design.kt"}}
 
     def test_branding_requires_exact_ios_artwork_and_records_mask_review(self):
         spec = self.branding()
         result = release.check_branding(self.root, spec)
         self.assertEqual(result["androidForegroundInset"], "10%")
-        self.assertEqual(result["identicalIconSHA256"], release.sha256(self.root / "android/mural_icon.png"))
+        self.assertEqual(result["identicalIconSHA256"], release.sha256(self.root / "android/fleunce_icon.png"))
         self.assertEqual(len(result["designSources"]), 2)
-        png(self.root / "android/mural_icon.png", 1024, 1024, 2)
+        png(self.root / "android/fleunce_icon.png", 1024, 1024, 2)
         with self.assertRaisesRegex(release.InvalidRelease, "differs from the exact iOS"):
             release.check_branding(self.root, spec)
 
     def test_branding_rejects_reference_changes_that_bypass_the_inspected_artwork(self):
         spec = self.branding()
         paths_and_replacements = [
-            ("ios/AppIcon.appiconset/Contents.json", "MuralIcon.png", "OtherIcon.png"),
-            ("android/AndroidManifest.xml", "@mipmap/ic_mural", "@mipmap/other"),
-            ("android/ic_mural.xml", "@drawable/ic_mural_foreground", "@drawable/other"),
-            ("android/ic_mural_foreground.xml", "@drawable/mural_icon", "@drawable/other")
+            ("ios/AppIcon.appiconset/Contents.json", "FleunceIcon.png", "OtherIcon.png"),
+            ("android/AndroidManifest.xml", "@mipmap/ic_fleunce", "@mipmap/other"),
+            ("android/ic_fleunce.xml", "@drawable/ic_fleunce_foreground", "@drawable/other"),
+            ("android/ic_fleunce_foreground.xml", "@drawable/fleunce_icon", "@drawable/other")
         ]
         for relative, old, new in paths_and_replacements:
             path = self.root / relative
@@ -165,7 +165,7 @@ class AndroidReleaseTests(unittest.TestCase):
             archive.writestr("BundleConfig.pb", b"config")
             archive.writestr("base/manifest/AndroidManifest.xml", b"protobuf")
             archive.writestr("base/dex/classes.dex", b"dex")
-            archive.writestr("base/lib/arm64-v8a/libmural.so", native or elf())
+            archive.writestr("base/lib/arm64-v8a/libfleunce.so", native or elf())
             if notices:
                 archive.writestr("base/assets/LICENSE.txt", "MIT")
             if extra:
@@ -176,7 +176,7 @@ class AndroidReleaseTests(unittest.TestCase):
         result = release.check_aab(self.bundle(), ["LICENSE.txt"])
         self.assertEqual(result["abis"], ["arm64-v8a"])
         self.assertEqual(len(result["nativeLibraries"]), 1)
-        self.assertEqual(result["nativeLibraries"]["base/lib/arm64-v8a/libmural.so"]["sha256"], release.hashlib.sha256(elf()).hexdigest())
+        self.assertEqual(result["nativeLibraries"]["base/lib/arm64-v8a/libfleunce.so"]["sha256"], release.hashlib.sha256(elf()).hexdigest())
         with self.assertRaisesRegex(release.InvalidRelease, "Missing bundled notice"):
             release.check_aab(self.bundle(notices=False), ["LICENSE.txt"])
         with self.assertRaisesRegex(release.InvalidRelease, "GNU_RELRO"):
@@ -249,8 +249,8 @@ class AndroidReleaseTests(unittest.TestCase):
             release.below(self.root, "link/outside")
 
     def test_bundle_manifest_rejects_debug_test_backup_and_wrong_candidate(self):
-        spec = {"packageName": "chat.mural.android", "versionCode": 1, "versionName": "0.1", "minSdk": 26, "targetSdk": 36}
-        xml = '''<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="chat.mural.android" android:versionCode="1" android:versionName="0.1">
+        spec = {"packageName": "chat.fleunce.android", "versionCode": 1, "versionName": "0.1", "minSdk": 26, "targetSdk": 36}
+        xml = '''<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="chat.fleunce.android" android:versionCode="1" android:versionName="0.1">
           <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"/>
           <uses-permission android:name="android.permission.RECORD_AUDIO"/>
           <application android:allowBackup="false" android:usesCleartextTraffic="false" />
@@ -260,7 +260,7 @@ class AndroidReleaseTests(unittest.TestCase):
                           xml.replace("<application ", '<application android:testOnly="true" '),
                           xml.replace('allowBackup="false"', 'allowBackup="true"'),
                           xml.replace('versionCode="1"', 'versionCode="2"'),
-                          xml.replace("chat.mural.android", "chat.mural.android.uitest")):
+                          xml.replace("chat.fleunce.android", "chat.fleunce.android.uitest")):
             with self.assertRaises(release.InvalidRelease):
                 release.check_bundle_manifest(malformed, spec)
 
@@ -272,7 +272,7 @@ class AndroidReleaseTests(unittest.TestCase):
 
     def cli_fixture(self):
         spec = self.branding() | {"schemaVersion": 1, "scope": "hosted-guest-preview",
-            "packageName": "chat.mural.android", "versionCode": 5, "versionName": "0.1",
+            "packageName": "chat.fleunce.android", "versionCode": 5, "versionName": "0.1",
             "minSdk": 26, "targetSdk": 36, "metadataLocale": "en-US", "requiredLicenses": ["LICENSE.txt"],
             "assets": {"icon": "assets/icon.png", "featureGraphic": "assets/feature.png",
                        "phoneScreenshots": ["assets/one.png", "assets/two.png"]}}
@@ -280,7 +280,7 @@ class AndroidReleaseTests(unittest.TestCase):
         metadata = directory / "metadata/en-US"
         metadata.mkdir(parents=True)
         for name in release.TEXT_LIMITS:
-            (metadata / f"{name}.txt").write_text("Mural preview\n")
+            (metadata / f"{name}.txt").write_text("Fleunce preview\n")
         assets = directory / "assets"
         assets.mkdir()
         for name, width, height, color in [("icon", 512, 512, 6), ("feature", 1024, 500, 2),
@@ -298,7 +298,7 @@ class AndroidReleaseTests(unittest.TestCase):
         def execute(command, **kwargs):
             config = {"optimizations": {"uncompressNativeLibraries": {"alignment": "PAGE_ALIGNMENT_16K"}}}
             manifest = f'''<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                package="chat.mural.android" android:versionCode="{manifest_version}" android:versionName="0.1">
+                package="chat.fleunce.android" android:versionCode="{manifest_version}" android:versionName="0.1">
                 <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"/>
                 <application android:allowBackup="false" android:usesCleartextTraffic="false"/>
             </manifest>'''

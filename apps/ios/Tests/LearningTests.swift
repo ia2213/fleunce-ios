@@ -1,5 +1,5 @@
 import XCTest
-@testable import MuralCore
+@testable import FleunceCore
 
 final class LearningTests: XCTestCase {
     func fixture(day: Double = 0, theme: String = "walk", supported: Bool = false, kind: EvidenceKind = .independent) -> SessionRecord {

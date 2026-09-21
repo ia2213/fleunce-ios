@@ -20,7 +20,7 @@ const databaseURL = process.env.TEST_DATABASE_URL;
 if (databaseURL && !new URL(databaseURL).pathname.endsWith('_test')) throw new Error('Use an isolated test database.');
 const integration = (name: string, fn: () => Promise<void>) => test(name, { skip: !databaseURL && 'Set TEST_DATABASE_URL.' }, fn);
 const proxy = { hmacKey: 'a'.repeat(64), proxyToken: 'b'.repeat(64), allowLocalLoopback: false };
-const network = { 'x-mural-client-ip': '192.0.2.112', 'x-mural-proxy-token': proxy.proxyToken };
+const network = { 'x-fleunce-client-ip': '192.0.2.112', 'x-fleunce-proxy-token': proxy.proxyToken };
 const stripeSecret = 'whsec_' + 'syntheticfixture'.repeat(3);
 const stripeKey = 'sk_test_' + 'syntheticfixture'.repeat(3);
 const clone = <T>(value: T): T => structuredClone(value);
@@ -40,7 +40,7 @@ async function fixture(options: { enabled?: boolean; salesEnabled?: boolean; aiV
       createCount++; const orderID = params.client_reference_id!, id = `cs_test_${orderID.replaceAll('-', '')}`;
       const existing = sessions.get(id); if (existing) return clone(existing);
       const session = { id, status: 'open', mode: 'payment', livemode: false, payment_status: 'unpaid',
-        client_reference_id: orderID, metadata: { mural_minute_order: orderID }, currency: 'usd', amount_total: 997,
+        client_reference_id: orderID, metadata: { fleunce_minute_order: orderID }, currency: 'usd', amount_total: 997,
         payment_intent: `pi_${orderID}`, url: `https://checkout.stripe.com/c/pay/${id}` };
       // Provider IDs are alphanumeric; retain the UUID only in the server metadata.
       session.payment_intent = `pi_${orderID.replaceAll('-', '')}`;
@@ -57,8 +57,8 @@ async function fixture(options: { enabled?: boolean; salesEnabled?: boolean; aiV
     verifyEvent: (raw, signature) => stripeSDK.webhooks.constructEvent(raw, signature, stripeSecret),
   };
   const stripe = new StripeMinuteProvider(db, vault, { secretKey: stripeKey, webhookSecret: stripeSecret, accountID: 'acct_httpfixture',
-    webOrigin: 'https://mural.example.test', checkoutEnabled: true }, transport);
-  const play = new PlayMinuteProvider(db, vault, { packageName: 'chat.mural.httpfixture', bindingKey: Buffer.alloc(32, 8),
+    webOrigin: 'https://fleunce.example.test', checkoutEnabled: true }, transport);
+  const play = new PlayMinuteProvider(db, vault, { packageName: 'chat.fleunce.httpfixture', bindingKey: Buffer.alloc(32, 8),
     currencyExponents: { usd: 2 }, purchasesEnabled: true }, {
     purchase: async () => clone(playFacts),
     order: async () => ({ orderId: 'GPA.1234-5678-9012-34567', purchaseToken: playFacts.token, state: 'PROCESSED',
@@ -440,7 +440,7 @@ integration('lost create responses remain recoverable after the Stripe idempoten
   try {
     const member = await f.account(), key = randomUUID();
     const order = await f.aiPurchases!.createOrder(member.id, 'stripe', 'fixture-ai', key);
-    // An old request may have reached Stripe without its response reaching Mural. Never recreate it blindly.
+    // An old request may have reached Stripe without its response reaching Fleunce. Never recreate it blindly.
     await f.db.query("INSERT INTO minute_stripe_checkout_attempts(order_id,started_at) VALUES($1,now()-interval '25 hours')", [order.orderID]);
     await assert.rejects(f.stripe.checkout(member.id, order.orderID), { code: 'checkout_reconciliation_required' });
     disabled = createApp({ db: f.db, auth: { googleClientID: 'synthetic-google-client' }, accounts: { admission: new AuthAdmission(f.db, proxy) },

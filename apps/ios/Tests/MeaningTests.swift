@@ -1,5 +1,5 @@
 import XCTest
-@testable import MuralCore
+@testable import FleunceCore
 
 @MainActor final class MeaningTests: XCTestCase {
     @MainActor private final class Translator {

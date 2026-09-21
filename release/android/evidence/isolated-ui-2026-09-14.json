@@ -28,8 +28,8 @@
     "display": "1080x2424",
     "densityDPI": 420,
     "fontScale": 1.0,
-    "testApplicationID": "chat.mural.android.uitest",
-    "personalApplicationID": "chat.mural.android",
+    "testApplicationID": "chat.fleunce.android.uitest",
+    "personalApplicationID": "chat.fleunce.android",
     "personalDataPreserved": true,
     "originalDeviceSettingsRestored": true
   },

@@ -1,6 +1,6 @@
 # Conversation minutes
 
-Mural's planned minute packs grant conversation time. A 30-minute pack grants 1,800 seconds of connected conversation, independent of model token counts. Pauses within an active conversation count; ending the conversation stops the clock. Normal meanings and teaching assessments belong in the pack price, with bounded helper usage. Final pack prices and live sales remain pending cost verification.
+Fleunce's planned minute packs grant conversation time. A 30-minute pack grants 1,800 seconds of connected conversation, independent of model token counts. Pauses within an active conversation count; ending the conversation stops the clock. Normal meanings and teaching assessments belong in the pack price, with bounded helper usage. Final pack prices and live sales remain pending cost verification.
 
 Provider costs and user time have different ledgers. The existing money ledger records financial amounts. The minute ledger records time grants, reservations, settlement and release using integer milliseconds. Model price changes must not change time already purchased. The old sandbox dollar-credit endpoints remain temporarily for compatibility; they are not the consumer minute purchase implementation.
 

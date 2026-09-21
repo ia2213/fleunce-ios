@@ -8,16 +8,16 @@ All flags accept only `true` or `false`. All file paths are absolute. Files are 
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `MURAL_MINUTE_COMMERCE_ENABLED` | `false` | Constructs commerce services when true. Disabled construction does not read files or query the database. |
-| `MURAL_MINUTE_SALES_ENABLED` | `false` | Enables catalog visibility and new purchases. Requires commerce enabled and catalog approval. Existing payment reconciliation remains available with sales disabled. |
-| `MURAL_MINUTE_ALLOW_LIVE` | `false` | Permits a manifest with environment `live`. A test manifest with this flag true is rejected. |
-| `MURAL_MINUTE_COMMERCE_CONFIG_FILE` | absent | Required manifest, at most 64 KiB. |
-| `MURAL_MINUTE_CATALOG_FILE` | absent | Required canonical product catalog, at most 256 KiB. |
-| `MURAL_MINUTE_CATALOG_APPROVED_SHA256` | absent | Lowercase SHA-256 of the exact catalog file bytes. Required for sales. A supplied digest must match even when sales are disabled. |
-| `MURAL_MINUTE_RECEIPT_KEYS_FILE` | absent | Required receipt encryption key ring, at most 64 KiB. |
-| `MURAL_MINUTE_STRIPE_CREDENTIALS_FILE` | absent | Required exactly when the manifest includes Stripe. |
-| `MURAL_MINUTE_PLAY_SERVICE_ACCOUNT_FILE` | absent | Required exactly when the manifest includes Play. |
-| `MURAL_MINUTE_PLAY_BINDING_KEY_FILE` | absent | Required exactly when the manifest includes Play. |
+| `FLEUNCE_MINUTE_COMMERCE_ENABLED` | `false` | Constructs commerce services when true. Disabled construction does not read files or query the database. |
+| `FLEUNCE_MINUTE_SALES_ENABLED` | `false` | Enables catalog visibility and new purchases. Requires commerce enabled and catalog approval. Existing payment reconciliation remains available with sales disabled. |
+| `FLEUNCE_MINUTE_ALLOW_LIVE` | `false` | Permits a manifest with environment `live`. A test manifest with this flag true is rejected. |
+| `FLEUNCE_MINUTE_COMMERCE_CONFIG_FILE` | absent | Required manifest, at most 64 KiB. |
+| `FLEUNCE_MINUTE_CATALOG_FILE` | absent | Required canonical product catalog, at most 256 KiB. |
+| `FLEUNCE_MINUTE_CATALOG_APPROVED_SHA256` | absent | Lowercase SHA-256 of the exact catalog file bytes. Required for sales. A supplied digest must match even when sales are disabled. |
+| `FLEUNCE_MINUTE_RECEIPT_KEYS_FILE` | absent | Required receipt encryption key ring, at most 64 KiB. |
+| `FLEUNCE_MINUTE_STRIPE_CREDENTIALS_FILE` | absent | Required exactly when the manifest includes Stripe. |
+| `FLEUNCE_MINUTE_PLAY_SERVICE_ACCOUNT_FILE` | absent | Required exactly when the manifest includes Play. |
+| `FLEUNCE_MINUTE_PLAY_BINDING_KEY_FILE` | absent | Required exactly when the manifest includes Play. |
 
 Sales enabled while commerce is disabled is an error. Missing, partial or mismatched active configuration raises `minute_commerce_configuration_invalid` with status 503. Separate test and live configurations cannot share a database containing receipts from both environments.
 
@@ -29,10 +29,10 @@ The manifest contains `version: 1`, `environment: "test" | "live"`, at least one
 | --- | --- |
 | `webOrigin` | HTTPS origin without credentials, port, query, fragment or non-root path. Required for Stripe. |
 | `stripe` | `{ "accountID": "acct_…", "managedPayments": false }`; mode defaults to `false` and accepts only a boolean. |
-| `play` | `{ "packageName": "chat.mural.android", "currencyExponents": { "usd": 2 } }` |
+| `play` | `{ "packageName": "chat.fleunce.android", "currencyExponents": { "usd": 2 } }` |
 | `runner` | Optional limits listed below. |
 
-`chat.mural.android` is the permanent Play package. Each configured Play currency has an explicit exponent from 0 to 3. Catalog currency names use lowercase ISO-style three-letter identifiers.
+`chat.fleunce.android` is the permanent Play package. Each configured Play currency has an explicit exponent from 0 to 3. Catalog currency names use lowercase ISO-style three-letter identifiers.
 
 The active catalog contains `{ "version": 2, "products": [...] }`. It has at most 100 canonical `AIValueProduct` objects and no default price. Generate each product with `makeAIValueProduct` from `src/ai-value-purchases.ts`; do not manually calculate or insert the derived fields. Each product has exactly these fields:
 

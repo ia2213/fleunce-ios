@@ -1,14 +1,14 @@
 # Why paid minutes are estimates
 
-Mural's approved pricing formula uses exact AI cost, a 15% Mural service fee, and separately quoted payment costs and buffer. Purchased balances fund actual provider charges; the app shows estimated conversation minutes. A purchase does not guarantee a fixed duration. The $5.99 offer was not approved.
+Fleunce's approved pricing formula uses exact AI cost, a 15% Fleunce service fee, and separately quoted payment costs and buffer. Purchased balances fund actual provider charges; the app shows estimated conversation minutes. A purchase does not guarantee a fixed duration. The $5.99 offer was not approved.
 
-Voice has a duration-based cost. Meanings, corrections, assessments and topic searches add usage that varies between conversations. Under exact-usage pricing, a currency balance allows Mural to charge for actual provider usage while keeping unused value available for later conversations. Purchased value adds to the existing balance; it does not replace remaining free time. Free and gifted minutes remain duration entitlements and are spent before paid value.
+Voice has a duration-based cost. Meanings, corrections, assessments and topic searches add usage that varies between conversations. Under exact-usage pricing, a currency balance allows Fleunce to charge for actual provider usage while keeping unused value available for later conversations. Purchased value adds to the existing balance; it does not replace remaining free time. Free and gifted minutes remain duration entitlements and are spent before paid value.
 
 ## Fee calculation
 
-The quote preserves the amount allocated to AI usage. Mural's service fee is a percentage of that amount. Payment costs are calculated on the full amount collected, because a processor's percentage also applies to the fees in the payment. Any payment buffer is shown separately from the estimated processing charge.
+The quote preserves the amount allocated to AI usage. Fleunce's service fee is a percentage of that amount. Payment costs are calculated on the full amount collected, because a processor's percentage also applies to the fees in the payment. Any payment buffer is shown separately from the estimated processing charge.
 
-For example, a hypothetical $2.00 AI allocation with the 15% service fee leaves $2.00 for AI and $0.30 for Mural before payment costs. No live processor rate or checkout total is implied by this example. Channel, currency, regional fees and taxes need verification before a purchasable offer is created.
+For example, a hypothetical $2.00 AI allocation with the 15% service fee leaves $2.00 for AI and $0.30 for Fleunce before payment costs. No live processor rate or checkout total is implied by this example. Channel, currency, regional fees and taxes need verification before a purchasable offer is created.
 
 The service percentage lives in the database, initially at 1,500 basis points. Operator changes are versioned and audited. The public API can read this policy but cannot change it. A fulfilled order must retain its original quote, AI value, fees, currency and policy version; future fee changes must not rewrite an existing purchase.
 

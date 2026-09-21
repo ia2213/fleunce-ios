@@ -13,7 +13,7 @@ export async function migrate(db: Database): Promise<void> {
   const sourceDirectory = fileURLToPath(new URL('../migrations/', import.meta.url));
   const path = await readdir(sourceDirectory).then(() => sourceDirectory).catch(() => directory);
   await transaction(db, async sql => {
-    await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-migrations'))");
+    await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-migrations'))");
     await sql.query('CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())');
     for (const file of (await readdir(path)).filter(name => name.endsWith('.sql')).sort()) {
       if ((await sql.query('SELECT name FROM schema_migrations WHERE name=$1', [file])).rowCount) continue;
@@ -25,7 +25,7 @@ export async function migrate(db: Database): Promise<void> {
   // DDL transaction releases its ACCESS EXCLUSIVE locks. Retry this phase even
   // when all migration files were committed by an interrupted earlier run.
   await transaction(db, async sql => {
-    await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-migrations'))");
+    await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-migrations'))");
     for (const [table, name] of postCommitConstraints) {
       const constraint = (await sql.query(`SELECT c.convalidated FROM pg_constraint c
         JOIN pg_class t ON t.oid=c.conrelid JOIN pg_namespace n ON n.oid=t.relnamespace
@@ -39,7 +39,7 @@ export async function migrate(db: Database): Promise<void> {
 }
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const db = connectDatabase(process.env.DATABASE_URL ?? '');
-  try { await migrate(db); console.info('Mural schema ready.'); }
-  catch { console.error('Mural migration failed. Check database configuration.'); process.exitCode = 1; }
+  try { await migrate(db); console.info('Fleunce schema ready.'); }
+  catch { console.error('Fleunce migration failed. Check database configuration.'); process.exitCode = 1; }
   finally { await db.end(); }
 }

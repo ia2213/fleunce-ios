@@ -4,12 +4,12 @@ This is the historical v4 packaging record. The later [Play submission record](e
 
 Version 4 adds an account-deletion support dialog with email, copy-address and web options. It retains the free-trial and personal-key experience. Paid checkout is disabled, with its environment set to `test` in both packaged builds.
 
-The candidate was built from clean commit `cd75bdb23ee1ed5d4318ff084d7400b35306120a`. Both files use `chat.mural.android`, version 0.1 (code 4), minimum API 26 and target API 36. The API origin is `https://api.mural.chat`; the Google client ID is public configuration. No provider key or account credential is bundled.
+The candidate was built from clean commit `cd75bdb23ee1ed5d4318ff084d7400b35306120a`. Both files use `chat.fleunce.android`, version 0.1 (code 4), minimum API 26 and target API 36. The API origin is `https://api.fleunce.chat`; the Google client ID is public configuration. No provider key or account credential is bundled.
 
 | File in `Hej/deliverables` | Build | Bytes | SHA-256 |
 | --- | --- | ---: | --- |
-| `Mural-Android-preview-2026-09-14-v4.apk` | Installable debug preview | 63,496,043 | `4f0b5eb731c6bb9508a853d3d46976916ba0bf244830161facb68bbcb6d18373` |
-| `Mural-Android-release-2026-09-14-v4.aab` | Upload-key-signed release bundle | 33,050,159 | `8e408404ac2c9cf397eeceac0e0d71b245b8d24884169df2b424729bc62a8946` |
+| `Fleunce-Android-preview-2026-09-14-v4.apk` | Installable debug preview | 63,496,043 | `4f0b5eb731c6bb9508a853d3d46976916ba0bf244830161facb68bbcb6d18373` |
+| `Fleunce-Android-release-2026-09-14-v4.aab` | Upload-key-signed release bundle | 33,050,159 | `8e408404ac2c9cf397eeceac0e0d71b245b8d24884169df2b424729bc62a8946` |
 
 The final build passed **257 JVM tests**, **49 isolated UI/device tests** and **21 release-validator tests**, with no failures or skips. Release lint reports zero errors and 44 warnings. The interface suite ran in temporary emulator user 13; the original user and display settings were restored, preserving personal app data.
 

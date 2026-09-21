@@ -1,17 +1,17 @@
-# Mural
+# Fleunce
 
 **The language app you eventually delete.**
 
 <p align="center">
-  <img src="marketing/screenshots/iphone-17-spanish/01-hola.png" width="24%" alt="Mural greeting in Spanish with voice controls" />
+  <img src="marketing/screenshots/iphone-17-spanish/01-hola.png" width="24%" alt="Fleunce greeting in Spanish with voice controls" />
   <img src="marketing/screenshots/iphone-17-spanish/02-conversacion.png" width="24%" alt="Spanish café conversation with English meaning subtitles" />
   <img src="marketing/screenshots/iphone-17-spanish/03-temas.png" width="24%" alt="Conversation themes for learning Spanish" />
   <img src="marketing/screenshots/iphone-17-spanish/04-palabras.png" width="24%" alt="Spanish vocabulary with three levels of recall strength" />
 </p>
 
-Mural is a native iPhone and Android app for learning through conversation. Speak to a warm, animated orb, follow the meaning when you need it, and practise words again in later conversations. Mural adjusts the challenge from the evidence in your replies.
+Fleunce is a native iPhone and Android app for learning through conversation. Speak to a warm, animated orb, follow the meaning when you need it, and practise words again in later conversations. Fleunce adjusts the challenge from the evidence in your replies.
 
-Built with SwiftUI and Liquid Glass on iPhone, and Jetpack Compose on Android. Learning records stay on your device. This version connects directly to OpenAI using your own API key. It needs an internet connection, but no Mural account or running Mac.
+Built with SwiftUI and Liquid Glass on iPhone, and Jetpack Compose on Android. Learning records stay on your device. This version connects directly to OpenAI using your own API key. It needs an internet connection, but no Fleunce account or running Mac.
 
 ## Android
 
@@ -30,10 +30,10 @@ You need a Mac with Xcode 26 or later, an iPhone running iOS 26.1 or later, an A
 
 ### Install with a local AI agent
 
-If Codex or another coding agent has access to your Mac's files and terminal, paste the prompt below. The agent can clone, build and install Mural. You handle Apple Account sign-in and team selection in Xcode, device trust and Developer Mode prompts, and API-key entry inside the app. The [iPhone installation guide](docs/run-on-iphone.md) covers each step.
+If Codex or another coding agent has access to your Mac's files and terminal, paste the prompt below. The agent can clone, build and install Fleunce. You handle Apple Account sign-in and team selection in Xcode, device trust and Developer Mode prompts, and API-key entry inside the app. The [iPhone installation guide](docs/run-on-iphone.md) covers each step.
 
 ```text
-Help me build and install Mural on my iPhone from https://github.com/Chuloo/mural.
+Help me build and install Fleunce on my iPhone from https://github.com/Chuloo/fleunce.
 
 Clone the repository into a new local folder, or use this checkout if it is
 already open. Read README.md, docs/run-on-iphone.md and docs/build-and-test.md.
@@ -42,11 +42,11 @@ run the offline core tests, and build the iOS Simulator target.
 
 Guide me through adding my Apple Account and choosing my signing team in
 Xcode. For a first installation, help me choose a unique bundle identifier if
-needed. Preserve the existing team and identifier when updating Mural, and
+needed. Preserve the existing team and identifier when updating Fleunce, and
 do not uninstall it or erase its learning data.
 
 Detect my connected iPhone, build with the configured signing team, install
-Mural and launch it. Tell me when I need to unlock the phone, trust this Mac
+Fleunce and launch it. Tell me when I need to unlock the phone, trust this Mac
 or the developer profile, enable Developer Mode, or approve a system prompt.
 
 I will choose my learning and subtitle languages, then enter my own OpenAI
@@ -62,14 +62,14 @@ I still need to do on the phone. I will start the first live conversation.
 
 Updating an earlier checkout? The iPhone project now lives in `apps/ios/`. Before opening it, follow the [local-settings migration steps](docs/run-on-iphone.md#update-an-earlier-checkout) to preserve your signing team, account configuration and existing app identity.
 
-1. Clone [Chuloo/mural](https://github.com/Chuloo/mural), or download its ZIP. Open `apps/ios/Mural.xcodeproj`.
+1. Clone [Chuloo/fleunce](https://github.com/Chuloo/fleunce), or download its ZIP. Open `apps/ios/Fleunce.xcodeproj`.
 2. In Xcode, open **Settings → Accounts** and add your Apple Account.
-3. Select the **Mural** target, open **Signing & Capabilities**, enable automatic signing, and choose your team. For your own fork, replace the bundle identifier with a unique value such as `com.yourname.mural`. Keep that value stable for later updates.
+3. Select the **Fleunce** target, open **Signing & Capabilities**, enable automatic signing, and choose your team. For your own fork, replace the bundle identifier with a unique value such as `com.yourname.fleunce`. Keep that value stable for later updates.
 4. Connect and unlock your iPhone. Trust the Mac if prompted. Turn on **Settings → Privacy & Security → Developer Mode** on the phone, restart, and confirm the setting.
-5. Select **Mural** as the scheme and your iPhone as the destination, then click **Run**. If iOS asks you to trust the developer, do so in **Settings → General → VPN & Device Management**.
+5. Select **Fleunce** as the scheme and your iPhone as the destination, then click **Run**. If iOS asks you to trust the developer, do so in **Settings → General → VPN & Device Management**.
 6. Choose your learning and subtitle languages in the welcome screens. In **Settings → Advanced → Use your own API key**, save your own OpenAI project key. Start a conversation and allow microphone access.
 
-You should hear Mural greet you in your chosen language. You can now disconnect your phone from the Mac and use Wi-Fi or cellular.
+You should hear Fleunce greet you in your chosen language. You can now disconnect your phone from the Mac and use Wi-Fi or cellular.
 
 A free Personal Team can run the app on your own phone; TestFlight and App Store distribution require Apple Developer Program membership. Free provisioning profiles expire after seven days. Refresh by running the same project again, preserving the team and bundle identifier. Export a learning backup before changing either or switching phones. See the [detailed iPhone guide](docs/run-on-iphone.md) for common setup problems. [Apple membership guidance](https://developer.apple.com/support/compare-memberships/)
 
@@ -89,9 +89,9 @@ On iPhone, Mandarin includes optional pinyin in Talk, transcripts and word detai
 
 ## Privacy and API costs
 
-Mural stores conversations, vocabulary and preferences on your device. There is no Mural cloud sync, analytics SDK or advertising. The optional iPhone account feature stores signup data on the account service; conversations and vocabulary stay local. Your API key is stored in the device’s Keychain, excluded from learning exports, and sent only to OpenAI.
+Fleunce stores conversations, vocabulary and preferences on your device. There is no Fleunce cloud sync, analytics SDK or advertising. The optional iPhone account feature stores signup data on the account service; conversations and vocabulary stay local. Your API key is stored in the device’s Keychain, excluded from learning exports, and sent only to OpenAI.
 
-During practice, audio, selected conversation text, learning context and requested searches go to OpenAI. Mural does not save raw audio. API requests set `store: false` where supported, but that does not disable all provider retention; OpenAI’s abuse-monitoring rules and your project’s settings still apply. [OpenAI data controls](https://developers.openai.com/api/docs/guides/your-data)
+During practice, audio, selected conversation text, learning context and requested searches go to OpenAI. Fleunce does not save raw audio. API requests set `store: false` where supported, but that does not disable all provider retention; OpenAI’s abuse-monitoring rules and your project’s settings still apply. [OpenAI data controls](https://developers.openai.com/api/docs/guides/your-data)
 
 OpenAI bills your project for voice, text and search. The app’s usage display is an estimate, and its conversation time limit is not a billing cap. Check your OpenAI project’s usage and spending settings.
 
@@ -101,7 +101,7 @@ Hosted free conversations and minute purchases are **not active**. Optional Goog
 
 A public TestFlight link and App Store listing are not yet available. [Release preparation](release/README.md) records the outstanding requirements.
 
-The [Mural website](https://mural.chat) lives in the separate [Chuloo/mural-website repository](https://github.com/Chuloo/mural-website).
+The [Fleunce website](https://fleunce.chat) lives in the separate [Chuloo/fleunce-website repository](https://github.com/Chuloo/fleunce-website).
 
 ## Build and test
 
@@ -109,7 +109,7 @@ From the repository root:
 
 ```sh
 swift test --package-path apps/ios
-xcodebuild -project apps/ios/Mural.xcodeproj -scheme Mural \
+xcodebuild -project apps/ios/Fleunce.xcodeproj -scheme Fleunce \
   -destination 'generic/platform=iOS Simulator' \
   -derivedDataPath .build/DerivedData \
   CODE_SIGNING_ALLOWED=NO ARCHS=arm64 ONLY_ACTIVE_ARCH=YES build
@@ -142,4 +142,4 @@ Read [how the language architecture works](docs/language-architecture.md) and [h
 
 The native WebRTC package is pinned to [stasel/WebRTC 152.0.0](https://github.com/stasel/WebRTC/tree/152.0.0). The app bundles [third-party notices](apps/ios/App/ThirdPartyNotices.txt) and the SDK’s privacy manifest. Review upstream notices when changing the dependency.
 
-Mural is released under the [MIT License](LICENSE). Third-party components retain their own licenses. The Mural name and logo identify the original project; the software license does not grant trademark rights.
+Fleunce is released under the [MIT License](LICENSE). Third-party components retain their own licenses. The Fleunce name and logo identify the original project; the software license does not grant trademark rights.

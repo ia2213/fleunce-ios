@@ -1,9 +1,9 @@
 {
-  "filename": "Mural-Android-preview-2026-09-14-v4.apk",
+  "filename": "Fleunce-Android-preview-2026-09-14-v4.apk",
   "bytes": 63496043,
   "sha256": "4f0b5eb731c6bb9508a853d3d46976916ba0bf244830161facb68bbcb6d18373",
   "manifest": {
-    "package": "chat.mural.android",
+    "package": "chat.fleunce.android",
     "versionCode": 4,
     "versionName": "0.1",
     "minSdk": 26,
@@ -14,7 +14,7 @@
     "usesCleartextTraffic": false
   },
   "buildType": "debug",
-  "apiOrigin": "https://api.mural.chat",
+  "apiOrigin": "https://api.fleunce.chat",
   "minutePurchasesEnabled": false,
   "minutePurchaseEnvironment": "test",
   "signatureVerified": true,
@@ -34,7 +34,7 @@
     "scope": "Known credential files and high-confidence secret patterns only; not proof that every possible credential format is absent."
   },
   "requiredNotices": {
-    "Mural-LICENSE.txt": true,
+    "Fleunce-LICENSE.txt": true,
     "Apache-2.0.txt": true,
     "Nunito-OFL.txt": true,
     "THIRD-PARTY-NOTICES.txt": true,

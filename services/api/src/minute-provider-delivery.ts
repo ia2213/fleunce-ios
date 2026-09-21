@@ -8,7 +8,7 @@ export const providerHash = (value: string) => createHash('sha256').update(value
 export const orderIDPattern = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const referencePattern = /^[\x21-\x7e]{1,4096}$/;
 function aad(orderID: string, scope: PurchaseScope, referenceHash: string): Buffer {
-  return Buffer.from(JSON.stringify(['mural-minute-receipt-v1', orderID.toLowerCase(), scope.provider, scope.environment, scope.merchant, referenceHash]));
+  return Buffer.from(JSON.stringify(['fleunce-minute-receipt-v1', orderID.toLowerCase(), scope.provider, scope.environment, scope.merchant, referenceHash]));
 }
 function scopeMatches(row: any, scope: PurchaseScope) {
   return row.provider === scope.provider && row.environment === scope.environment && row.merchant === scope.merchant;

@@ -1,4 +1,4 @@
-# How to build and test Mural
+# How to build and test Fleunce
 
 Run commands from the repository root unless a step changes directory. The iPhone project and Swift package live in `apps/ios/`. Core tests need Swift 6. Native builds need Xcode 26 or later.
 
@@ -6,7 +6,7 @@ Run commands from the repository root unless a step changes directory. The iPhon
 
 ```sh
 swift test --package-path apps/ios
-xcodebuild -project apps/ios/Mural.xcodeproj -scheme Mural \
+xcodebuild -project apps/ios/Fleunce.xcodeproj -scheme Fleunce \
   -destination 'generic/platform=iOS Simulator' \
   -derivedDataPath .build/DerivedData \
   CODE_SIGNING_ALLOWED=NO ARCHS=arm64 ONLY_ACTIVE_ARCH=YES build
@@ -15,7 +15,7 @@ xcodebuild -project apps/ios/Mural.xcodeproj -scheme Mural \
 Create an iPhone 17 simulator in Xcode’s **Devices and Simulators** window. If you name it `iPhone 17`, run UI tests with:
 
 ```sh
-xcodebuild -project apps/ios/Mural.xcodeproj -scheme Mural \
+xcodebuild -project apps/ios/Fleunce.xcodeproj -scheme Fleunce \
   -destination 'platform=iOS Simulator,name=iPhone 17,arch=arm64' \
   -derivedDataPath .build/DerivedData \
   CODE_SIGNING_ALLOWED=NO ARCHS=arm64 ONLY_ACTIVE_ARCH=YES \
@@ -38,7 +38,7 @@ python3 scripts/export_android_content.py --check
 python3 scripts/check_cross_platform.py
 ```
 
-The last two catch generated language content and a Swift core change without its Kotlin counterpart, respectively. See [how Mural keeps languages independent](language-architecture.md) for what each contract covers.
+The last two catch generated language content and a Swift core change without its Kotlin counterpart, respectively. See [how Fleunce keeps languages independent](language-architecture.md) for what each contract covers.
 
 ## Preview without saving learning data
 
@@ -68,6 +68,6 @@ Record the build, checks and remaining limitations in `verification/validation.m
 
 ## Record a scripted Spanish demo
 
-In a Debug build, launch with `--verify-audio --record-spanish-demo`. This uses the saved API key and temporary learning data. After a 30-second setup pause, it starts a café conversation with English meanings, mutes the microphone, and sends two scripted typed replies. Mural’s responses and speech come from the live APIs. The second reply contains a grammar mistake so the conversation can demonstrate a correction.
+In a Debug build, launch with `--verify-audio --record-spanish-demo`. This uses the saved API key and temporary learning data. After a 30-second setup pause, it starts a café conversation with English meanings, mutes the microphone, and sends two scripted typed replies. Fleunce’s responses and speech come from the live APIs. The second reply contains a grammar mistake so the conversation can demonstrate a correction.
 
-This is a typed-input demo with live voice output. It does not verify speech recognition or a human conversation. The helper ends the session and writes a content-free `demo-verification.json` status in the app container. Actual recording is separate; select the Mural screen and its app audio in your recorder. The helper has been compiled on-device; a completed recording and playback review remain required.
+This is a typed-input demo with live voice output. It does not verify speech recognition or a human conversation. The helper ends the session and writes a content-free `demo-verification.json` status in the app container. Actual recording is separate; select the Fleunce screen and its app audio in your recorder. The helper has been compiled on-device; a completed recording and playback review remain required.

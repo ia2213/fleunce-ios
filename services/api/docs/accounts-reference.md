@@ -1,6 +1,6 @@
 # Account API reference
 
-Optional accounts use Google or Apple identity tokens to issue a Mural session. Account creation does not grant credits, a trial, or hosted conversations. Learning data and the user's OpenAI key remain on the device. See [Enable accounts](enable-accounts.md) for deployment steps.
+Optional accounts use Google or Apple identity tokens to issue a Fleunce session. Account creation does not grant credits, a trial, or hosted conversations. Learning data and the user's OpenAI key remain on the device. See [Enable accounts](enable-accounts.md) for deployment steps.
 
 ## Routes and payloads
 
@@ -12,7 +12,7 @@ All responses use `Cache-Control: no-store`. Native requests use JSON and HTTPS.
 | `POST /v1/auth/challenge` | `{}`; 1,024-byte limit | `challengeID` UUID, `nonce` random hex string, `expiresInSeconds: 300`. |
 | `POST /v1/auth/exchange` | `{ "provider": "google", "idToken": "…", "challengeID": "…" }`; 20,000-byte limit | `accountID` UUID, random `accessToken`, `expiresInSeconds: 86400`. Provider can also be `apple` when enabled. |
 | `GET /v1/account` | `Authorization: Bearer <accessToken>` | `accountID`, nullable `email`, `providers` array, `createdAt` in UTC with milliseconds. |
-| `POST /v1/auth/sign-out` | Bearer and `{}`; 1,024-byte limit | `{ "signedOut": true }`; revokes every Mural session for this account. |
+| `POST /v1/auth/sign-out` | Bearer and `{}`; 1,024-byte limit | `{ "signedOut": true }`; revokes every Fleunce session for this account. |
 | `DELETE /v1/account` | Bearer and `{}` for Google; Apple requires `{ "appleAuthorizationCode": "…" }`; 5,120-byte limit | `{ "deleted": true, "retained": null }` for an empty signup account. Resolved financial history instead returns a retention explanation. |
 | `GET /v1/wallet` | Bearer | USD `balanceNanoUSD`, `reservedNanoUSD`, `availableNanoUSD` as integer strings. Account-only deployment can leave this route gated. |
 
@@ -22,7 +22,7 @@ All responses use `Cache-Control: no-store`. Native requests use JSON and HTTPS.
 
 Unknown body fields are rejected. ID tokens are limited to 16,384 characters; Apple deletion codes to 4,096. A profile's account ID comes from the authenticated session. The API never returns identity-provider subjects or tokens in the profile.
 
-Send the challenge's **raw nonce** in the provider's authorization request. The backend compares SHA-256 of the signed token's nonce with the stored hash. Google installed-app authorization also uses PKCE and an independently checked state in the native client. Mural verifies RS256 signatures against each provider's fixed JWKS endpoint, issuer, audience, expiry, issued-at age (at most ten minutes), subject and nonce. For iOS, Google's authorized party, when present, must match the iOS client ID. Android tokens use `GOOGLE_ANDROID_SERVER_CLIENT_ID` as audience and must name an explicitly allowlisted Android client in `azp`. The server audience alone does not authorize an Android app. The provider's subject identifies the account; equal emails never merge accounts. Google recommends verifying these token claims and using the stable subject as the user identifier. [Google iOS backend authentication](https://developers.google.com/identity/sign-in/ios/backend-auth)
+Send the challenge's **raw nonce** in the provider's authorization request. The backend compares SHA-256 of the signed token's nonce with the stored hash. Google installed-app authorization also uses PKCE and an independently checked state in the native client. Fleunce verifies RS256 signatures against each provider's fixed JWKS endpoint, issuer, audience, expiry, issued-at age (at most ten minutes), subject and nonce. For iOS, Google's authorized party, when present, must match the iOS client ID. Android tokens use `GOOGLE_ANDROID_SERVER_CLIENT_ID` as audience and must name an explicitly allowlisted Android client in `azp`. The server audience alone does not authorize an Android app. The provider's subject identifies the account; equal emails never merge accounts. Google recommends verifying these token claims and using the stable subject as the user identifier. [Google iOS backend authentication](https://developers.google.com/identity/sign-in/ios/backend-auth)
 
 Apple deletion exchanges a fresh authorization code, checks the returned identity against the locked account subject, and revokes the returned refresh token. The code and returned tokens exist only in memory. A failed exchange or revocation leaves local account records intact. Apple requires an in-app deletion path and revocation when an app uses Sign in with Apple. [Apple account deletion guidance](https://developer.apple.com/support/offering-account-deletion-in-your-app/)
 
@@ -34,7 +34,7 @@ Errors have the form `{ "error": { "code": "…" } }`, with no reflected request
 | --- | --- |
 | `400 invalid_request` / `invalid_json` | Malformed or unsupported input. |
 | `401 invalid_challenge` / `invalid_identity_token` | Expired, replayed or invalid authorization. Start a new sign-in. |
-| `401 sign_in_required` | Missing, expired, revoked or invalid Mural bearer. |
+| `401 sign_in_required` | Missing, expired, revoked or invalid Fleunce bearer. |
 | `409 unresolved_billing` | Pending checkout, nonzero balance or reserved value prevents deletion. The account remains intact. |
 | `429 rate_limit` | Hourly admission budget exhausted; `Retry-After: 3600`. |
 | `503 accounts_unavailable` / `accounts_proxy_not_ready` | Disabled account service, missing trusted-proxy configuration, or admission database failure. |
@@ -59,4 +59,4 @@ The network HMAC includes the UTC date and a private key, so the same network ge
 
 Deleting an account with no billing or usage history removes its account, identity, session and wallet rows. If settled financial history exists, the API removes email, identities and sessions and retains the opaque account reference needed by the immutable journal. It refuses deletion while paid value or a pending checkout is unresolved. Payments remain unavailable in the account-only release.
 
-Encrypted backups have their own expiry, so live deletion does not immediately remove every backup copy. Exclude admission-counter data from logical backups and apply retention pruning and subsequent deletion requests before using restored data. Provider revocation outside Mural does not currently invalidate an existing Mural bearer immediately; the bearer expires within 24 hours or is revoked by Mural sign-out/deletion.
+Encrypted backups have their own expiry, so live deletion does not immediately remove every backup copy. Exclude admission-counter data from logical backups and apply retention pruning and subsequent deletion requests before using restored data. Provider revocation outside Fleunce does not currently invalidate an existing Fleunce bearer immediately; the bearer expires within 24 hours or is revoked by Fleunce sign-out/deletion.

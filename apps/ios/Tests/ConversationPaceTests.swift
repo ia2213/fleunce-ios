@@ -1,5 +1,5 @@
 import XCTest
-@testable import MuralCore
+@testable import FleunceCore
 
 final class ConversationPaceTests: XCTestCase {
     private func sample(_ id: String, typed: Bool = false, meaning: Bool = false, level: Int = 4, outcome: Outcome = .success, evidence: EvidenceKind = .independent, language: String = "nb") -> (Assessment, Passage) {

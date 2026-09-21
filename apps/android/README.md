@@ -1,4 +1,4 @@
-# Mural for Android
+# Fleunce for Android
 
 Native Kotlin and Jetpack Compose client for Android 8.0 or later. It offers voice and written conversation, eight learning languages, 24 themes, meanings, vocabulary and local history, using the owner's OpenAI API key. Mandarin captions link each word and show optional pinyin on Android 10 or later; Android 8 and 9 keep word links without pinyin.
 

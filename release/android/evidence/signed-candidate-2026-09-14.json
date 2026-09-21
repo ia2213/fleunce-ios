@@ -3,7 +3,7 @@
   "recordedAt": "2026-09-13T22:42:43.414277+00:00",
   "status": "Signed candidate prepared for internal Play testing; not uploaded by this audit.",
   "artifact": {
-    "filename": "Mural-Android-release-2026-09-14.aab",
+    "filename": "Fleunce-Android-release-2026-09-14.aab",
     "location": "Hej/deliverables (outside the repository)",
     "bytes": 33029850,
     "sha256": "cb327af6edbecbf3b2212cdfc12d978c763a6517a5505bccddb35a5f82d50d20",
@@ -17,21 +17,21 @@
     "sourceManifest": "release/private/android-final-2026-09-14/build-snapshot.json",
     "sourceUnchangedAtVerification": true,
     "changedFilesSinceFullUISuite": [
-      "apps/android/app/src/main/java/chat/mural/core/AIValuePurchase.kt",
-      "apps/android/app/src/main/java/chat/mural/core/MinutePurchases.kt",
-      "apps/android/app/src/main/java/chat/mural/network/MinuteCommerceClient.kt",
-      "apps/android/app/src/test/java/chat/mural/network/MinuteCommerceClientTest.kt"
+      "apps/android/app/src/main/java/chat/fleunce/core/AIValuePurchase.kt",
+      "apps/android/app/src/main/java/chat/fleunce/core/MinutePurchases.kt",
+      "apps/android/app/src/main/java/chat/fleunce/network/MinuteCommerceClient.kt",
+      "apps/android/app/src/test/java/chat/fleunce/network/MinuteCommerceClientTest.kt"
     ]
   },
   "buildConfiguration": {
-    "package": "chat.mural.android",
+    "package": "chat.fleunce.android",
     "versionCode": 1,
     "versionName": "0.1",
     "buildType": "release",
     "debuggable": false,
     "minSdk": 26,
     "targetSdk": 36,
-    "apiOrigin": "https://api.mural.chat",
+    "apiOrigin": "https://api.fleunce.chat",
     "googleServerClientID": "1034240936303-v182map9ntca934qc10i2ql3366onue7.apps.googleusercontent.com",
     "minutePurchasesEnabled": false,
     "minutePurchaseEnvironment": "test",
@@ -41,7 +41,7 @@
     "allPayloadSignaturesValid": true,
     "payloadEntriesVerified": 607,
     "certificateSHA256": "e45e9cf5ed9d6164ba58ea5ad7dfc267cb822c7aeb8c46a35d39a3c8db20c65c",
-    "certificateSubject": "CN=Mural Upload, O=Hackmamba Inc., C=US",
+    "certificateSubject": "CN=Fleunce Upload, O=Hackmamba Inc., C=US",
     "algorithm": "SHA256withRSA",
     "keySizeBits": 3072,
     "jarsignerVerified": true,

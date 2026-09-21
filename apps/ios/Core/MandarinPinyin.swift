@@ -1,6 +1,6 @@
 import Foundation
 
-// Builds on richardguerre's Mandarin contribution in Chuloo/mural#4.
+// Builds on richardguerre's Mandarin contribution in Chuloo/fleunce#4.
 public struct MandarinPronunciationToken: Equatable, Sendable {
     public let text: String
     public let pinyin: String?

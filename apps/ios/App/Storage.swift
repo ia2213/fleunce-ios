@@ -2,12 +2,12 @@ import Foundation
 import SwiftData
 import Security
 import Observation
-import MuralCore
+import FleunceCore
 
 @Model final class StoredArchive {
     @Attribute(.unique) var key: String
     var payload: Data
-    init(payload: Data) { key = "mural-v1"; self.payload = payload }
+    init(payload: Data) { key = "fleunce-v1"; self.payload = payload }
 }
 
 @MainActor @Observable final class LearningStore {
@@ -19,7 +19,7 @@ import MuralCore
     private let migrationBackupURL: URL?
     init(inMemory: Bool = false) throws {
         migrationBackupURL = inMemory ? nil : URL.applicationSupportDirectory
-            .appendingPathComponent("Mural", isDirectory: true)
+            .appendingPathComponent("Fleunce", isDirectory: true)
             .appendingPathComponent("before-language-modules.json")
         container = try ModelContainer(for: StoredArchive.self, configurations: ModelConfiguration(isStoredInMemoryOnly: inMemory, cloudKitDatabase: .none))
         let context = container.mainContext
@@ -73,7 +73,7 @@ import MuralCore
             do { try FileManager.default.removeItem(at: migrationBackupURL) }
             catch CocoaError.fileNoSuchFile { /* Most installations have no migration backup. */ }
             catch {
-                self.error = "Mural couldn’t delete the older learning backup. Your conversations are still here. Please try again."
+                self.error = "Fleunce couldn’t delete the older learning backup. Your conversations are still here. Please try again."
                 return
             }
         }
@@ -93,11 +93,11 @@ import MuralCore
             error = nil
             syncWidgetData()
         } catch {
-            self.error = "Mural couldn’t save your progress. Please export a backup and try again."
+            self.error = "Fleunce couldn’t save your progress. Please export a backup and try again."
         }
     }
     func syncWidgetData() {
-        let defaults = UserDefaults(suiteName: "group.no.william.mural") ?? UserDefaults.standard
+        let defaults = UserDefaults(suiteName: "group.no.william.fleunce") ?? UserDefaults.standard
         defaults.set(language.name, forKey: "widget_language")
         defaults.set(learner.words.count, forKey: "widget_word_count")
         defaults.set(learningSessions.count, forKey: "widget_streak")
@@ -109,7 +109,7 @@ import MuralCore
 }
 
 enum CredentialStore {
-    private static let service = "no.william.mural.gemini"
+    private static let service = "no.william.fleunce.gemini"
     private static var query: [String: Any] { [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: "owner", kSecAttrSynchronizable as String: false] }
     static func read() -> String? {
         var q = query; q[kSecReturnData as String] = true; q[kSecMatchLimit as String] = kSecMatchLimitOne

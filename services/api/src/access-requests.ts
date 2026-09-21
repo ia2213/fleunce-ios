@@ -64,7 +64,7 @@ function canonicalIP(value: string): string {
 }
 
 export function trustedClientNetwork(headers: IncomingHttpHeaders, remoteAddress: string, proxyToken: string, allowLoopback = false): string {
-  const supplied = headers['x-mural-proxy-token'], address = headers['x-mural-client-ip'];
+  const supplied = headers['x-fleunce-proxy-token'], address = headers['x-fleunce-client-ip'];
   if (typeof supplied === 'string' && typeof address === 'string') {
     const actual = Buffer.from(supplied), expected = Buffer.from(proxyToken);
     if (actual.length === expected.length && timingSafeEqual(actual, expected)) return canonicalIP(address);
@@ -76,7 +76,7 @@ export function trustedClientNetwork(headers: IncomingHttpHeaders, remoteAddress
 export class AccessRequests {
   constructor(readonly db: Database, readonly config: AccessRequestConfig) {}
   allowedOrigin(origin: unknown): string {
-    if (typeof origin !== 'string' || (origin !== 'https://mural.chat' && origin !== this.config.localOrigin)) throw new ServiceError('origin_not_allowed', 403);
+    if (typeof origin !== 'string' || (origin !== 'https://fleunce.chat' && origin !== this.config.localOrigin)) throw new ServiceError('origin_not_allowed', 403);
     return origin;
   }
   clientAddress(headers: IncomingHttpHeaders, remoteAddress: string, origin: string): string {

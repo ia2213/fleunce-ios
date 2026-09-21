@@ -7,15 +7,15 @@
   },
   "checks": {
     "branding": {
-      "iosIconSource": "apps/ios/App/Assets.xcassets/AppIcon.appiconset/MuralIcon.png",
-      "androidIconSource": "apps/android/app/src/main/res/drawable-nodpi/mural_icon.png",
+      "iosIconSource": "apps/ios/App/Assets.xcassets/AppIcon.appiconset/FleunceIcon.png",
+      "androidIconSource": "apps/android/app/src/main/res/drawable-nodpi/fleunce_icon.png",
       "identicalIconSHA256": "96503dcbfb81efbdd298e7a3d0132c4ed497b7f36ae632c5462a3039223e9fd1",
       "androidAdaptiveIconSHA256": "1e6a55fd8fb581dd8f1e3a03768c5b6f394af49ddf65fa098992983abaeab795",
       "androidForegroundSHA256": "75c993e3d9c9e9ace7ad029b726d8f3dcb28e71dbea8475b4a38a072715198ee",
       "androidForegroundInset": "10%",
       "designSources": {
         "apps/ios/App/Design.swift": "ff2317f4f1e9c4d1562c008d18232277137d0a2a2c0298683b4e6ccfe54da706",
-        "apps/android/app/src/main/java/chat/mural/ui/Design.kt": "c3958902e974622f3583a68e085fa6b3fdab38a755a4782333c8fb51692877b4"
+        "apps/android/app/src/main/java/chat/fleunce/ui/Design.kt": "c3958902e974622f3583a68e085fa6b3fdab38a755a4782333c8fb51692877b4"
       },
       "visualReviewRequired": "Launcher masks and scale, in-app wordmark and store artwork must match the current iOS reference."
     },
@@ -291,14 +291,14 @@
         "scope": "Known credential files and high-confidence secret patterns only; not proof that every possible credential format is absent."
       },
       "jarSignatureEntries": [
-        "META-INF/MURAL-UP.RSA",
-        "META-INF/MURAL-UP.SF"
+        "META-INF/FLEUNCE-UP.RSA",
+        "META-INF/FLEUNCE-UP.SF"
       ]
     },
     "bundletool": {
       "alignment": "PAGE_ALIGNMENT_16K",
       "manifest": {
-        "packageName": "chat.mural.android",
+        "packageName": "chat.fleunce.android",
         "versionCode": 2,
         "versionName": "0.1",
         "minSdk": 26,
@@ -310,13 +310,13 @@
           "android.permission.RECORD_AUDIO",
           "android.permission.USE_BIOMETRIC",
           "android.permission.USE_FINGERPRINT",
-          "chat.mural.android.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+          "chat.fleunce.android.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
           "com.android.vending.BILLING"
         ],
         "exportedComponents": [
           {
             "type": "activity",
-            "name": "chat.mural.MainActivity",
+            "name": "chat.fleunce.MainActivity",
             "permission": null
           },
           {

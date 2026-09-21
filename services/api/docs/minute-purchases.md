@@ -50,7 +50,7 @@ Before enabling purchases:
 Run the focused suite against an isolated database whose name ends in `_test`:
 
 ```sh
-TEST_DATABASE_URL=postgresql://localhost/mural_billing_test npx tsx --test tests/minute-purchases.test.ts
+TEST_DATABASE_URL=postgresql://localhost/fleunce_billing_test npx tsx --test tests/minute-purchases.test.ts
 ```
 
 The tests create and remove their own schema. The restricted-role test also needs permission to create and remove an isolated PostgreSQL role.

@@ -21,4 +21,4 @@ let output = URL(fileURLWithPath: CommandLine.arguments[1])
 let destination = CGImageDestinationCreateWithURL(output as CFURL, UTType.png.identifier as CFString, 1, nil)!
 CGImageDestinationAddImage(destination, pixels.makeImage()!, nil)
 guard CGImageDestinationFinalize(destination) else { fatalError("Could not save app icon") }
-print("Created Mural app icon")
+print("Created Fleunce app icon")

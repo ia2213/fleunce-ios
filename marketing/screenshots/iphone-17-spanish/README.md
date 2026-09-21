@@ -1,4 +1,4 @@
-# Mural screenshots — Spanish
+# Fleunce screenshots — Spanish
 
 Four original PNG captures from the iPhone 17 simulator, iOS 26.4, at 1206 × 2622 pixels. Captured 12 September 2026 with a 09:41 status bar, full signal and full battery. No device frame, resizing or image retouching.
 

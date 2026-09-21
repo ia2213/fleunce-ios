@@ -17,14 +17,14 @@ test('all API failures have references without logging private bodies, query str
       payload: { privateTranscript: 'private-words' } });
     assert.equal(response.statusCode, 503);
     const failure = records.find(record => record.event === 'request_failed')!;
-    assert.match(String(response.headers['x-mural-error-reference']), /^[a-f0-9]{12}$/);
-    assert.equal(failure.reference, response.headers['x-mural-error-reference']);
+    assert.match(String(response.headers['x-fleunce-error-reference']), /^[a-f0-9]{12}$/);
+    assert.equal(failure.reference, response.headers['x-fleunce-error-reference']);
     assert.equal(failure.operation, 'POST /v1/auth/challenge');
     assert.equal(failure.reason, 'accounts_unavailable');
     assert.doesNotMatch(JSON.stringify(records), /private|secret|Bearer/);
     const missing = await app.inject('/private-nonexistent-path?secret=hidden');
     assert.equal(missing.statusCode, 404);
-    assert.match(String(missing.headers['x-mural-error-reference']), /^[a-f0-9]{12}$/);
+    assert.match(String(missing.headers['x-fleunce-error-reference']), /^[a-f0-9]{12}$/);
     assert.equal(records.at(-1)!.operation, 'GET unmatched');
     assert.doesNotMatch(JSON.stringify(records), /private|secret|hidden/);
   } finally { await app.close(); }
@@ -46,9 +46,9 @@ test('parallel requests keep provider events tied to their own response referenc
   try {
     const responses = await Promise.all(['one', 'two'].map(id => app.inject(`/diagnostic-test/${id}`)));
     for (const [index, id] of ['one', 'two'].entries()) {
-      assert.equal(records.find(record => record.operation === id)?.reference, responses[index]!.headers['x-mural-error-reference']);
+      assert.equal(records.find(record => record.operation === id)?.reference, responses[index]!.headers['x-fleunce-error-reference']);
     }
-    assert.notEqual(responses[0]!.headers['x-mural-error-reference'], responses[1]!.headers['x-mural-error-reference']);
+    assert.notEqual(responses[0]!.headers['x-fleunce-error-reference'], responses[1]!.headers['x-fleunce-error-reference']);
   } finally { await app.close(); }
 });
 

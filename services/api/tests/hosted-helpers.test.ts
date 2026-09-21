@@ -319,7 +319,7 @@ integration('helper runtime privileges allow settlement but forbid rewriting bud
   const f = await seed(600_000, true), role = `helper_runtime_${randomUUID().replaceAll('-', '')}`;
   await db!.query(`CREATE ROLE ${role}; GRANT USAGE ON SCHEMA ${schema} TO ${role}`);
   const grants = await readFile(new URL('../operations/hosted-helper-runtime-grants.sql', import.meta.url), 'utf8');
-  await db!.query(grants.replaceAll('mural_runtime', role));
+  await db!.query(grants.replaceAll('fleunce_runtime', role));
   // SELECT FOR UPDATE on an owned voice row requires an UPDATE privilege, already held by the voice runtime.
   await db!.query(`GRANT UPDATE(state,deadline,charged_ms) ON hosted_sessions TO ${role}`);
   const runtimeURL = new URL(databaseURL!); runtimeURL.searchParams.set('options', `-c search_path=${schema} -c role=${role}`);

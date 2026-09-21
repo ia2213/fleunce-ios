@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://mural.chat/contracts/minute-balance-v1.json",
-  "title": "Mural free time and estimated paid balance",
+  "$id": "https://fleunce.chat/contracts/minute-balance-v1.json",
+  "title": "Fleunce free time and estimated paid balance",
   "type": "object",
   "required": [
     "unit",

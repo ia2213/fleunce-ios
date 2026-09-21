@@ -23,7 +23,7 @@ public enum TeachingPolicy {
 '''
 
     def test_identical_prompts_pass(self):
-        kotlin = '''package chat.mural.core
+        kotlin = '''package chat.fleunce.core
 
 object TeachingPolicy {
     fun greeting(language:LanguageModule) = "Begin now in " + language.name + " and wait."
@@ -37,7 +37,7 @@ object TeachingPolicy {
             self.assertEqual(ccp.check_prompts(swift_path, kotlin_path), [])
 
     def test_changed_prompt_word_fails(self):
-        kotlin = '''package chat.mural.core
+        kotlin = '''package chat.fleunce.core
 
 object TeachingPolicy {
     fun greeting(language:LanguageModule) = "Begin right now in " + language.name + " and wait."
@@ -55,7 +55,7 @@ object TeachingPolicy {
             self.assertIn(str(swift_path), failures[0])
 
     def test_prompt_without_kotlin_counterpart_fails(self):
-        kotlin = '''package chat.mural.core
+        kotlin = '''package chat.fleunce.core
 
 object TeachingPolicy {
     fun farewell(language:LanguageModule) = "Goodbye."
@@ -103,7 +103,7 @@ class ConstantsTests(unittest.TestCase):
             '        if fragment.startMS - result[i].endMS <= %d {}\n'
             '    }\n'
             '}\n' % swift_gap)
-        android = root / 'apps/android/app/src/main/java/chat/mural/core'
+        android = root / 'apps/android/app/src/main/java/chat/fleunce/core'
         android.mkdir(parents=True)
         (android / 'Models.kt').write_text(
             'object Transcript {\n'
@@ -131,7 +131,7 @@ class ConstantsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = pathlib.Path(tmp)
             self.write_models(root, 2200, 2200)
-            (root / 'apps/android/app/src/main/java/chat/mural/core/Models.kt').unlink()
+            (root / 'apps/android/app/src/main/java/chat/fleunce/core/Models.kt').unlink()
             failures = ccp.check_constants(root, self.GAP_ONLY)
             self.assertEqual(len(failures), 1)
             self.assertTrue(failures[0].startswith('constants: transcript_gap_ms'), failures)
@@ -240,13 +240,13 @@ class ReportTests(unittest.TestCase):
     def test_failures_name_repository_relative_paths(self):
         root = REPO_ROOT.resolve()
         failure = ccp.format_failure('prompts', 'voice() wording differs between platforms',
-                                     root / 'apps/android/app/src/main/java/chat/mural/core/TeachingPolicy.kt', 4,
+                                     root / 'apps/android/app/src/main/java/chat/fleunce/core/TeachingPolicy.kt', 4,
                                      root / 'apps/ios/Core/TeachingPolicy.swift', 4)
         output = io.StringIO()
         with mock.patch.object(ccp, 'run_checks', return_value=[failure]), contextlib.redirect_stdout(output):
             self.assertEqual(ccp.main(['--root', str(root)]), 1)
         self.assertNotIn(str(root), output.getvalue())
-        self.assertIn('Update apps/android/app/src/main/java/chat/mural/core/TeachingPolicy.kt:4 to match apps/ios/Core/TeachingPolicy.swift:4.', output.getvalue())
+        self.assertIn('Update apps/android/app/src/main/java/chat/fleunce/core/TeachingPolicy.kt:4 to match apps/ios/Core/TeachingPolicy.swift:4.', output.getvalue())
 
 
 if __name__ == '__main__':

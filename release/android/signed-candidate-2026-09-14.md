@@ -1,6 +1,6 @@
 # Signed Android candidate — 14 September 2026
 
-`Mural-Android-release-2026-09-14.aab` is ready for internal Play testing in the sibling `Hej/deliverables` directory. This audit did not upload it. The package is `chat.mural.android`, version 0.1 (code 1), with minimum API 26 and target API 36. Paid checkout remains disabled.
+`Fleunce-Android-release-2026-09-14.aab` is ready for internal Play testing in the sibling `Hej/deliverables` directory. This audit did not upload it. The package is `chat.fleunce.android`, version 0.1 (code 1), with minimum API 26 and target API 36. Paid checkout remains disabled.
 
 - **SHA-256:** `cb327af6edbecbf3b2212cdfc12d978c763a6517a5505bccddb35a5f82d50d20`
 - **Size:** 33,029,850 bytes.

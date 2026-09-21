@@ -1,4 +1,4 @@
-# HANDOFF & MÉMOIRE PROJET : MURAL (Mural-Gemini)
+# HANDOFF & MÉMOIRE PROJET : FLEUNCE (Fleunce-Gemini)
 
 > **Document de reprise automatique / Handoff**  
 > Ce document récapitule l'état complet du projet, l'architecture, les secrets/configs, et les procédures pour reprendre le travail sans repartir de zéro.
@@ -6,11 +6,11 @@
 ---
 
 ## 1. Vue d'ensemble & Dépôt
-- **Nom du projet** : Mural (Mural-Gemini)
-- **Dépôt Git** : `https://github.com/ia2213/mural-gemini.git`
+- **Nom du projet** : Fleunce (Fleunce-Gemini)
+- **Dépôt Git** : `https://github.com/ia2213/fleunce-gemini.git`
 - **Branche principale** : `main`
-- **Dossier local** : `C:/Users/Marc Hopf/mural_project/repo`
-- **Livraison finale IPA** : Bureau client `C:/Users/Marc Hopf/Desktop/Mural-Gemini.ipa` + Bot Telegram `@CerveauPriveeBot` (chat_id: `856614939`)
+- **Dossier local** : `C:/Users/Marc Hopf/fleunce_project/repo`
+- **Livraison finale IPA** : Bureau client `C:/Users/Marc Hopf/Desktop/Fleunce-Gemini.ipa` + Bot Telegram `@CerveauPriveeBot` (chat_id: `856614939`)
 
 ---
 
@@ -30,10 +30,10 @@
 
 ### C. Interface & Compatibilité
 - **iPad Support** : `NavigationSplitView`, layout responsive sidebar/detail, `TARGETED_DEVICE_FAMILY = "1,2"`, orientations complètes.
-- **WidgetKit Widgets** : Extension `MuralWidgetExtension` (tailles Small, Medium, Large) connectée via `UserDefaults` partagés (`group.no.william.mural`).
+- **WidgetKit Widgets** : Extension `FleunceWidgetExtension` (tailles Small, Medium, Large) connectée via `UserDefaults` partagés (`group.no.william.fleunce`).
 - **Telegram Mini App & Bot** :
-  - Mini App : `https://ia2213.github.io/mural-gemini/` (`index.html`)
-  - Bot Telegram : `@MuralTeacherBot` avec commandes `/correction`, `/provider`, `/key`.
+  - Mini App : `https://ia2213.github.io/fleunce-gemini/` (`index.html`)
+  - Bot Telegram : `@FleunceTeacherBot` avec commandes `/correction`, `/provider`, `/key`.
 
 ### D. Niveaux de correction
 - Réglable dans l'UI (Réglages / Preferences) : **Fort**, **Moyen**, **Faible** (`correctionLevel` dans `TeachingPolicy.swift`).
@@ -48,9 +48,9 @@
   - Structure de l'IPA :
     ```
     Payload/
-    └── Mural.app/
+    └── Fleunce.app/
         └── PlugIns/
-            └── MuralWidgetExtension.appex
+            └── FleunceWidgetExtension.appex
     ```
   - Widget Kit : Inclus dans `PlugIns/` pour apparaître dans le sélecteur de widgets iOS.
 
@@ -60,15 +60,15 @@
 
 | Fichier / Repertoire | Rôle |
 |---|---|
-| `apps/ios/Mural.xcodeproj/project.pbxproj` | Configuration Xcode (Targets `Mural`, `MuralWidgetExtension`, `MuralUITests`). |
+| `apps/ios/Fleunce.xcodeproj/project.pbxproj` | Configuration Xcode (Targets `Fleunce`, `FleunceWidgetExtension`, `FleunceUITests`). |
 | `apps/ios/App/APIClient.swift` | Moteur tri-fournisseurs (Groq, Gemini, Hermes VPS) + Auto-Failover. |
 | `apps/ios/App/Models.swift` | Modèles de données (`providerID`, `correctionLevel`, etc.). |
 | `apps/ios/Core/TeachingPolicy.swift` | Prompts pédagogiques ajustables selon `correctionLevel`. |
 | `apps/ios/App/RootView.swift` | Layout principal iPad (`NavigationSplitView`) et iPhone. |
 | `apps/ios/App/Storage.swift` | Stockage et synchro `UserDefaults` partagés pour Widgets. |
-| `apps/ios/Widget/MuralWidget.swift` | Code Swift du WidgetKit (Small/Medium/Large). |
+| `apps/ios/Widget/FleunceWidget.swift` | Code Swift du WidgetKit (Small/Medium/Large). |
 | `index.html` | Code source Telegram Mini App (GitHub Pages). |
-| `mural_telegram_runner.py` | Bot Python Telegram `@MuralTeacherBot`. |
+| `fleunce_telegram_runner.py` | Bot Python Telegram `@FleunceTeacherBot`. |
 | `.github/workflows/build-ios.yml` | Pipeline de build automatique et génération d'IPA. |
 
 ---
@@ -80,7 +80,7 @@ Si une nouvelle session démarre ou si tu veux relancer/modifier le projet :
 1. **Lire ce fichier** : `HANDOFF.md` à la racine du dépôt.
 2. **Se placer dans le répertoire** :
    ```bash
-   cd "C:/Users/Marc Hopf/mural_project/repo"
+   cd "C:/Users/Marc Hopf/fleunce_project/repo"
    ```
 3. **Pousser des modifications & déclencher le build IPA** :
    ```bash
@@ -89,7 +89,7 @@ Si une nouvelle session démarre ou si tu veux relancer/modifier le projet :
    git push origin main
    ```
 4. **Récupérer l'IPA compilé** :
-   - Automatiquement téléchargé par les scripts Python sur `C:/Users/Marc Hopf/Desktop/Mural-Gemini.ipa` et envoyé sur Telegram au bot.
+   - Automatiquement téléchargé par les scripts Python sur `C:/Users/Marc Hopf/Desktop/Fleunce-Gemini.ipa` et envoyé sur Telegram au bot.
 
 ---
 *Dernière mise à jour : 20 Septembre 2026*

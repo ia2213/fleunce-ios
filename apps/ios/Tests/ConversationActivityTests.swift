@@ -1,5 +1,5 @@
 import XCTest
-@testable import MuralCore
+@testable import FleunceCore
 
 final class ConversationActivityTests: XCTestCase {
     func testOneCheckInAndExactDeadlineDespiteItsAudio() {

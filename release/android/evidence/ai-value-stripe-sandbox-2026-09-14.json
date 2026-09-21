@@ -11,7 +11,7 @@
     "currency": "USD",
     "checkoutTotalMinor": 300,
     "aiAllocationMinor": 200,
-    "muralFeeMinor": 30,
+    "fleunceFeeMinor": 30,
     "paymentCostFixtureMinor": 70,
     "launchOffer": false,
     "actualProcessingFeeClaim": false

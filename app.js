@@ -1,5 +1,5 @@
 /**
- * Mural Teacher · Telegram Mini App Frontend
+ * Fleunce Teacher · Telegram Mini App Frontend
  * Powered by Telegram WebApp SDK + UI/UX Pro Max
  * Works seamlessly on local server AND standalone GitHub Pages!
  */
@@ -102,9 +102,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Load API Key Settings
 function loadApiKeySettings() {
   try {
-    const key = localStorage.getItem('mural_groq_api_key') || currentUser.groq_api_key || '';
-    const model = localStorage.getItem('mural_groq_model') || currentUser.groq_model || 'llama-3.3-70b-versatile';
-    const provider = localStorage.getItem('mural_api_provider') || 'groq';
+    const key = localStorage.getItem('fleunce_groq_api_key') || currentUser.groq_api_key || '';
+    const model = localStorage.getItem('fleunce_groq_model') || currentUser.groq_model || 'llama-3.3-70b-versatile';
+    const provider = localStorage.getItem('fleunce_api_provider') || 'groq';
 
     const keyInput = document.getElementById('apiKeyInput');
     if (keyInput && key) keyInput.value = key;
@@ -196,9 +196,9 @@ async function saveApiKeySettings() {
   const key = document.getElementById('apiKeyInput')?.value?.trim() || '';
   const model = document.getElementById('aiModelSelect')?.value || 'llama-3.3-70b-versatile';
 
-  localStorage.setItem('mural_api_provider', provider);
-  localStorage.setItem('mural_groq_api_key', key);
-  localStorage.setItem('mural_groq_model', model);
+  localStorage.setItem('fleunce_api_provider', provider);
+  localStorage.setItem('fleunce_groq_api_key', key);
+  localStorage.setItem('fleunce_groq_model', model);
 
   currentUser.groq_api_key = key;
   currentUser.groq_model = model;
@@ -236,7 +236,7 @@ async function saveApiKeySettings() {
 // Load preferences from localStorage
 function loadSavedPreferences() {
   try {
-    const saved = localStorage.getItem('mural_user_prefs');
+    const saved = localStorage.getItem('fleunce_user_prefs');
     if (saved) {
       currentUser = { ...currentUser, ...JSON.parse(saved) };
     }
@@ -246,7 +246,7 @@ function loadSavedPreferences() {
 // Save preferences to localStorage
 function savePreferences() {
   try {
-    localStorage.setItem('mural_user_prefs', JSON.stringify(currentUser));
+    localStorage.setItem('fleunce_user_prefs', JSON.stringify(currentUser));
   } catch (e) {}
 }
 
@@ -312,9 +312,9 @@ function switchTab(tabId) {
   }
 }
 
-// Living Mural Orb Controller
+// Living Fleunce Orb Controller
 function setOrbState(state) {
-  const orb = document.getElementById('muralOrb');
+  const orb = document.getElementById('fleunceOrb');
   const wave1 = document.getElementById('orbWave1');
   const wave2 = document.getElementById('orbWave2');
   const status = document.getElementById('orbStatus');
@@ -608,7 +608,7 @@ function appendTeacherMessage(data) {
       <div class="flex items-center justify-between pb-2 mb-2 border-b border-white/[0.06] text-[11px]">
         <div class="flex items-center gap-1.5 font-bold text-sky-400">
           <span>${flag}</span>
-          <span>Mural · ${currentUser.level}</span>
+          <span>Fleunce · ${currentUser.level}</span>
         </div>
         <button onclick="playTTS('${escapeQuote(data.reply)}', '${currentUser.learning_lang}')" class="px-2 py-0.5 rounded-full bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 flex items-center gap-1 text-[10px] font-semibold transition">
           <span>🔊</span>
@@ -634,8 +634,8 @@ function renderInitialMessage() {
   if (!container || container.children.length > 0) return;
 
   const data = {
-    reply: "Hallo! Ich bin dein Mural-Sprachlehrer. Wie kann ich dir heute beim Deutschlernen helfen?",
-    translationFr: "Bonjour ! Je suis ton tuteur de langue Mural. Comment puis-je t'aider aujourd'hui dans ton apprentissage de l'allemand ?",
+    reply: "Hallo! Ich bin dein Fleunce-Sprachlehrer. Wie kann ich dir heute beim Deutschlernen helfen?",
+    translationFr: "Bonjour ! Je suis ton tuteur de langue Fleunce. Comment puis-je t'aider aujourd'hui dans ton apprentissage de l'allemand ?",
     suggestedReply: "Ich möchte mein Deutsch für das B2-Niveau verbessern.",
     vocabulary: [
       { word: "der Sprachlehrer", translation: "le professeur / tuteur de langue", example: "" }

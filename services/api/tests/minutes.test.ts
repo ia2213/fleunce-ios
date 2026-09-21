@@ -190,7 +190,7 @@ integration('minute API requires identity, exposes no grant route and leaves pur
   try {
     const id = await f.account(), token = randomBytes(32).toString('base64url'); await f.gift(id, 30);
     await f.db.query("INSERT INTO auth_sessions(id,account_id,token_hash,expires_at) VALUES($1,$2,$3,now()+interval '1 hour')", [randomUUID(), id, digest(token)]);
-    const headers = { 'x-mural-client-ip': '192.0.2.43', 'x-mural-proxy-token': config.proxyToken };
+    const headers = { 'x-fleunce-client-ip': '192.0.2.43', 'x-fleunce-proxy-token': config.proxyToken };
     assert.equal((await app.inject({ url: '/v1/minutes', headers })).statusCode, 401);
     const authHeaders = { ...headers, authorization: `Bearer ${token}` };
     const response = await app.inject({ url: '/v1/minutes', headers: authHeaders });

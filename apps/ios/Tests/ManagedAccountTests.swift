@@ -1,5 +1,5 @@
 import XCTest
-@testable import MuralCore
+@testable import FleunceCore
 
 final class ManagedAccountTests: XCTestCase {
     private let client = "123-example.apps.googleusercontent.com"
@@ -7,9 +7,9 @@ final class ManagedAccountTests: XCTestCase {
     private let nonce = String(repeating: "a", count: 64)
     private let state = String(repeating: "s", count: 43)
     private func config(api: String = "https://accounts.example.test", enabled: Bool = true,
-                        schemes: [String]? = nil, apple: String = "chat.mural.test") throws -> ManagedAccountConfiguration {
+                        schemes: [String]? = nil, apple: String = "chat.fleunce.test") throws -> ManagedAccountConfiguration {
         try ManagedAccountConfiguration(apiURL: api, googleClientID: client, appleClientID: apple,
-            bundleID: "chat.mural.test", registeredURLSchemes: schemes ?? [scheme], appleCapabilityEnabled: enabled)
+            bundleID: "chat.fleunce.test", registeredURLSchemes: schemes ?? [scheme], appleCapabilityEnabled: enabled)
     }
     private func flow() throws -> ManagedGoogleAuthorization {
         try ManagedGoogleAuthorization(configuration: config(), verifier: String(repeating: "v", count: 43), state: state, nonce: nonce)
@@ -27,25 +27,25 @@ final class ManagedAccountTests: XCTestCase {
     }
     func testGoogleCanBeConfiguredWithoutAppleCapability() throws {
         let google = try ManagedAccountConfiguration(apiURL: "https://accounts.example.test", googleClientID: client,
-            bundleID: "chat.mural.test", registeredURLSchemes: [scheme], appleCapabilityEnabled: false)
+            bundleID: "chat.fleunce.test", registeredURLSchemes: [scheme], appleCapabilityEnabled: false)
         XCTAssertEqual(google.providers, [.google])
         XCTAssertNil(google.appleClientID)
         XCTAssertEqual(google.googleRedirectURI?.absoluteString, scheme + ":/oauth2redirect")
         // Adding a provider preserves the account's server and app binding.
         XCTAssertEqual(google.storageScope, try config().storageScope)
         XCTAssertThrowsError(try ManagedAccountConfiguration(apiURL: "https://accounts.example.test", googleClientID: client,
-            bundleID: "chat.mural.test", registeredURLSchemes: [], appleCapabilityEnabled: false))
+            bundleID: "chat.fleunce.test", registeredURLSchemes: [], appleCapabilityEnabled: false))
     }
     func testAppleOnlyRequiresCapabilityAndCannotStartGoogleAuthorization() throws {
-        let apple = try ManagedAccountConfiguration(apiURL: "https://accounts.example.test", appleClientID: "chat.mural.test",
-            bundleID: "chat.mural.test", registeredURLSchemes: [], appleCapabilityEnabled: true)
+        let apple = try ManagedAccountConfiguration(apiURL: "https://accounts.example.test", appleClientID: "chat.fleunce.test",
+            bundleID: "chat.fleunce.test", registeredURLSchemes: [], appleCapabilityEnabled: true)
         XCTAssertEqual(apple.providers, [.apple])
         XCTAssertNil(apple.googleRedirectURI)
         XCTAssertThrowsError(try ManagedGoogleAuthorization(configuration: apple, verifier: String(repeating: "v", count: 43), state: state, nonce: nonce))
-        XCTAssertThrowsError(try ManagedAccountConfiguration(apiURL: "https://accounts.example.test", appleClientID: "chat.mural.test",
-            bundleID: "chat.mural.test", registeredURLSchemes: [], appleCapabilityEnabled: false))
+        XCTAssertThrowsError(try ManagedAccountConfiguration(apiURL: "https://accounts.example.test", appleClientID: "chat.fleunce.test",
+            bundleID: "chat.fleunce.test", registeredURLSchemes: [], appleCapabilityEnabled: false))
         XCTAssertThrowsError(try ManagedAccountConfiguration(apiURL: "https://accounts.example.test",
-            bundleID: "chat.mural.test", registeredURLSchemes: [], appleCapabilityEnabled: true))
+            bundleID: "chat.fleunce.test", registeredURLSchemes: [], appleCapabilityEnabled: true))
     }
     func testPKCES256MatchesRFC7636VectorAndBindsRawNonce() throws {
         XCTAssertEqual(ManagedGoogleAuthorization.codeChallenge(verifier: "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"),

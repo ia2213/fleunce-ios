@@ -10,7 +10,7 @@ Result: 67 JVM tests, 23 Python contract tests and 7 instrumented tests (on a ph
 - Android SDK and Build Tools 35; minimum Android 8.0 (API 26).
 - Physical device: OPPO CPH2599, Android 16 (API 36), ARM64, over USB and wireless debugging.
 - Virtual device: Pixel 6 profile, Android 15 (API 35), x86_64 with Google APIs.
-- App ID `chat.mural.android`; interface tests install `chat.mural.android.uitest`.
+- App ID `chat.fleunce.android`; interface tests install `chat.fleunce.android.uitest`.
 
 ## Automated checks
 
@@ -49,7 +49,7 @@ Manual checks with the owner's OpenAI key:
 - Language redirect uses `TextClassifier`, available from Android 10; older versions skip it. The redirect itself was not forced on a device, because the model stayed in the practice language during testing.
 - Bluetooth headsets: on Android 12 or later a connected headset is chosen over the speaker, after a wired or USB headset; on Android 8–11 the speaker is used. The route is chosen when the conversation connects, so a headset connected during a conversation is not adopted. Not verified with a headset.
 - Incoming calls, other physical Android devices, Google Play distribution and an iPhone regression run in Xcode were not covered here.
-- Behaviour shared with iPhone that device QA surfaced is reported upstream as [#5](https://github.com/Chuloo/mural/issues/5), [#6](https://github.com/Chuloo/mural/issues/6) and [#7](https://github.com/Chuloo/mural/issues/7); the Android client alone does not fix it.
+- Behaviour shared with iPhone that device QA surfaced is reported upstream as [#5](https://github.com/Chuloo/fleunce/issues/5), [#6](https://github.com/Chuloo/fleunce/issues/6) and [#7](https://github.com/Chuloo/fleunce/issues/7); the Android client alone does not fix it.
 - Usage records are estimates, not a billing cap; the OpenAI dashboard is authoritative.
 
 ## Manual test with the owner's key

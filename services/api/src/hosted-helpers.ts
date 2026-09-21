@@ -37,7 +37,7 @@ export interface HostedResponsesRequest {
   service_tier: 'default'; prompt_cache_options: { mode: 'explicit' };
   instructions: string; input: [{ role: 'user'; content: string }];
   max_output_tokens: 1400 | 2200; reasoning: { effort: 'low' };
-  text?: { format: { type: 'json_schema'; name: 'mural_result'; strict: true; schema: JSONObject } };
+  text?: { format: { type: 'json_schema'; name: 'fleunce_result'; strict: true; schema: JSONObject } };
   tools?: [{ type: 'web_search'; search_context_size: 'low' }]; tool_choice: 'auto' | 'none'; max_tool_calls: 1;
 }
 /** One network attempt only. The implementation must honor the signal, bound the body and never retry. */
@@ -98,7 +98,7 @@ export function hostedHelperBody(input: HostedHelperInput): HostedResponsesReque
   return { model: HOSTED_HELPER_MODEL, store: false, background: false, stream: false, service_tier: 'default',
     prompt_cache_options: { mode: 'explicit' }, instructions: input.instructions, input: [{ role: 'user', content: input.input }],
     max_output_tokens: input.schema ? 2200 : 1400, reasoning: { effort: 'low' }, tool_choice: input.search ? 'auto' : 'none', max_tool_calls: 1,
-    ...(input.schema ? { text: { format: { type: 'json_schema' as const, name: 'mural_result' as const, strict: true as const, schema: input.schema } } } : {}),
+    ...(input.schema ? { text: { format: { type: 'json_schema' as const, name: 'fleunce_result' as const, strict: true as const, schema: input.schema } } } : {}),
     ...(input.search ? { tools: [{ type: 'web_search' as const, search_context_size: 'low' as const }] as [{ type: 'web_search'; search_context_size: 'low' }] } : {}) };
 }
 /** Published standard-tier rates, including cache writes and the long-context threshold. */
@@ -138,7 +138,7 @@ export class HostedHelpers {
   /** Call inside voice admission's transaction after inserting its minute-funded session, before provider creation. */
   async reserveSessionBudget(sql: PoolClient, account: string, sessionID: string): Promise<void> {
     if (!this.allows(account)) throw new ServiceError('hosted_helpers_not_ready', 503);
-    await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-hosted-funding-cap'))");
+    await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-hosted-funding-cap'))");
     const owner=(await sql.query('SELECT funding_mode FROM hosted_sessions WHERE id=$1 AND account_id=$2',[sessionID,account])).rows[0];
     if (owner?.funding_mode==='ai-value') await lockPaidWallet(sql,account);
     const session = (await sql.query(`SELECT h.*,a.deleted_at,r.account_id AS minute_owner,r.amount_ms AS minute_amount,r.state AS minute_state
@@ -187,7 +187,7 @@ export class HostedHelpers {
   }
   private async reserve(account: string, sessionID: string, input: HostedHelperInput, providerBody: HostedResponsesRequest) {
     return transaction(this.db, async sql => {
-      await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-hosted-funding-cap'))");
+      await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-hosted-funding-cap'))");
       const owner = (await sql.query('SELECT funding_mode FROM hosted_sessions WHERE id=$1 AND account_id=$2', [sessionID,account])).rows[0];
       const paidWallet = owner?.funding_mode==='ai-value' ? await lockPaidWallet(sql,account) : undefined;
       const session = (await sql.query(`SELECT h.*,a.deleted_at,r.account_id AS minute_owner,r.amount_ms AS minute_amount,r.state AS minute_state,
@@ -286,7 +286,7 @@ export class HostedHelpers {
   }
   private async settle(requestID: string, sessionID: string, observed: ObservedResponse, charge: bigint, breached: boolean) {
     const overrun = await transaction(this.db, async sql => {
-      await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-hosted-funding-cap'))");
+      await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-hosted-funding-cap'))");
       const session=(await sql.query('SELECT account_id,funding_mode FROM hosted_sessions WHERE id=$1',[sessionID])).rows[0];
       if (!session) throw new ServiceError('live_session_not_found',404);
       if (session.funding_mode==='ai-value') await lockWallet(sql,session.account_id);
@@ -320,7 +320,7 @@ export class HostedHelpers {
   /** Release only unused session allowance; unresolved provider attempts keep their holds indefinitely. */
   async expireBudgets(): Promise<number> {
     return transaction(this.db, async sql => {
-      await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-hosted-funding-cap'))");
+      await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-hosted-funding-cap'))");
       const rows = (await sql.query(`SELECT b.*,h.account_id FROM hosted_helper_sessions b JOIN hosted_sessions h ON h.id=b.session_id
         WHERE b.state='open' AND (NOT b.activation_pending OR h.state<>'creating')
           AND (b.expires_at<=now() OR (h.helper_closed_at IS NOT NULL AND

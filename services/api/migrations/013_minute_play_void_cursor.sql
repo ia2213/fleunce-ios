@@ -1,7 +1,7 @@
 -- Contains only a Google pagination cursor and checkpoint, never purchase tokens or user data.
 CREATE TABLE minute_play_void_cursors (
   environment text NOT NULL CHECK (environment IN ('test','live')),
-  merchant text NOT NULL CHECK (merchant='chat.mural.android'),
+  merchant text NOT NULL CHECK (merchant='chat.fleunce.android'),
   completed_through_ms bigint CHECK (completed_through_ms BETWEEN 0 AND 9007199254740991),
   window_start_ms bigint CHECK (window_start_ms BETWEEN 0 AND 9007199254740991),
   window_end_ms bigint CHECK (window_end_ms BETWEEN 0 AND 9007199254740991),

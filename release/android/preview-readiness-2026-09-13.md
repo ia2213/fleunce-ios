@@ -8,15 +8,15 @@ Follow-up on 14 September: the six store screenshots and feature graphic are now
 
 | Field | Recorded value |
 | --- | --- |
-| File, relative to the repository | `../deliverables/Mural-Android-preview-2026-09-13.apk` |
+| File, relative to the repository | `../deliverables/Fleunce-Android-preview-2026-09-13.apk` |
 | Size | 65,921,525 bytes |
 | SHA-256 | `8aca837413d40f15e70cbe74a14083f03bedc5d3906e0ddbe7f3ada7164604a5` |
-| Package and version | `chat.mural.android`, code 1, version 0.1 |
+| Package and version | `chat.fleunce.android`, code 1, version 0.1 |
 | Android support declared | Minimum API 26; target API 36 |
 | Build | Debug; debuggable; not test-only |
 | Signing | APK v2 signature verifies; existing Android Debug identity retained |
 | Certificate SHA-256 | `16cc94553e43e0d9dfbc0ac72f162eb163e7d26d330bcae455e212c0a790c022` |
-| Packaged configuration | `https://api.mural.chat`, public Google client ID, purchases disabled, purchase environment `test` |
+| Packaged configuration | `https://api.fleunce.chat`, public Google client ID, purchases disabled, purchase environment `test` |
 | Backup and cleartext traffic | Both disabled in the packaged manifest |
 | Credentials and notices | Known-pattern scan: zero findings across 605 entries. All six required notice files present |
 
@@ -40,7 +40,7 @@ The earlier disk-blocked 16 KB attempt is superseded by the successful runtime e
 | --- | --- | --- |
 | App name, short description, full description, release notes | Prepared in `metadata/en-US`; current guest preview wording, adults 18+, no paid availability claim | Recheck against the uploaded candidate and enabled trial policy |
 | Icon | Present: `assets/icon.png`, 512 × 512 RGBA, 62,428 bytes | Compare final launcher and listing appearance with iOS |
-| Feature graphic | Prepared: `assets/feature-graphic.png`, 1024 × 500 opaque PNG | Native Mural brand and orb; compare with the final candidate |
+| Feature graphic | Prepared: `assets/feature-graphic.png`, 1024 × 500 opaque PNG | Native Fleunce brand and orb; compare with the final candidate |
 | Six phone screenshots | All six paths prepared at 1080 × 1920 | English controls with Spanish learning and English meanings; actual UI with synthetic conversation/vocabulary fixtures |
 | Graphic alt text | Prepared in `assets/README.md` | Enter it with the corresponding images in Console |
 | Other listing locales | Not prepared | Choose initial markets before committing to localized listings |
@@ -53,7 +53,7 @@ Google requires an icon, feature graphic and at least two screenshots; this proj
 
 1. **Complete account continuity.** Run a live guest-to-Google transfer and verify the same allowance after login, token renewal and restart. Cover an account that already received its trial, cancellation, sign-out and account deletion. Local integration tests are recorded; the fresh live guest profile has not completed this journey.
 2. **Complete safety and privacy operations.** Enable and verify in-app AI-output reports before Play release, including excerpt consent, delivery, restricted operator access and 30-day cleanup. Verify the external account-deletion path and finalize the declarations against the deployed services.
-3. **Finish the actual-cost paid flow before enabling sales.** The approved model uses actual AI cost, a default 15% Mural fee and separately quoted payment costs/buffer. Purchased minutes are estimates. Wallet fulfillment, voice/helper settlement, refunds, Play-signed purchase recovery, taxes and launch prices still require verification. [Prepared pricing wording](paid-listing-copy.md) stays outside the current listing.
+3. **Finish the actual-cost paid flow before enabling sales.** The approved model uses actual AI cost, a default 15% Fleunce fee and separately quoted payment costs/buffer. Purchased minutes are estimates. Wallet fulfillment, voice/helper settlement, refunds, Play-signed purchase recovery, taxes and launch prices still require verification. [Prepared pricing wording](paid-listing-copy.md) stays outside the current listing.
 4. **Test the supported devices.** Exercise API 26 before promising that minimum. On a physical Android phone, verify microphone, speaker, wired/Bluetooth routes, interruptions and reconnects. Repeat a short conversation and meaning test for every advertised language; the recorded live guest test covers Spanish from Spain only.
 5. **Review the listing artwork and finish access.** The feature graphic and six screenshots are prepared with [capture evidence](evidence/play-assets-2026-09-14.json). Compare them with the final candidate and iOS branding, then finish private reviewer instructions, support handling, audience/rating and launch markets.
 6. **Freeze and package the Play candidate.** The owner-requested Documents signing backup is verified by the release operator. It is on the same Mac; an off-device copy remains advisable. Build the current release AAB from a recorded source/configuration snapshot and check its own manifest, secret scan, notices, native alignment and generated split APKs. Sign only with the approved upload identity.

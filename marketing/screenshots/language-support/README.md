@@ -1,6 +1,6 @@
 # Language support screenshots
 
-Three unedited captures of Mural's native Talk screen on an iPhone 16 Pro simulator running iOS 26.4.1, taken on 13 September 2026 from the app at `7ea5a8168d35894323ce0717ec8b2caee0e26191`.
+Three unedited captures of Fleunce's native Talk screen on an iPhone 16 Pro simulator running iOS 26.4.1, taken on 13 September 2026 from the app at `7ea5a8168d35894323ce0717ec8b2caee0e26191`.
 
 | File | Language | Visible behavior |
 | --- | --- | --- |

@@ -24,7 +24,7 @@ The API installs one Fastify `onRequest` hook before registering its routes (`se
 
 `services/api/src/auth-admission.ts:21–44` verifies the trusted network identity and atomically updates PostgreSQL counters. Exceeding a quota throws `rate_limit` with HTTP 429. The calling hook adds `Retry-After: 3600`. These two minute mutations share the account-operation allowance with other account routes; they do not each receive a separate 600-request quota.
 
-The default limiter uses the socket-derived `request.ip` with Fastify `trustProxy: false`. When Mural proxy configuration exists, `app.ts:61–66` requires `trustedClientNetwork`; `services/api/src/access-requests.ts:66–73` validates the proxy token before accepting the client-address header. An arbitrary `X-Forwarded-For` does not select a fresh bucket.
+The default limiter uses the socket-derived `request.ip` with Fastify `trustProxy: false`. When Fleunce proxy configuration exists, `app.ts:61–66` requires `trustedClientNetwork`; `services/api/src/access-requests.ts:66–73` validates the proxy token before accepting the client-address header. An arbitrary `X-Forwarded-For` does not select a fresh bucket.
 
 Existing tests cover durable admission across instances, spoofed proxy headers, global limits, encoded routes and the default 120-request limiter (`services/api/tests/accounts.test.ts:190–205`, `220–269`). They were inspected for this review; this read-only audit did not rerun or change them. The reported minute routes are governed by those same hooks.
 

@@ -6,7 +6,7 @@ Paid purchases add a prepaid AI allocation to the existing nano-USD wallet. They
 
 `makeAIValueProduct` computes an operator-reviewed quote from the AI allocation in checkout-currency minor units, currency exponent, rational USD exchange rate, service-fee policy, processing rate/fixed cost/buffer, and estimate rate. USD quotes require exponent 2 and a 1:1 exchange rate. The constructor recomputes the amount and rejects supplied AI credit, fees, or estimated time that disagree with those inputs.
 
-The quote separates AI allocation, Mural fee, payment-cost estimate, and payment buffer. The allocation alone becomes usable AI value. Its estimated time is calculated at the pinned estimate rate and carries `estimate: true`; it is not a time entitlement.
+The quote separates AI allocation, Fleunce fee, payment-cost estimate, and payment buffer. The allocation alone becomes usable AI value. Its estimated time is calculated at the pinned estimate rate and carries `estimate: true`; it is not a time entitlement.
 
 Orders use the existing provider-order registry with `entitlement_kind = ai_value` and no `allowance_ms`. Migration 017 adds an immutable quote table and AI-value transaction records. The quote retains currency, exchange-rate version, pricing-policy version, processing assumptions, and estimate-rate version. A policy change stops new orders from an old catalog; an existing order keeps its original quote.
 

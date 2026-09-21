@@ -27,13 +27,13 @@ android = root / 'apps' / 'android'
 subprocess.run([str(android / 'gradlew'), ':app:assembleUiTest', ':app:assembleUiTestAndroidTest'], cwd=android, check=True)
 for apk in ['app/build/outputs/apk/uiTest/app-uiTest.apk', 'app/build/outputs/apk/androidTest/uiTest/app-uiTest-androidTest.apk']:
     device('install', '-r', str(android / apk))
-result = device('shell', 'am', 'instrument', '-w', '-e', 'class', 'chat.mural.DesignReviewTest',
-                'chat.mural.android.uitest.test/androidx.test.runner.AndroidJUnitRunner').decode()
+result = device('shell', 'am', 'instrument', '-w', '-e', 'class', 'chat.fleunce.DesignReviewTest',
+                'chat.fleunce.android.uitest.test/androidx.test.runner.AndroidJUnitRunner').decode()
 if 'OK (1 test)' not in result:
     raise SystemExit('The design verification failed. Run the instrumented test for details.')
 args.output.mkdir(parents=True, exist_ok=True)
 for name in ['01-onboarding', '02-meaning', '03-talk', '04-themes', '05-words']:
-    data = device('exec-out', 'run-as', 'chat.mural.android.uitest', 'cat', f'files/design-review/{name}.png')
+    data = device('exec-out', 'run-as', 'chat.fleunce.android.uitest', 'cat', f'files/design-review/{name}.png')
     if not data.startswith(b'\x89PNG\r\n\x1a\n'):
         raise SystemExit(f'No valid screenshot was returned for {name}.')
     (args.output / f'{name}.png').write_bytes(data)

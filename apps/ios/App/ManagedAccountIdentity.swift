@@ -1,7 +1,7 @@
 import AuthenticationServices
 import Security
 import UIKit
-import MuralCore
+import FleunceCore
 
 @MainActor
 final class ManagedAccountIdentity: NSObject, ASWebAuthenticationPresentationContextProviding,

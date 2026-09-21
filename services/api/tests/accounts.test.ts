@@ -18,9 +18,9 @@ after(async () => { if (db) await db.end(); });
 const integration = (name: string, fn: () => Promise<void>) => test(name, { skip: !db && 'Set TEST_DATABASE_URL for PostgreSQL tests.' }, fn);
 const signing = await generateKeyPair('RS256'), jwk = await exportJWK(signing.publicKey); jwk.kid = 'account-test';
 const keys = createLocalJWKSet({ keys: [jwk] });
-const config = { googleClientID: 'mural-google-test', appleClientID: 'com.example.mural' };
+const config = { googleClientID: 'fleunce-google-test', appleClientID: 'com.example.fleunce' };
 const admissionConfig = { hmacKey: 'c'.repeat(64), proxyToken: 'd'.repeat(64), allowLocalLoopback: false };
-const headers = { 'x-mural-client-ip': '192.0.2.42', 'x-mural-proxy-token': admissionConfig.proxyToken };
+const headers = { 'x-fleunce-client-ip': '192.0.2.42', 'x-fleunce-proxy-token': admissionConfig.proxyToken };
 const verifier: typeof verifyIdentity = (provider, token, nonce, cfg) => verifyIdentity(provider, token, nonce, cfg, keys);
 async function jwt(nonce: string, subject: string, provider: 'google' | 'apple' = 'google', email: string | null = 'account@example.test') {
   return new SignJWT({ nonce, email, email_verified: true }).setProtectedHeader({ alg: 'RS256', kid: 'account-test' })
@@ -216,14 +216,14 @@ integration('deleting an account with resolved financial history removes PII whi
 });
 integration('auth quotas persist across instances, reject spoofed headers, and prune short-lived identifiers', async () => {
   const one = new AuthAdmission(db!, admissionConfig), two = new AuthAdmission(db!, admissionConfig);
-  await assert.rejects(one.enter('challenge', { ...headers, 'x-mural-proxy-token': 'wrong' }, '127.0.0.1'), { code: 'accounts_proxy_not_ready' });
+  await assert.rejects(one.enter('challenge', { ...headers, 'x-fleunce-proxy-token': 'wrong' }, '127.0.0.1'), { code: 'accounts_proxy_not_ready' });
   await one.enter('challenge', headers, '127.0.0.1');
   await db!.query("UPDATE auth_rate_limits SET hits=60 WHERE operation='challenge' AND scope='network'");
   await assert.rejects(two.enter('challenge', headers, '127.0.0.1'), { code: 'rate_limit' });
   const stored = (await db!.query("SELECT identifier,hits,expires_at,window_start FROM auth_rate_limits WHERE scope='network'")).rows[0];
   assert.match(stored.identifier, /^[a-f0-9]{64}$/); assert.equal(stored.hits, 61);
   assert.equal(stored.expires_at.getTime() - stored.window_start.getTime(), 7_200_000);
-  await two.enter('challenge', { ...headers, 'x-mural-client-ip': '192.0.2.43' }, '127.0.0.1');
+  await two.enter('challenge', { ...headers, 'x-fleunce-client-ip': '192.0.2.43' }, '127.0.0.1');
   const expired = await createChallenge(db!);
   await db!.query("UPDATE auth_challenges SET expires_at=now()-interval '1 minute' WHERE id=$1", [expired.challengeID]);
   await db!.query("UPDATE auth_rate_limits SET expires_at=now()-interval '1 minute'");
@@ -251,7 +251,7 @@ integration('the global challenge budget bounds distinct networks and returns a 
     await db!.query("UPDATE auth_rate_limits SET hits=2000 WHERE operation='challenge' AND scope='global'");
     const before = Number((await db!.query('SELECT count(*) AS count FROM auth_challenges')).rows[0].count);
     const response = await service.inject({ method: 'POST', url: '/v1/auth/challenge',
-      headers: { ...headers, 'x-mural-client-ip': '198.51.100.74' }, payload: {} });
+      headers: { ...headers, 'x-fleunce-client-ip': '198.51.100.74' }, payload: {} });
     assert.equal(response.statusCode, 429); assert.equal(response.headers['retry-after'], '3600');
     assert.deepEqual(response.json(), { error: { code: 'rate_limit' } });
     assert.equal(Number((await db!.query('SELECT count(*) AS count FROM auth_challenges')).rows[0].count), before);
@@ -283,7 +283,7 @@ integration('concurrent requests rejected by one network cannot consume the last
   const denied = await Promise.allSettled(Array.from({ length: 32 }, () => admission.enter('challenge', headers, '127.0.0.1')));
   assert.equal(denied.filter(result => result.status === 'rejected').length, 32);
   assert.equal((await db!.query("SELECT hits FROM auth_rate_limits WHERE operation='challenge' AND scope='global'")).rows[0].hits, 1999);
-  await admission.enter('challenge', { ...headers, 'x-mural-client-ip': '198.51.100.72' }, '127.0.0.1');
+  await admission.enter('challenge', { ...headers, 'x-fleunce-client-ip': '198.51.100.72' }, '127.0.0.1');
   assert.equal((await db!.query("SELECT hits FROM auth_rate_limits WHERE operation='challenge' AND scope='global'")).rows[0].hits, 2000);
 });
 integration('public read throttling uses authenticated client networks instead of the shared proxy socket', async () => {
@@ -292,7 +292,7 @@ integration('public read throttling uses authenticated client networks instead o
     assert.equal((await service.inject({ method: 'GET', url: '/v1/auth/providers' })).statusCode, 503);
     for (let i = 0; i < 120; i++) assert.equal((await service.inject({ method: 'GET', url: '/v1/auth/providers', headers })).statusCode, 200);
     assert.equal((await service.inject({ method: 'GET', url: '/v1/auth/providers', headers })).statusCode, 429);
-    const other = await service.inject({ method: 'GET', url: '/v1/auth/providers', headers: { ...headers, 'x-mural-client-ip': '198.51.100.73' } });
+    const other = await service.inject({ method: 'GET', url: '/v1/auth/providers', headers: { ...headers, 'x-fleunce-client-ip': '198.51.100.73' } });
     assert.equal(other.statusCode, 200); assert.deepEqual(other.json(), { google: true, googleAndroid: false, apple: false });
   } finally { await service.close(); }
 });

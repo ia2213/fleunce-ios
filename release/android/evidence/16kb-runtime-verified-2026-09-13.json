@@ -5,7 +5,7 @@
   "observedPageSizeBytes": 16384,
   "emulator": "37.1.11.0",
   "tests": {
-    "class": "chat.mural.network.NativeCompatibilityTest",
+    "class": "chat.fleunce.network.NativeCompatibilityTest",
     "passed": 2,
     "failed": 0,
     "scope": "Load bundled native libraries and construct a WebRTC audio/data offer offline"

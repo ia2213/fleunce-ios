@@ -7,7 +7,7 @@ import { connectDatabase, type Database } from '../src/db.js';
 import { AIReports, AI_REPORT_BODY_LIMIT, AI_REPORT_CONSENT_VERSION, AI_REPORT_LIMITS, AI_REPORT_PATH, reportNetwork } from '../src/feedback.js';
 
 const config = { hmacKey: 'c'.repeat(64), proxyToken: 'd'.repeat(64), allowLocalLoopback: false };
-const headers = (address = '203.0.113.21') => ({ 'x-mural-client-ip': address, 'x-mural-proxy-token': config.proxyToken });
+const headers = (address = '203.0.113.21') => ({ 'x-fleunce-client-ip': address, 'x-fleunce-proxy-token': config.proxyToken });
 const input = () => ({ reportID: randomUUID(), languageID: 'es', reason: 'incorrect', excerpt: 'Una frase para revisar.', consentVersion: AI_REPORT_CONSENT_VERSION });
 const unused = { query: async () => { throw new Error('Database must not be reached.'); } } as unknown as Database;
 
@@ -71,7 +71,7 @@ integration('HTTP rejects invented proxy identities and ignores untrusted forwar
   const app = appWithReports();
   try {
     for (const fakeHeaders of [{}, { 'x-forwarded-for': '198.51.100.10' },
-      { ...headers(), 'x-mural-proxy-token': 'wrong' }, { ...headers(), 'x-mural-client-ip': 'not-an-IP' }]) {
+      { ...headers(), 'x-fleunce-proxy-token': 'wrong' }, { ...headers(), 'x-fleunce-client-ip': 'not-an-IP' }]) {
       const response = await app.inject({ method: 'POST', url: AI_REPORT_PATH, headers: fakeHeaders, payload: input() });
       assert.equal(response.statusCode, 503); assert.deepEqual(response.json(), { error: { code: 'ai_reports_unavailable' } });
     }

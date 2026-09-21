@@ -18,8 +18,8 @@ const databaseURL = process.env.TEST_DATABASE_URL;
 if (databaseURL && !new URL(databaseURL).pathname.endsWith('_test')) throw new Error('Use an isolated test database.');
 const integration = (name: string, fn: () => Promise<void>) => test(name, { skip: !databaseURL && 'Set TEST_DATABASE_URL.' }, fn);
 const stripeConfig = (): StripeMinuteConfig => ({ secretKey: 'sk_test_' + 'fixture'.repeat(4), webhookSecret: 'whsec_' + 'fixture'.repeat(4),
-  accountID: 'acct_synthetic', webOrigin: 'https://mural.example.test', checkoutEnabled: true });
-const playConfig = (): PlayMinuteConfig => ({ packageName: 'chat.mural.synthetic', bindingKey: Buffer.alloc(32, 7), currencyExponents: { usd: 2 }, purchasesEnabled: true });
+  accountID: 'acct_synthetic', webOrigin: 'https://fleunce.example.test', checkoutEnabled: true });
+const playConfig = (): PlayMinuteConfig => ({ packageName: 'chat.fleunce.synthetic', bindingKey: Buffer.alloc(32, 7), currencyExponents: { usd: 2 }, purchasesEnabled: true });
 const total = { currencyCode: 'USD', units: '9', nanos: 970_000_000 };
 const clone = <T>(value: T): T => structuredClone(value);
 class FakeStripe implements StripeMinuteTransport {
@@ -29,11 +29,11 @@ class FakeStripe implements StripeMinuteTransport {
   constructor() { this.priceValue = { id: 'price_synthetic', active: true, livemode: false, currency: 'usd', unit_amount: 997, type: 'one_time' }; }
   bind(orderID: string) {
     this.current = { id: 'cs_test_synthetic', livemode: false, mode: 'payment', client_reference_id: orderID,
-      metadata: { mural_minute_order: orderID }, currency: 'usd', amount_total: 997,
+      metadata: { fleunce_minute_order: orderID }, currency: 'usd', amount_total: 997,
       status: 'open', payment_status: 'unpaid', url: 'https://checkout.stripe.com/c/pay/cs_test_synthetic', payment_intent: 'pi_synthetic' };
     this.lineValue = { quantity: 1, price: { id: 'price_synthetic' }, currency: 'usd', amount_total: 997 };
     this.intentValue = { id: 'pi_synthetic', livemode: false, status: 'succeeded', currency: 'usd', amount_received: 997,
-      metadata: { mural_minute_order: orderID }, latest_charge: 'ch_synthetic' };
+      metadata: { fleunce_minute_order: orderID }, latest_charge: 'ch_synthetic' };
     this.chargeValue = { id: 'ch_synthetic', status: 'succeeded', payment_intent: 'pi_synthetic', livemode: false, paid: true, captured: true,
       currency: 'usd', amount: 997, disputed: false };
   }
@@ -136,7 +136,7 @@ integration('Stripe checkout snapshots the server quote and persists its referen
     const call = f.stripeTransport.createCalls[0];
     assert.deepEqual(call.params.line_items, [{ price: 'price_synthetic', quantity: 1 }]);
     assert.equal(call.params.client_reference_id, order.orderID); assert.equal(call.params.allow_promotion_codes, false);
-    assert.equal(call.params.payment_intent_data.metadata.mural_minute_order, order.orderID);
+    assert.equal(call.params.payment_intent_data.metadata.fleunce_minute_order, order.orderID);
     await f.stripe.checkout(account, order.orderID); assert.equal(f.stripeTransport.createCalls.length, 1);
     await assert.rejects(f.stripe.checkout(await f.account(), order.orderID), /purchase_not_found/);
   } finally { await f.cleanup(); }
@@ -348,16 +348,16 @@ test('Google transport uses fixed encoded endpoints, authenticated empty consump
   const transport = new GooglePlayHTTPTransport({ accessToken: async () => 'synthetic-access-token-for-test' }, (async (url: any, init: any) => {
     calls.push({ url, init }); return new Response('{}', { status: 200 });
   }) as any);
-  await transport.purchase('chat.mural.test', 'token?/secret'); await transport.consume('chat.mural.test', 'thirty', 'token?/secret');
-  await transport.order('chat.mural.test', 'GPA.1234-5678'); await transport.voided('chat.mural.test', 1000, 2000, 'page token');
-  assert.equal(calls[0].url, 'https://androidpublisher.googleapis.com/androidpublisher/v3/applications/chat.mural.test/purchases/productsv2/tokens/token%3F%2Fsecret');
+  await transport.purchase('chat.fleunce.test', 'token?/secret'); await transport.consume('chat.fleunce.test', 'thirty', 'token?/secret');
+  await transport.order('chat.fleunce.test', 'GPA.1234-5678'); await transport.voided('chat.fleunce.test', 1000, 2000, 'page token');
+  assert.equal(calls[0].url, 'https://androidpublisher.googleapis.com/androidpublisher/v3/applications/chat.fleunce.test/purchases/productsv2/tokens/token%3F%2Fsecret');
   assert.equal(calls[1].init.method, 'POST'); assert.equal(calls[1].init.body, undefined); assert.equal(calls[1].init.redirect, 'error');
   assert.equal(calls[0].init.headers.authorization, 'Bearer synthetic-access-token-for-test');
   assert.match(calls[3].url, /includeQuantityBasedPartialRefund=true/); assert.match(calls[3].url, /token=page\+token/);
   const tooLarge = new GooglePlayHTTPTransport({ accessToken: async () => 'synthetic-access-token-for-test' }, (async () => new Response('x'.repeat(270_000))) as any);
-  await assert.rejects(tooLarge.purchase('chat.mural.test', 'token'), /^Error: google_provider_unavailable$/);
+  await assert.rejects(tooLarge.purchase('chat.fleunce.test', 'token'), /^Error: google_provider_unavailable$/);
   const failed = new GooglePlayHTTPTransport({ accessToken: async () => 'synthetic-access-token-for-test' }, (async () => { throw new Error('secret body'); }) as any);
-  await assert.rejects(failed.purchase('chat.mural.test', 'token'), /^Error: google_provider_unavailable$/);
+  await assert.rejects(failed.purchase('chat.fleunce.test', 'token'), /^Error: google_provider_unavailable$/);
 });
 
 test('service-account OAuth signs the exact audience/scope and coalesces token refresh without exposing provider errors', async () => {
@@ -384,7 +384,7 @@ integration('restricted runtime can store encrypted receipts and process jobs bu
     const account = await f.account(), order = await f.stripeOrder(account); f.stripeTransport.paid();
     await f.db.query(`CREATE ROLE ${role}; GRANT USAGE ON SCHEMA ${f.schema} TO ${role}; GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA ${f.schema} TO ${role}`);
     for (const file of ['minute-runtime-grants.sql','minute-purchase-runtime-grants.sql','minute-provider-runtime-grants.sql']) {
-      await f.db.query((await readFile(new URL(`../operations/${file}`, import.meta.url), 'utf8')).replaceAll('mural_runtime', role));
+      await f.db.query((await readFile(new URL(`../operations/${file}`, import.meta.url), 'utf8')).replaceAll('fleunce_runtime', role));
     }
     const url = new URL(databaseURL!); url.searchParams.set('options', `-c search_path=${f.schema} -c role=${role}`); runtime = connectDatabase(url.toString());
     const vault = new MinuteReceiptVault(runtime, 'test-key', new Map([['test-key', f.encryptionKey]]));

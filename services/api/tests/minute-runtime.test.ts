@@ -21,7 +21,7 @@ test('restricted runtime can serve signup and minute usage but cannot change ope
     await owner.query(`CREATE ROLE ${role}; GRANT USAGE ON SCHEMA ${schema} TO ${role};
       GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA ${schema} TO ${role}`);
     const grants = await readFile(new URL('../operations/minute-runtime-grants.sql', import.meta.url), 'utf8');
-    await owner.query(grants.replaceAll('mural_runtime', role));
+    await owner.query(grants.replaceAll('fleunce_runtime', role));
     const runtimeURL = new URL(databaseURL!); runtimeURL.searchParams.set('options', `-c search_path=${schema} -c role=${role}`);
     const runtime = connectDatabase(runtimeURL.toString());
     try {

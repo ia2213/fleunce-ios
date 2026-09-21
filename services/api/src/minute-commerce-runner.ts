@@ -18,7 +18,7 @@ export class PlayVoidReconciler {
   async page(): Promise<{ skipped: boolean; pages: number; scheduled: number; more: boolean }> {
     return transaction(this.db, async sql => {
       const locked = (await sql.query('SELECT pg_try_advisory_xact_lock(hashtextextended($1,0)) AS acquired',
-        [`mural-play-void-cursor:${this.play.environment}:${this.play.merchant}`])).rows[0].acquired;
+        [`fleunce-play-void-cursor:${this.play.environment}:${this.play.merchant}`])).rows[0].acquired;
       if (!locked) return { skipped: true, pages: 0, scheduled: 0, more: false };
       await sql.query(`INSERT INTO minute_play_void_cursors(environment,merchant) VALUES($1,$2) ON CONFLICT DO NOTHING`,
         [this.play.environment, this.play.merchant]);

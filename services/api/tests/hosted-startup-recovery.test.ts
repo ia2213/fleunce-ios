@@ -68,7 +68,7 @@ integration('runtime role cannot invoke support recovery or alter its audit reco
   await f.db.query(`GRANT USAGE ON SCHEMA ${f.schema} TO ${role}`);
   await f.db.query(`GRANT SELECT,INSERT,UPDATE ON ALL TABLES IN SCHEMA ${f.schema} TO ${role}`);
   const grants=await readFile(new URL('../operations/hosted-startup-recovery-runtime-grants.sql',import.meta.url),'utf8');
-  await f.db.query(grants.replaceAll('mural_runtime',role));
+  await f.db.query(grants.replaceAll('fleunce_runtime',role));
   const url=new URL(databaseURL!);url.searchParams.set('options',`-c search_path=${f.schema} -c role=${role}`);runtime=connectDatabase(url.toString());
   await assert.rejects(recoverHostedStartup(runtime,f.input),{code:'42501'});
   assert.equal((await f.snapshot()).reserved_ms,'600000');

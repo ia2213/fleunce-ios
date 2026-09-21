@@ -69,7 +69,7 @@ export class HostedVoice {
     if (this.leader) throw new ServiceError('voice_worker_already_started', 503);
     const leader = await this.db.connect();
     try {
-      const lock = await leader.query("SELECT pg_try_advisory_lock(hashtext('mural-hosted-voice-worker')) AS acquired");
+      const lock = await leader.query("SELECT pg_try_advisory_lock(hashtext('fleunce-hosted-voice-worker')) AS acquired");
       if (!lock.rows[0].acquired) throw new ServiceError('voice_worker_already_running', 503);
       this.leader = leader;
       this.leaderError=() => { this.accepting = false; void this.emergencyClose(); };
@@ -92,7 +92,7 @@ export class HostedVoice {
       this.timer = setInterval(() => { void this.tick().catch(error => { this.diagnostics.record('voice_watchdog_failed', { operation: 'voice.watchdog' }, error); this.accepting = false; void this.emergencyClose(); }); }, 1_000);
       this.timer.unref();
     } catch (error) {
-      if (this.leader) { await leader.query("SELECT pg_advisory_unlock(hashtext('mural-hosted-voice-worker'))").catch(() => {}); this.leader = undefined; }
+      if (this.leader) { await leader.query("SELECT pg_advisory_unlock(hashtext('fleunce-hosted-voice-worker'))").catch(() => {}); this.leader = undefined; }
       if (this.leaderError) leader.removeListener('error',this.leaderError);
       this.leaderError=undefined;leader.release(); throw error;
     }
@@ -110,7 +110,7 @@ export class HostedVoice {
     let paidReserve=this.paidHold(15_000);
     let deadline = new Date(this.now() + reservedMilliseconds);
     await transaction(this.db, async sql => {
-      await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-hosted-funding-cap'))");
+      await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-hosted-funding-cap'))");
       const minuteWallet = minutes ? await lockMinuteWallet(sql, account) : undefined;
       let wallet = minuteWallet ?? await lockWallet(sql, account, true);
       if((await sql.query('SELECT 1 FROM minute_guest_link_intents WHERE guest_account_id=$1',[account])).rowCount)
@@ -219,7 +219,7 @@ export class HostedVoice {
   }
   private async settleRejectedCreate(id: string, account: string, rejection: LiveCreateRejectedError): Promise<void> {
     await transaction(this.db, async sql => {
-      await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-hosted-funding-cap'))");
+      await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-hosted-funding-cap'))");
       const funding = (await sql.query('SELECT minute_reservation_id FROM hosted_sessions WHERE id=$1 AND account_id=$2', [id, account])).rows[0];
       if (!funding) throw new ServiceError('provider_reconciliation_required', 503);
       if (funding.minute_reservation_id) await lockMinuteWallet(sql, account, false);
@@ -254,7 +254,7 @@ export class HostedVoice {
    * only a durable cancellation before it can release time without a provider final event. */
   private async prepareMinuteProviderAttempt(id: string, account: string, attempt = true): Promise<boolean> {
     return transaction(this.db, async sql => {
-      await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-hosted-funding-cap'))");
+      await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-hosted-funding-cap'))");
       const funding=(await sql.query('SELECT funding_mode FROM hosted_sessions WHERE id=$1 AND account_id=$2',[id,account])).rows[0];
       const paid=funding?.funding_mode==='ai-value';
       if (paid) await lockWallet(sql,account); else await lockMinuteWallet(sql, account, false);
@@ -305,7 +305,7 @@ export class HostedVoice {
     const state = await transaction(this.db, async sql => {
       // Match admission/helper lock order so final voice cost and reduced helper liability
       // become visible atomically to a new funded conversation.
-      await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-hosted-funding-cap'))");
+      await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-hosted-funding-cap'))");
       const owner = (await sql.query('SELECT account_id,minute_reservation_id FROM hosted_sessions WHERE id=$1', [id])).rows[0];
       if (!owner) throw new ServiceError('unknown_hosted_session');
       if (owner.minute_reservation_id) await lockMinuteWallet(sql, owner.account_id, false);
@@ -461,7 +461,7 @@ export class HostedVoice {
     for (const slot of this.slots.values()) slot.connection?.disconnect();
     this.slots.clear();
     if (this.leader) {
-      await this.leader.query("SELECT pg_advisory_unlock(hashtext('mural-hosted-voice-worker'))").catch(() => {});
+      await this.leader.query("SELECT pg_advisory_unlock(hashtext('fleunce-hosted-voice-worker'))").catch(() => {});
       if (this.leaderError) this.leader.removeListener('error',this.leaderError);
       this.leaderError=undefined;
       this.leader.release(); this.leader = undefined;

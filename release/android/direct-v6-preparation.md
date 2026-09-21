@@ -2,7 +2,7 @@
 
 Version 6 is being prepared to fix Google sign-in when guest conversation usage is still being settled. The change lets the Google flow open and durably links the earlier guest usage to the member account. Available gift or purchased balance can then be used while that usage is reconciled, without granting a second welcome allowance. Building and runtime verification remain pending.
 
-The package remains `chat.mural.android`, version name `0.1`, minimum API 26 and target API 36. The default spec uses version code 6 with purchases disabled by default. [specs/direct-v6.json](specs/direct-v6.json) describes the explicitly configured direct Stripe build. The [v5 direct spec](specs/direct-v5.json) and [v4 Play submission](evidence/play-submission-2026-09-14.json) remain historical records.
+The package remains `chat.fleunce.android`, version name `0.1`, minimum API 26 and target API 36. The default spec uses version code 6 with purchases disabled by default. [specs/direct-v6.json](specs/direct-v6.json) describes the explicitly configured direct Stripe build. The [v5 direct spec](specs/direct-v5.json) and [v4 Play submission](evidence/play-submission-2026-09-14.json) remain historical records.
 
 ## Required before building
 
@@ -14,7 +14,7 @@ The package remains `chat.mural.android`, version name `0.1`, minimum API 26 and
 
 ## Build and upgrade requirements
 
-The direct build requires `mural.minutePurchasesEnabled=true`, `mural.purchaseChannel=stripe` and `mural.minutePurchaseEnvironment=live`, with the intended API origin and Google client ID supplied through local configuration. A clean build's defaults do not enable this channel. Use the [build and verification procedure](build-and-verify.md) after the code is complete.
+The direct build requires `fleunce.minutePurchasesEnabled=true`, `fleunce.purchaseChannel=stripe` and `fleunce.minutePurchaseEnvironment=live`, with the intended API origin and Google client ID supplied through local configuration. A clean build's defaults do not enable this channel. Use the [build and verification procedure](build-and-verify.md) after the code is complete.
 
 Sign the v6 APK with the same review certificate as the installed v5 direct APK. Use protected password files or a private signing prompt; keep passwords out of arguments and logs. Verify the certificate match, APK v2/v3 signatures, version code 6, release manifest flags, 16 KB ZIP alignment and the embedded-credential scan before distributing it.
 

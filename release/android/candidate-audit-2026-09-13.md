@@ -6,15 +6,15 @@ This historical inspection candidate builds and passes bundle validation. Accoun
 
 | Item | Result |
 | --- | --- |
-| Bundle | `release/private/android-candidate-2026-09-13/mural-0.1-1-unsigned.aab` |
+| Bundle | `release/private/android-candidate-2026-09-13/fleunce-0.1-1-unsigned.aab` |
 | SHA-256 | `699dc931914a27d7264c88953e18fb3df0c06ed688a331f89d8bc65bc6f05812` |
 | Size | 32,920,631 bytes |
-| Identity | `chat.mural.android`, version code `1`, version name `0.1` |
+| Identity | `chat.fleunce.android`, version code `1`, version name `0.1` |
 | Android support | Minimum API 26; target API 36 |
 | Build | `bundleRelease` and `lintRelease` succeeded; lint had zero errors, 42 warnings and two hints |
 | Source | Base commit `b0fbc88dcef231af9391268f162aba7fb87829a6` plus uncommitted work; all 83 recorded production source/configuration files stayed unchanged during the build |
 | Manifest | Not debuggable or test-only; automatic backup and cleartext traffic disabled |
-| Public configuration | `https://api.mural.chat` and a Google public OAuth client ID; purchases disabled; purchase environment `test` |
+| Public configuration | `https://api.fleunce.chat` and a Google public OAuth client ID; purchases disabled; purchase environment `test` |
 | Signing | No JAR signature entries; `jarsigner` confirms the bundle is unsigned |
 | Bundle tooling | Cached bundletool 1.18.0 validates the bundle and reports `PAGE_ALIGNMENT_16K` |
 
@@ -32,7 +32,7 @@ Gradle could not strip those library names and packaged them as received. The in
 
 The Play icon now meets the 512 × 512 RGBA requirement. Its alpha is uniformly opaque and its sRGB setting matches the canonical source. Every RGB pixel is unchanged from the existing 512-pixel image; [conversion evidence](evidence/icon-normalization.json) records the before/after hashes. The Android launcher image remains byte-identical to the iOS source. [Google icon specification](https://developer.android.com/distribute/google-play/resources/icon-design-specifications)
 
-The feature graphic and all six final store screenshots are missing. Existing tall design captures are review evidence. Installed launcher masks/scale, the in-app Mural wordmark and final store artwork still need visual comparison against iOS. The prepared listing copy passes length checks and describes a BYOK preview; it must not be used to advertise hosted purchases before they work in the submitted candidate.
+The feature graphic and all six final store screenshots are missing. Existing tall design captures are review evidence. Installed launcher masks/scale, the in-app Fleunce wordmark and final store artwork still need visual comparison against iOS. The prepared listing copy passes length checks and describes a BYOK preview; it must not be used to advertise hosted purchases before they work in the submitted candidate.
 
 ## Remaining release gates
 

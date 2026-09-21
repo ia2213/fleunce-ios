@@ -1,11 +1,11 @@
 # Android version 2 — 14 September 2026
 
-Two separate files are prepared in the sibling `Hej/deliverables` directory. Both use `chat.mural.android`, version 0.1 (code 2), minimum API 26 and target API 36. Paid checkout remains disabled.
+Two separate files are prepared in the sibling `Hej/deliverables` directory. Both use `chat.fleunce.android`, version 0.1 (code 2), minimum API 26 and target API 36. Paid checkout remains disabled.
 
 | File | Build | Bytes | SHA-256 |
 | --- | --- | ---: | --- |
-| `Mural-Android-preview-2026-09-14-v2.apk` | Installable debug preview | 63,458,443 | `52f5e9997dd565e39207f2d1662f264bfc0573e48c78d4f9e2279eafc280be86` |
-| `Mural-Android-release-2026-09-14-v2.aab` | Upload-key-signed release bundle | 33,031,535 | `613cf25edc8db5bfe154f15d7cfd878197a0392e300c5eb671e5fd7240f70ce3` |
+| `Fleunce-Android-preview-2026-09-14-v2.apk` | Installable debug preview | 63,458,443 | `52f5e9997dd565e39207f2d1662f264bfc0573e48c78d4f9e2279eafc280be86` |
+| `Fleunce-Android-release-2026-09-14-v2.aab` | Upload-key-signed release bundle | 33,031,535 | `613cf25edc8db5bfe154f15d7cfd878197a0392e300c5eb671e5fd7240f70ce3` |
 
 The preview keeps the existing personal debug certificate. All 607 release-bundle payload signatures verify against the approved upload certificate. Bundletool validation, all eight store assets and all five generated ARM64/device split signature and 16 KB alignment checks pass. The packaged ARM64 libraries match the earlier successful 16 KB runtime test byte for byte.
 

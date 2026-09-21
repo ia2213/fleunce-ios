@@ -6,7 +6,7 @@ import type { Database } from '../src/db.js';
 
 const signing = await generateKeyPair('ES256', { extractable: true });
 const apple = await generateKeyPair('RS256');
-const config = { clientID: 'com.example.mural', teamID: 'TEAM123456', keyID: 'KEY1234567', privateKeyPEM: await exportPKCS8(signing.privateKey) };
+const config = { clientID: 'com.example.fleunce', teamID: 'TEAM123456', keyID: 'KEY1234567', privateKeyPEM: await exportPKCS8(signing.privateKey) };
 const db = { query: async () => ({ rows: [{ subject: 'account-apple-subject' }] }) } as unknown as Database;
 async function identity(subject: string, audience = config.clientID) {
   return new SignJWT({}).setProtectedHeader({ alg: 'RS256' }).setSubject(subject).setAudience(audience)

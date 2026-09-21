@@ -33,7 +33,7 @@ from https://developers.google.com/static/identity/images/signin-assets.zip
 (downloaded September 12, 2026). Google retains its trademarks and artwork
 rights. Use is subject to Google's Sign in with Google branding guidelines:
 https://developers.google.com/identity/branding-guidelines
-The Mural MIT license does not grant rights to Google's marks.
+The Fleunce MIT license does not grant rights to Google's marks.
 
 
 Google WebRTC

@@ -236,7 +236,7 @@ integration('the restricted runtime settles paid helpers while provenance and fu
     GRANT SELECT ON minute_purchase_transactions TO ${role};
     GRANT UPDATE ON wallets TO ${role}`);
   for(const file of ['minute-runtime-grants.sql','hosted-helper-runtime-grants.sql','actual-value-runtime-grants.sql']) {
-    const grants=await readFile(new URL(`../operations/${file}`,import.meta.url),'utf8');await db!.query(grants.replaceAll('mural_runtime',role));
+    const grants=await readFile(new URL(`../operations/${file}`,import.meta.url),'utf8');await db!.query(grants.replaceAll('fleunce_runtime',role));
   }
   const runtimeURL=new URL(databaseURL!);runtimeURL.searchParams.set('options',`-c search_path=${schema} -c role=${role}`);
   const runtime=connectDatabase(runtimeURL.toString());

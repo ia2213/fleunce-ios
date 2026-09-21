@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "scope": "hosted-guest-preview",
-  "packageName": "chat.mural.android",
+  "packageName": "chat.fleunce.android",
   "versionCode": 8,
   "versionName": "0.1",
   "minSdk": 26,
@@ -9,16 +9,16 @@
   "metadataLocale": "en-US",
   "branding": {
     "iosIconSet": "apps/ios/App/Assets.xcassets/AppIcon.appiconset",
-    "iosIconFile": "MuralIcon.png",
-    "androidIconFile": "apps/android/app/src/main/res/drawable-nodpi/mural_icon.png",
+    "iosIconFile": "FleunceIcon.png",
+    "androidIconFile": "apps/android/app/src/main/res/drawable-nodpi/fleunce_icon.png",
     "androidManifest": "apps/android/app/src/main/AndroidManifest.xml",
-    "androidAdaptiveIcon": "apps/android/app/src/main/res/mipmap-anydpi-v26/ic_mural.xml",
-    "androidForeground": "apps/android/app/src/main/res/drawable/ic_mural_foreground.xml",
+    "androidAdaptiveIcon": "apps/android/app/src/main/res/mipmap-anydpi-v26/ic_fleunce.xml",
+    "androidForeground": "apps/android/app/src/main/res/drawable/ic_fleunce_foreground.xml",
     "iosDesignSource": "apps/ios/App/Design.swift",
-    "androidDesignSource": "apps/android/app/src/main/java/chat/mural/ui/Design.kt"
+    "androidDesignSource": "apps/android/app/src/main/java/chat/fleunce/ui/Design.kt"
   },
   "requiredLicenses": [
-    "Mural-LICENSE.txt",
+    "Fleunce-LICENSE.txt",
     "Apache-2.0.txt",
     "Nunito-OFL.txt",
     "THIRD-PARTY-NOTICES.txt",

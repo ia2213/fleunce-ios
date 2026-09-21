@@ -260,43 +260,43 @@ def check_prompts(swift_path, kotlin_path):
 CONSTANTS = [
     ('transcript_gap_ms', 'scalar',
      ('apps/ios/Core/Models.swift', r'fragment\.startMS - result\[i\]\.endMS <= (\d[\d_]*)'),
-     ('apps/android/app/src/main/java/chat/mural/core/Models.kt', r'f\.startMS - p\.endMS <= (\d[\d_]*)')),
+     ('apps/android/app/src/main/java/chat/fleunce/core/Models.kt', r'f\.startMS - p\.endMS <= (\d[\d_]*)')),
     ('redirect_confidence', 'scalar',
      ('apps/ios/Core/TeachingPolicy.swift', r'confidence > (\d+\.\d+)'),
-     ('apps/android/app/src/main/java/chat/mural/core/TeachingPolicy.kt', r'confidence>(\d+\.\d+)')),
+     ('apps/android/app/src/main/java/chat/fleunce/core/TeachingPolicy.kt', r'confidence>(\d+\.\d+)')),
     ('max_words', 'scalar',
      ('apps/ios/Core/LearningEngine.swift', r'proposal\.words\.count <= (\d[\d_]*)'),
-     ('apps/android/app/src/main/java/chat/mural/core/LearningEngine.kt', r'proposal\.words\.size>(\d[\d_]*)')),
+     ('apps/android/app/src/main/java/chat/fleunce/core/LearningEngine.kt', r'proposal\.words\.size>(\d[\d_]*)')),
     ('next_goal_prefix', 'scalar',
      ('apps/ios/Core/LearningEngine.swift', r'nextGoal\.prefix\((\d[\d_]*)\)'),
-     ('apps/android/app/src/main/java/chat/mural/core/LearningEngine.kt', r'nextGoal\.take\((\d[\d_]*)\)')),
+     ('apps/android/app/src/main/java/chat/fleunce/core/LearningEngine.kt', r'nextGoal\.take\((\d[\d_]*)\)')),
     ('capability_prefix', 'scalar',
      ('apps/ios/Core/LearningEngine.swift', r'capability\.prefix\((\d[\d_]*)\)'),
-     ('apps/android/app/src/main/java/chat/mural/core/LearningEngine.kt', r'capability\.take\((\d[\d_]*)\)')),
+     ('apps/android/app/src/main/java/chat/fleunce/core/LearningEngine.kt', r'capability\.take\((\d[\d_]*)\)')),
     ('min_word_confidence', 'scalar',
      ('apps/ios/Core/LearningEngine.swift', r'word\.confidence >= (\d+\.\d+)'),
-     ('apps/android/app/src/main/java/chat/mural/core/LearningEngine.kt', r'word\.confidence !in (\d+\.\d+)\.\.')),
+     ('apps/android/app/src/main/java/chat/fleunce/core/LearningEngine.kt', r'word\.confidence !in (\d+\.\d+)\.\.')),
     ('imitation_window_ms', 'scalar',
      ('apps/ios/Core/LearningEngine.swift', r'\$0\.endMS < (\d[\d_]*)'),
-     ('apps/android/app/src/main/java/chat/mural/core/LearningEngine.kt', r'passage\.startMS-p\.endMS<(\d[\d_]*)')),
+     ('apps/android/app/src/main/java/chat/fleunce/core/LearningEngine.kt', r'passage\.startMS-p\.endMS<(\d[\d_]*)')),
     ('review_intervals_days', 'list',
      ('apps/ios/Core/LearningEngine.swift', r'\[([\d., ]+)\]\[bars\] \* 86400'),
-     ('apps/android/app/src/main/java/chat/mural/core/LearningEngine.kt', r'listOf\(([\d., ]+)\)\[bars\]\*86400')),
+     ('apps/android/app/src/main/java/chat/fleunce/core/LearningEngine.kt', r'listOf\(([\d., ]+)\)\[bars\]\*86400')),
     ('steady_window_days', 'scalar',
      ('apps/ios/Core/LearningEngine.swift', r'>= (\d[\d_]*) \* 86400'),
-     ('apps/android/app/src/main/java/chat/mural/core/LearningEngine.kt', r'>=(\d[\d_]*)\*86400')),
+     ('apps/android/app/src/main/java/chat/fleunce/core/LearningEngine.kt', r'>=(\d[\d_]*)\*86400')),
     ('steady_min_days', 'scalar',
      ('apps/ios/Core/LearningEngine.swift', r'days >= (\d[\d_]*) &&'),
-     ('apps/android/app/src/main/java/chat/mural/core/LearningEngine.kt', r'days>=(\d[\d_]*) &&')),
+     ('apps/android/app/src/main/java/chat/fleunce/core/LearningEngine.kt', r'days>=(\d[\d_]*) &&')),
     ('steady_min_contexts', 'scalar',
      ('apps/ios/Core/LearningEngine.swift', r'contexts >= (\d[\d_]*) &&'),
-     ('apps/android/app/src/main/java/chat/mural/core/LearningEngine.kt', r'contexts>=(\d[\d_]*) &&')),
+     ('apps/android/app/src/main/java/chat/fleunce/core/LearningEngine.kt', r'contexts>=(\d[\d_]*) &&')),
     ('capability_evidence_min', 'scalar',
      ('apps/ios/Core/LearningEngine.swift', r'value\.count >= (\d[\d_]*)'),
-     ('apps/android/app/src/main/java/chat/mural/core/LearningEngine.kt', r'\.size>=(\d[\d_]*) \}')),
+     ('apps/android/app/src/main/java/chat/fleunce/core/LearningEngine.kt', r'\.size>=(\d[\d_]*) \}')),
     ('idle_voice_s', 'scalar',
      ('apps/ios/Core/SessionLimits.swift', r'idleVoiceSeconds: Double = (\d[\d_]*(?:\.\d[\d_]*)?)'),
-     ('apps/android/app/src/main/java/chat/mural/core/SessionLimits.kt', r'IDLE_VOICE_SECONDS = (\d[\d_]*(?:\.\d[\d_]*)?)')),
+     ('apps/android/app/src/main/java/chat/fleunce/core/SessionLimits.kt', r'IDLE_VOICE_SECONDS = (\d[\d_]*(?:\.\d[\d_]*)?)')),
 ]
 
 
@@ -529,10 +529,10 @@ def check_archive_fields(swift_path, kotlin_path):
 def run_checks(root):
     failures = []
     failures += check_prompts(root / 'apps/ios/Core/TeachingPolicy.swift',
-                               root / 'apps/android/app/src/main/java/chat/mural/core/TeachingPolicy.kt')
+                               root / 'apps/android/app/src/main/java/chat/fleunce/core/TeachingPolicy.kt')
     failures += check_constants(root)
     failures += check_archive_fields(root / 'apps/ios/Core/Models.swift',
-                                      root / 'apps/android/app/src/main/java/chat/mural/core/Models.kt')
+                                      root / 'apps/android/app/src/main/java/chat/fleunce/core/Models.kt')
     return failures
 
 

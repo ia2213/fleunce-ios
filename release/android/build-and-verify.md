@@ -26,7 +26,7 @@ Obtain a pinned release of Google's [bundletool](https://github.com/google/bundl
 
 ```sh
 python3 scripts/check_android_release.py \
-  --aab /absolute/path/mural-release.aab \
+  --aab /absolute/path/fleunce-release.aab \
   --bundletool-jar /absolute/path/bundletool-all.jar \
   --require-bundle --require-assets \
   --output /absolute/path/candidate-evidence/release-files.json
@@ -39,7 +39,7 @@ The default specification is the current v8 candidate. To recheck the archived v
 ```sh
 python3 scripts/check_android_release.py \
   --spec release/android/specs/play-v4.json \
-  --aab /absolute/path/Mural-Android-release-2026-09-14-v4.aab \
+  --aab /absolute/path/Fleunce-Android-release-2026-09-14-v4.aab \
   --bundletool-jar /absolute/path/bundletool-all.jar \
   --require-bundle --require-assets \
   --output /absolute/path/candidate-evidence/v4-recheck.json

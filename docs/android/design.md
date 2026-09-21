@@ -1,8 +1,8 @@
-# Mural on Android
+# Fleunce on Android
 
 ## Decision and scope
 
-Mural keeps two native clients: SwiftUI and SwiftData in `apps/ios/`, and Kotlin with Jetpack Compose in `apps/android/`. The API lives in `services/api/`. Shared fixtures and contracts keep learning data compatible while each app retains its platform audio, accessibility and animation tools.
+Fleunce keeps two native clients: SwiftUI and SwiftData in `apps/ios/`, and Kotlin with Jetpack Compose in `apps/android/`. The API lives in `services/api/`. Shared fixtures and contracts keep learning data compatible while each app retains its platform audio, accessibility and animation tools.
 
 The Android client keeps the eight language modules, the 24 themes and their cultural variants, WebRTC voice, written replies, meanings, word lookup, current topics with sources, history, corrections, vocabulary and learning projection. It adds written conversation without the microphone permission. Android account and minute-purchase integration is in progress. The public hosted conversation service remains disabled; no cloud learning sync is planned.
 
@@ -27,7 +27,7 @@ Pinyin uses the MIT-licensed [phrase-pinyin-data](https://github.com/mozillazg/p
 - `core/`: serializable models, the v1/v2 archive, language modules, evidence rules, teaching policy, `MeaningController`, `FinalAssessmentQueue`, session limits and usage summary. No Android dependencies, so it runs in JVM tests.
 - `network/`: direct HTTPS client for OpenAI, AES-GCM credentials protected by Android Keystore, native WebRTC transport and the platform language detector.
 - `LearningRepository`: private `learning.json` written with `AtomicFile`. It never contains the API key.
-- `MuralViewModel`: conversation state, duration and inactivity limits, cancellation, assessments, meanings and persistence. Isolated copies prevent a late response from changing another conversation.
+- `FleunceViewModel`: conversation state, duration and inactivity limits, cancellation, assessments, meanings and persistence. Isolated copies prevent a late response from changing another conversation.
 - `ui/` and `MainActivity`: Compose screens, explicit consent, system permissions, export and import through the Android document picker, and accessibility. Copy lives in `res/values` (English) and `res/values-es` (Spanish).
 
 ## Platform mapping
@@ -49,13 +49,13 @@ Pinyin uses the MIT-licensed [phrase-pinyin-data](https://github.com/mozillazg/p
 
 The iPhone JSON archive (`schemaVersion` 2) and the v1 Norwegian migration are preserved. Dates are seconds since 1 January 2001, not the Unix epoch. Import merges new conversations, keeps local settings and revalidates evidence. Files over 30 MB, duplicates, unknown languages and invalid records are rejected. Exports from both platforms are semantically compatible; key order differs because Swift sorts keys.
 
-The microphone works only in the foreground. Ending the conversation, losing audio focus, leaving the app or cancelling the connection releases audio and WebRTC. Only the permissions Mural needs are requested, and no recordings are stored. System backups and device transfers exclude the archive and credentials; learners move their learning through explicit export.
+The microphone works only in the foreground. Ending the conversation, losing audio focus, leaving the app or cancelling the connection releases audio and WebRTC. Only the permissions Fleunce needs are requested, and no recordings are stored. System backups and device transfers exclude the archive and credentials; learners move their learning through explicit export.
 
-The repository protocol is unchanged: OpenAI `POST /v1/live/sessions` with `gpt-live-1`, voice `marin` and the `oai-events` channel, and helper operations through `POST /v1/responses` with `gpt-5.6-luna`. The key is entered on the device, never in code. There is no shared key, no required Mural server and no paid call in automated tests.
+The repository protocol is unchanged: OpenAI `POST /v1/live/sessions` with `gpt-live-1`, voice `marin` and the `oai-events` channel, and helper operations through `POST /v1/responses` with `gpt-5.6-luna`. The key is entered on the device, never in code. There is no shared key, no required Fleunce server and no paid call in automated tests.
 
 ## Keeping both clients in sync
 
-Language content is generated from the Swift modules by `scripts/export_android_content.py`. `scripts/check_cross_platform.py` compares teaching prompts, learning constants and archive fields between `apps/ios/Core/` and `apps/android/app/src/main/java/chat/mural/core/`, and `shared/fixtures/cross-platform/` holds an archive that both `swift test` and the Gradle tests decode, project and re-encode. See [the language architecture](../language-architecture.md).
+Language content is generated from the Swift modules by `scripts/export_android_content.py`. `scripts/check_cross_platform.py` compares teaching prompts, learning constants and archive fields between `apps/ios/Core/` and `apps/android/app/src/main/java/chat/fleunce/core/`, and `shared/fixtures/cross-platform/` holds an archive that both `swift test` and the Gradle tests decode, project and re-encode. See [the language architecture](../language-architecture.md).
 
 ## Platform and verification
 

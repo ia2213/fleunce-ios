@@ -1,6 +1,6 @@
 # Initial source release audit
 
-Review date: 12 September 2026. Target repository: [Chuloo/mural](https://github.com/Chuloo/mural). License: [MIT](../LICENSE).
+Review date: 12 September 2026. Target repository: [Chuloo/fleunce](https://github.com/Chuloo/fleunce). License: [MIT](../LICENSE).
 
 The later [security audit](security-audit-2026-09-12.md) covers public Git history, deployed accounts and the resulting security fixes. The findings below describe the initial publication checkpoint.
 
@@ -24,9 +24,9 @@ Publish from the directory containing `Package.swift`, keeping the following rel
 | --- | --- |
 | `App/`, `apps/ios/Core/`, `apps/ios/Tests/`, `apps/ios/UITests/` | Source, fixtures, app assets, privacy manifest and third-party notices |
 | `Package.swift` | Pure Swift core package |
-| `Mural.xcodeproj/project.pbxproj` | Generated project without personal signing values |
-| `Mural.xcodeproj/xcshareddata/xcschemes/` | Shared scheme |
-| `Mural.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved` | Pinned dependency resolution |
+| `Fleunce.xcodeproj/project.pbxproj` | Generated project without personal signing values |
+| `Fleunce.xcodeproj/xcshareddata/xcschemes/` | Shared scheme |
+| `Fleunce.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved` | Pinned dependency resolution |
 | `Config/Signing.xcconfig`, `Config/Local.example.xcconfig` | Public signing configuration and example only |
 | `scripts/` | Repeatable generators |
 | `README.md`, `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md`, `.gitignore` | Public project information |
@@ -38,7 +38,7 @@ Publish from the directory containing `Package.swift`, keeping the following rel
 
 Exclude `.build/`, `DerivedData/`, `.swiftpm/` workspace state, Xcode user data, all local credentials and signing profiles, `Config/Local.xcconfig`, raw verification JSON/logs, compiled archives, exports of learning data, the duplicate marketing ZIP, and editor/system files. Keep the historical `plan/` drafts local for the first release; they describe earlier personal-build assumptions.
 
-Website source and assets are published in the separate [Chuloo/mural-website repository](https://github.com/Chuloo/mural-website) and deployed at [mural.chat](https://mural.chat). They are outside the app repository’s publication scope.
+Website source and assets are published in the separate [Chuloo/fleunce-website repository](https://github.com/Chuloo/fleunce-website) and deployed at [fleunce.chat](https://fleunce.chat). They are outside the app repository’s publication scope.
 
 ## Publication checks
 
@@ -51,4 +51,4 @@ Website source and assets are published in the separate [Chuloo/mural-website re
 
 ## Ignore coverage
 
-`Mural/.gitignore` covers build output, local signing, credential file formats, provisioning profiles and private release material. The workspace-level ignore file covers the existing verification images and logs. Before publishing this directory as its own repository, retain the child ignore rules and explicitly exclude the historical/raw files listed above; ignore rules alone are not an allowlist.
+`Fleunce/.gitignore` covers build output, local signing, credential file formats, provisioning profiles and private release material. The workspace-level ignore file covers the existing verification images and logs. Before publishing this directory as its own repository, retain the child ignore rules and explicitly exclude the historical/raw files listed above; ignore rules alone are not an allowlist.

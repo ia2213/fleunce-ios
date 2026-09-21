@@ -1,10 +1,10 @@
 # Android PR security review — 14 September 2026
 
-Reviewed all 37 open CodeQL findings reported for [PR #17](https://github.com/Chuloo/mural/pull/17) at `c8668df1dbc10d241c547400657ee82b69410e71`: three critical and 34 high. The Python and JavaScript SARIF data flows were retrieved from analyses `1770657374` and `1770658023`; this review uses their exact sources and sinks.
+Reviewed all 37 open CodeQL findings reported for [PR #17](https://github.com/Chuloo/fleunce/pull/17) at `c8668df1dbc10d241c547400657ee82b69410e71`: three critical and 34 high. The Python and JavaScript SARIF data flows were retrieved from analyses `1770657374` and `1770658023`; this review uses their exact sources and sinks.
 
 No production exploit was established by these 37 findings. Thirty-five are false positives for the reported rule, with evidence below. Two identify imprecise assertions in tests; those assertions have been strengthened. This is a review of the reported flows, not a claim that the whole application is vulnerability-free. No alerts were dismissed and no scanning configuration was weakened. The remote CodeQL gate remains failed until GitHub processes changes and reviewed alert dispositions.
 
-All source line numbers below refer to the scanned commit. An alert number links to `https://github.com/Chuloo/mural/security/code-scanning/NUMBER`.
+All source line numbers below refer to the scanned commit. An alert number links to `https://github.com/Chuloo/fleunce/security/code-scanning/NUMBER`.
 
 ## Critical: local capture executables
 
@@ -64,20 +64,20 @@ These test files check that `TEST_DATABASE_URL` points to a name ending in `_tes
 - Alert 44, `tests/access-requests.test.ts:94`: the substring check was a negative assertion that invalid responses did not leak a fixture email domain. It was never a URL allowlist. It now compares the complete response to `{ error: { code: 'invalid_access_request' } }`, proving the expected safe payload.
 - Alert 45, `tests/minute-providers.test.ts:116`: the checkout URL regex had unescaped dots. The test now parses the URL and checks the exact `https://checkout.stripe.com` origin. Production `stripe-minute-provider.ts:118` already requires HTTPS, the exact hostname, no port and no user information, so the weak test did not expose a production redirect bypass.
 
-The two modified API suites passed **33/33 tests**, with no skips, against a new local disposable `mural_codeql_review_test` database. No provider calls or live credentials were used. Log: `/private/tmp/mural-codeql-api-assertions-2026-09-14.log`.
+The two modified API suites passed **33/33 tests**, with no skips, against a new local disposable `fleunce_codeql_review_test` database. No provider calls or live credentials were used. Log: `/private/tmp/fleunce-codeql-api-assertions-2026-09-14.log`.
 
 ## Android CI failure
 
 The separate emulator failure was `PlayStoreCaptureTest.longSpanishReplyKeepsMeaningVisibleAndBothPassagesCanScroll`. The translation can fit completely at the CI device geometry, so requiring a positive scroll offset is incorrect. The revised assertion checks the complete text bounds when the scroll range is zero; otherwise it scrolls to the end and requires the final offset to reach the maximum. Independent target/meaning regions, visible first lines, fixed navigation and the microphone control remain asserted. No production layout or version changed for this correction.
 
-The focused regression passed on the local API 36 ARM64 emulator in isolated user 12 at **1080 × 2400, density 420**, matching the CI Pixel 6 geometry. This was a local geometry reproduction, not a rerun of GitHub's x86_64 job. The display returned to its original 1080 × 2424 size and density 420, and user 12 remained active. Personal app data was untouched. Build and test logs: `/private/tmp/mural-codeql-ui-regression-build-2026-09-14.log` and `/private/tmp/mural-codeql-long-reply-pixel6-2026-09-14.log`.
+The focused regression passed on the local API 36 ARM64 emulator in isolated user 12 at **1080 × 2400, density 420**, matching the CI Pixel 6 geometry. This was a local geometry reproduction, not a rerun of GitHub's x86_64 job. The display returned to its original 1080 × 2424 size and density 420, and user 12 remained active. Personal app data was untouched. Build and test logs: `/private/tmp/fleunce-codeql-ui-regression-build-2026-09-14.log` and `/private/tmp/fleunce-codeql-long-reply-pixel6-2026-09-14.log`.
 
 ## Scanner evidence
 
 | Evidence | SHA-256 |
 | --- | --- |
-| Python SARIF, `/private/tmp/mural-codeql-python-pr17.sarif` | `bbf647a3d0e94438331a8b7f0111fc2c28131805923c4d1b014fc5c61609ce81` |
-| JavaScript SARIF, `/private/tmp/mural-codeql-js-pr17.sarif` | `844f186354a3739bc0920b5eea48a6bd785841528fe8b366fb03b607f8568502` |
+| Python SARIF, `/private/tmp/fleunce-codeql-python-pr17.sarif` | `bbf647a3d0e94438331a8b7f0111fc2c28131805923c4d1b014fc5c61609ce81` |
+| JavaScript SARIF, `/private/tmp/fleunce-codeql-js-pr17.sarif` | `844f186354a3739bc0920b5eea48a6bd785841528fe8b366fb03b607f8568502` |
 
 The 35 remaining alerts require a reviewer to accept this evidence before setting their individual GitHub dispositions. This document does not perform that action or predict the next scan's result.
 

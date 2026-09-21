@@ -68,7 +68,7 @@ export async function minuteBalance(db: Database, account: string, publicMinutes
 
 /** Runs in the signup transaction. Merely signing in again cannot create another offer. */
 export async function captureWelcomeOffer(sql: PoolClient, account: string) {
-  await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-welcome-minutes'))");
+  await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-welcome-minutes'))");
   const policy = (await sql.query('SELECT * FROM minute_policy WHERE singleton')).rows[0];
   await sql.query(`INSERT INTO minute_welcome_offers(account_id,policy_version,allowance_ms) VALUES($1,$2,$3)
     ON CONFLICT(account_id) DO NOTHING`, [account, policy.version, policy.welcome_enabled ? policy.welcome_ms : 0]);
@@ -79,7 +79,7 @@ export async function claimWelcomeMinutes(db: Database, account: string, proof: 
   const verified = await attestor.verify(account, proof);
   if (!/^[A-Za-z0-9:_-]{8,200}$/.test(verified.deviceReference)) throw new ServiceError('invalid_trial_proof', 403);
   return transaction(db, async sql => {
-    await sql.query("SELECT pg_advisory_xact_lock(hashtext('mural-welcome-minutes'))");
+    await sql.query("SELECT pg_advisory_xact_lock(hashtext('fleunce-welcome-minutes'))");
     const policy = (await sql.query('SELECT * FROM minute_policy WHERE singleton')).rows[0];
     await lockMinuteWallet(sql, account);
     if((await sql.query(`SELECT 1 FROM minute_guest_link_intents i WHERE i.member_account_id=$1

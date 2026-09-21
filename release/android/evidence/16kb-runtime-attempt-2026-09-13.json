@@ -7,7 +7,7 @@
   "physicalAudioTestPerformed": false,
   "providerCallsPerformed": false,
   "existingAVDUntouched": true,
-  "isolatedAVDName": "Mural_16KB_API_35",
+  "isolatedAVDName": "Fleunce_16KB_API_35",
   "intendedSerial": "emulator-5556",
   "emulatorVersion": "37.1.11.0",
   "emulatorBuild": "15917651",
@@ -32,8 +32,8 @@
   "preparedTestPayload": {
     "appSHA256": "7151e3d53f625d8e7abe23fc6730bead434a33df6832c3d2daf6fdb803bb2ef4",
     "testAPKSHA256": "cef93eebbfd790d4ebbf92db6ddf25d2cc09b201078d79af16b093f01208ab91",
-    "targetPackage": "chat.mural.android.uitest",
-    "testClass": "chat.mural.network.NativeCompatibilityTest",
+    "targetPackage": "chat.fleunce.android.uitest",
+    "testClass": "chat.fleunce.network.NativeCompatibilityTest",
     "testMethod": "nativeWebRtcBuildsAnAudioAndDataOfferWithoutMicrophoneOrInternet",
     "testSourceSHA256": "4892eab0be60f251b25bcdeff5026cc43e3711acdfc53006ded5a59f4b6db910",
     "nativeLibraries": [

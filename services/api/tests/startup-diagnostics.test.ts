@@ -13,7 +13,7 @@ test('conversation rejection returns a generated reference and retains the origi
       payload: { sdp: 'private-sdp', instructions: 'private-conversation' } });
     assert.equal(response.statusCode, 503);
     assert.deepEqual(response.json(), { error: { code: 'hosted_voice_not_ready' } });
-    const reference = response.headers['x-mural-error-reference'];
+    const reference = response.headers['x-fleunce-error-reference'];
     assert.match(String(reference), /^[a-f0-9]{12}$/);
     assert.deepEqual(diagnostics, [{ reference, operation: 'start', status: 503, reason: 'hosted_voice_not_ready' }]);
     assert.doesNotMatch(JSON.stringify(diagnostics), /private/);
@@ -26,7 +26,7 @@ test('an observer failure cannot change account authentication or start a provid
     const response = await app.inject({ method: 'GET', url: '/v1/minutes' });
     assert.equal(response.statusCode, 401);
     assert.equal(response.json().error.code, 'sign_in_required');
-    assert.match(String(response.headers['x-mural-error-reference']), /^[a-f0-9]{12}$/);
+    assert.match(String(response.headers['x-fleunce-error-reference']), /^[a-f0-9]{12}$/);
   } finally { await app.close(); }
 });
 
@@ -47,6 +47,6 @@ test('a rejected asynchronous observer cannot become an unhandled rejection', as
     await new Promise<void>(resolve => setImmediate(resolve));
     assert.equal(response.statusCode, 401);
     assert.equal(response.json().error.code, 'sign_in_required');
-    assert.match(String(response.headers['x-mural-error-reference']), /^[a-f0-9]{12}$/);
+    assert.match(String(response.headers['x-fleunce-error-reference']), /^[a-f0-9]{12}$/);
   } finally { await app.close(); }
 });

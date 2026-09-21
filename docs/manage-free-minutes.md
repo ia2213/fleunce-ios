@@ -1,6 +1,6 @@
 # How to manage free minutes
 
-Run these commands from Mural's server directory on a trusted operator machine, using its private `DATABASE_URL`. Apply database migrations first. The commands do not need an OpenAI key. Never put a production database URL in a command, screenshot, issue or checked-in file.
+Run these commands from Fleunce's server directory on a trusted operator machine, using its private `DATABASE_URL`. Apply database migrations first. The commands do not need an OpenAI key. Never put a production database URL in a command, screenshot, issue or checked-in file.
 
 Use an operator database role permitted to maintain minute policy and grants. The app and website cannot call these operations. Until deployment roles and funded voice are finished, use the isolated test environment only. See [conversation minutes](conversation-minutes.md) for the behavior and current activation limits.
 
@@ -16,7 +16,7 @@ Use its version in a private request file. Amounts below are **US cents**. This 
 
 ```json
 {
-  "actor": "mural-operator",
+  "actor": "fleunce-operator",
   "reason": "Staging funding limits",
   "policy": {
     "version": 1,
@@ -46,7 +46,7 @@ Copy its `version` into a private JSON file. Set the new-user allowance and the 
 
 ```json
 {
-  "actor": "mural-operator",
+  "actor": "fleunce-operator",
   "reason": "Staging trial policy",
   "policy": {
     "version": 1,
@@ -75,7 +75,7 @@ Prepare a private request file. Generate a new UUID for this campaign and keep i
 ```json
 {
   "id": "11111111-1111-4111-8111-111111111111",
-  "actor": "mural-operator",
+  "actor": "fleunce-operator",
   "reason": "Early tester thank you",
   "audience": ["22222222-2222-4222-8222-222222222222"],
   "minutesPerUser": 30,

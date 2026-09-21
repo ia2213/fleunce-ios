@@ -55,7 +55,7 @@ integration('Play void pages resume their exact persisted window after a failure
   const f = await fixture();
   try {
     const requests: any[] = []; let fail = true;
-    const play = { environment: 'test' as const, merchant: 'chat.mural.android', pollVoids: async (start: number, end: number, token?: string) => {
+    const play = { environment: 'test' as const, merchant: 'chat.fleunce.android', pollVoids: async (start: number, end: number, token?: string) => {
       requests.push({ start,end,token });
       if (!token) return { scheduled: 1, nextPageToken: 'next-page' };
       if (fail) throw new Error('Google unavailable');
@@ -77,7 +77,7 @@ integration('two reconciler instances cannot fetch or advance the same Play page
   const f = await fixture();
   try {
     const entered = deferred(), release = deferred(); let calls = 0;
-    const play = { environment: 'test' as const, merchant: 'chat.mural.android', pollVoids: async () => {
+    const play = { environment: 'test' as const, merchant: 'chat.fleunce.android', pollVoids: async () => {
       calls++; entered.resolve(); await release.promise; return { scheduled: 0 };
     } };
     const first = new PlayVoidReconciler(f.db, play), second = new PlayVoidReconciler(f.db, play);
@@ -91,8 +91,8 @@ integration('void history expiration and stalled pagination preserve the checkpo
   const f = await fixture();
   try {
     const old = Date.now() - 31 * 86_400_000; let calls = 0;
-    await f.db.query(`INSERT INTO minute_play_void_cursors(environment,merchant,completed_through_ms) VALUES('test','chat.mural.android',$1)`, [old]);
-    const play = { environment: 'test' as const, merchant: 'chat.mural.android', pollVoids: async () => { calls++; return { scheduled: 0, nextPageToken: 'stuck' }; } };
+    await f.db.query(`INSERT INTO minute_play_void_cursors(environment,merchant,completed_through_ms) VALUES('test','chat.fleunce.android',$1)`, [old]);
+    const play = { environment: 'test' as const, merchant: 'chat.fleunce.android', pollVoids: async () => { calls++; return { scheduled: 0, nextPageToken: 'stuck' }; } };
     const reconciler = new PlayVoidReconciler(f.db, play);
     await assert.rejects(reconciler.page(), { code: 'play_void_cursor_expired' }); assert.equal(calls, 0);
     assert.equal(Number((await f.row()).completed_through_ms), old);
@@ -105,10 +105,10 @@ integration('void polling overlaps the prior checkpoint and cannot rewind its du
   const f = await fixture();
   try {
     const completed = Date.now() - 3_600_000; let start = 0;
-    await f.db.query(`INSERT INTO minute_play_void_cursors(environment,merchant,completed_through_ms) VALUES('test','chat.mural.android',$1)`, [completed]);
-    const reconciler = new PlayVoidReconciler(f.db, { environment: 'test', merchant: 'chat.mural.android', pollVoids: async value => { start = value; return { scheduled: 0 }; } });
+    await f.db.query(`INSERT INTO minute_play_void_cursors(environment,merchant,completed_through_ms) VALUES('test','chat.fleunce.android',$1)`, [completed]);
+    const reconciler = new PlayVoidReconciler(f.db, { environment: 'test', merchant: 'chat.fleunce.android', pollVoids: async value => { start = value; return { scheduled: 0 }; } });
     await reconciler.page(); assert.equal(start, completed - 300_000);
     await assert.rejects(f.db.query('UPDATE minute_play_void_cursors SET completed_through_ms=$1', [completed]), /immutable_minute_void_checkpoint/);
-    await assert.rejects(f.db.query("UPDATE minute_play_void_cursors SET merchant='chat.mural.other'"), /immutable_minute_void_checkpoint/);
+    await assert.rejects(f.db.query("UPDATE minute_play_void_cursors SET merchant='chat.fleunce.other'"), /immutable_minute_void_checkpoint/);
   } finally { await f.cleanup(); }
 });

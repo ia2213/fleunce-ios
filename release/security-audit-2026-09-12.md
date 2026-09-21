@@ -1,6 +1,6 @@
 # Security review — September 12, 2026
 
-No usable credentials were found in the audited public source or Git history. The review found and fixed seven issues involving request admission, backup imports and key-removal feedback. Backend fixes are deployed from `0b2cf65`; the signed iPhone update is installed. This review does not establish that Mural is free of every vulnerability.
+No usable credentials were found in the audited public source or Git history. The review found and fixed seven issues involving request admission, backup imports and key-removal feedback. Backend fixes are deployed from `0b2cf65`; the signed iPhone update is installed. This review does not establish that Fleunce is free of every vulnerability.
 
 ## Scope and secret checks
 
@@ -29,7 +29,7 @@ The backup issues require a user to import a malformed file. They did not provid
 - Live HTTPS checks passed for health, readiness, pricing and Google-provider discovery. Ordinary and encoded anonymous account requests returned 401; malformed exchange returned 400. Waitlist preflight returned 204 and malformed submissions returned 400. Wallet, checkout, webhooks, trials and hosted speech remain behind their 503 gate.
 - The user confirmed Google login. A private database check confirmed one account, Google identity, empty wallet and valid hashed session using counts and booleans only.
 - `npm audit` reported zero known advisories across 119 locked packages. The website's two first-party scripts were manually reviewed; no actionable XSS or telemetry was found. Sensitive-file URL probes returned 404.
-- [CodeQL setup](https://github.com/Chuloo/mural/actions/runs/34701612333) completed for Swift, JavaScript/TypeScript, Python and GitHub Actions on `b45d31e`. Fourteen alerts were individually reviewed: six involved trusted operator inputs or test assertions, and eight did not recognize the custom rate-limit hook. Their false-positive dispositions include individual explanations. The separate manual admission defects above were fixed and deployed; no blanket scanning rule was suppressed.
+- [CodeQL setup](https://github.com/Chuloo/fleunce/actions/runs/34701612333) completed for Swift, JavaScript/TypeScript, Python and GitHub Actions on `b45d31e`. Fourteen alerts were individually reviewed: six involved trusted operator inputs or test assertions, and eight did not recognize the custom rate-limit hook. Their false-positive dispositions include individual explanations. The separate manual admission defects above were fixed and deployed; no blanket scanning rule was suppressed.
 
 ## Ongoing protection and limits
 

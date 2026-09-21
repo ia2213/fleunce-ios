@@ -1,5 +1,5 @@
 import Foundation
-import MuralCore
+import FleunceCore
 
 final class NoRedirect: NSObject, URLSessionTaskDelegate {
     func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) { completionHandler(nil) }
@@ -277,7 +277,7 @@ struct APIResult { var text: String; var sources: [SourceLink]; var usage: APIUs
             switch self {
             case .missingKey: "Please enter your API Key for the selected provider in Settings."
             case .invalidResponse, .incomplete: "The AI provider returned an incomplete response. Please try again."
-            case .refused: "Mural couldn’t complete that request. Try a different topic."
+            case .refused: "Fleunce couldn’t complete that request. Try a different topic."
             case .http(401), .http(403): "Your API key or endpoint wasn’t accepted. Check Settings."
             case .http(404): "This model or endpoint was not found. Check your provider settings."
             case .http(429): "The provider's rate limit was reached. Try again shortly."

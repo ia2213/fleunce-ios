@@ -3,18 +3,18 @@
   "recordedAt": "2026-09-13T23:16:10.912133+00:00",
   "status": "Version 2 packaging verified; no upload or runtime test performed by this audit.",
   "artifact": {
-    "filename": "Mural-Android-release-2026-09-14-v2.aab",
+    "filename": "Fleunce-Android-release-2026-09-14-v2.aab",
     "location": "Hej/deliverables (outside repository)",
     "bytes": 33031535,
     "sha256": "613cf25edc8db5bfe154f15d7cfd878197a0392e300c5eb671e5fd7240f70ce3",
     "unsignedSHA256": "4f63489deea996982f6b16be8bb1bb15ca0f09e76b03910ca3a0c6c44562d2a0"
   },
   "previewAPK": {
-    "filename": "Mural-Android-preview-2026-09-14-v2.apk",
+    "filename": "Fleunce-Android-preview-2026-09-14-v2.apk",
     "bytes": 63458443,
     "sha256": "52f5e9997dd565e39207f2d1662f264bfc0573e48c78d4f9e2279eafc280be86",
     "manifest": {
-      "package": "chat.mural.android",
+      "package": "chat.fleunce.android",
       "versionCode": 2,
       "versionName": "0.1",
       "minSdk": 26,
@@ -25,7 +25,7 @@
       "usesCleartextTraffic": false
     },
     "buildType": "debug",
-    "apiOrigin": "https://api.mural.chat",
+    "apiOrigin": "https://api.fleunce.chat",
     "minutePurchasesEnabled": false,
     "minutePurchaseEnvironment": "test",
     "signatureVerified": true,
@@ -46,7 +46,7 @@
       "scope": "Known credential files and high-confidence secret patterns only; not proof that every possible credential format is absent."
     },
     "requiredNotices": {
-      "Mural-LICENSE.txt": true,
+      "Fleunce-LICENSE.txt": true,
       "Apache-2.0.txt": true,
       "Nunito-OFL.txt": true,
       "THIRD-PARTY-NOTICES.txt": true,
@@ -74,14 +74,14 @@
     "sourceUnchangedAtPackagingVerification": true
   },
   "buildConfiguration": {
-    "package": "chat.mural.android",
+    "package": "chat.fleunce.android",
     "versionCode": 2,
     "versionName": "0.1",
     "buildType": "release",
     "debuggable": false,
     "minSdk": 26,
     "targetSdk": 36,
-    "apiOrigin": "https://api.mural.chat",
+    "apiOrigin": "https://api.fleunce.chat",
     "googleServerClientID": "1034240936303-v182map9ntca934qc10i2ql3366onue7.apps.googleusercontent.com",
     "minutePurchasesEnabled": false,
     "minutePurchaseEnvironment": "test",
@@ -91,7 +91,7 @@
     "allPayloadSignaturesValid": true,
     "payloadEntriesVerified": 607,
     "certificateSHA256": "e45e9cf5ed9d6164ba58ea5ad7dfc267cb822c7aeb8c46a35d39a3c8db20c65c",
-    "certificateSubject": "CN=Mural Upload, O=Hackmamba Inc., C=US",
+    "certificateSubject": "CN=Fleunce Upload, O=Hackmamba Inc., C=US",
     "algorithm": "SHA256withRSA",
     "keySizeBits": 3072,
     "jarsignerVerified": true,

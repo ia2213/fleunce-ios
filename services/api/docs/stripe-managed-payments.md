@@ -1,6 +1,6 @@
 # Stripe Managed Payments verification reference
 
-Mural supports standard Stripe Checkout and Stripe Managed Payments through the same receipt and fulfillment worker. The installed Stripe SDK is `22.6.2`, whose default API version is `2026-08-26.dahlia`. Google Play verification is separate and unchanged.
+Fleunce supports standard Stripe Checkout and Stripe Managed Payments through the same receipt and fulfillment worker. The installed Stripe SDK is `22.6.2`, whose default API version is `2026-08-26.dahlia`. Google Play verification is separate and unchanged.
 
 ## Configuration and order binding
 
@@ -12,7 +12,7 @@ Managed checkout requires an exclusive-tax Price. Its request includes `managed_
 
 ## Amount verification
 
-Adaptive Pricing keeps Checkout Session and PaymentIntent amounts in the integration currency. The buyer's local currency and amount appear separately in `presentment_details`. Refund requests use the integration currency, and Stripe handles the original exchange rate. Mural never converts presentment amounts into AI entitlement. [Stripe Adaptive Pricing](https://docs.stripe.com/payments/currencies/localize-prices/adaptive-pricing?payment-ui=stripe-hosted)
+Adaptive Pricing keeps Checkout Session and PaymentIntent amounts in the integration currency. The buyer's local currency and amount appear separately in `presentment_details`. Refund requests use the integration currency, and Stripe handles the original exchange rate. Fleunce never converts presentment amounts into AI entitlement. [Stripe Adaptive Pricing](https://docs.stripe.com/payments/currencies/localize-prices/adaptive-pricing?payment-ui=stripe-hosted)
 
 | Evidence | Required relationship for Managed Payments |
 | --- | --- |
@@ -43,7 +43,7 @@ The existing entitlement ledger expects refunds in the original quote basis. Man
 normalizedRefund = ceil(originalBase × successfulGrossRefunds / verifiedGross)
 ```
 
-The ledger then reverses that proportion of the original AI allocation. Tax, payment fees and the Mural fee never become spendable AI value. A full gross refund revokes the full original allocation; partial refunds round conservatively toward reversal. Replayed notifications cannot grant or reverse the same value twice. Existing dispute handling still voids the entitlement.
+The ledger then reverses that proportion of the original AI allocation. Tax, payment fees and the Fleunce fee never become spendable AI value. A full gross refund revokes the full original allocation; partial refunds round conservatively toward reversal. Replayed notifications cannot grant or reverse the same value twice. Existing dispute handling still voids the entitlement.
 
 Link can issue refunds, including without approval after a support escalation goes unanswered for 48 hours. Stripe's documented refund support includes certain transactions within 60 days. Managed refunds include tax; some jurisdictions still require the original tax to be remitted. [Managed Payments support and refunds](https://docs.stripe.com/payments/managed-payments/how-it-works)
 

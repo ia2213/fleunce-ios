@@ -7,7 +7,7 @@ import { AIReports, AI_REPORT_CONSENT_VERSION, AI_REPORT_LIMITS as limits, aiRep
   containsReportCredential, parseAIReport, pruneAIReports, reportNetwork, type TrustedFeedbackNetwork } from '../src/feedback.js';
 
 const config = { hmacKey: 'a'.repeat(64), proxyToken: 'b'.repeat(64), allowLocalLoopback: false };
-const headers = (address = '203.0.113.19') => ({ 'x-mural-client-ip': address, 'x-mural-proxy-token': config.proxyToken });
+const headers = (address = '203.0.113.19') => ({ 'x-fleunce-client-ip': address, 'x-fleunce-proxy-token': config.proxyToken });
 const network = (address = '203.0.113.19') => reportNetwork(headers(address), '127.0.0.1', config);
 const body = () => ({ reportID: randomUUID(), languageID: 'es', reason: 'incorrect', excerpt: 'Una frase de prueba.', consentVersion: AI_REPORT_CONSENT_VERSION });
 const url = process.env.TEST_DATABASE_URL;
@@ -56,7 +56,7 @@ test('reports accept only bounded selected text, known reasons and explicit cons
   }
 });
 
-test('common provider, bearer, JWT and Mural token shapes are rejected without reflecting them', () => {
+test('common provider, bearer, JWT and Fleunce token shapes are rejected without reflecting them', () => {
   const samples = ['sk-' + 'example-not-a-key'.repeat(3), 'Bearer ' + 'z'.repeat(43), 'z'.repeat(43),
     'eyJ' + 'a'.repeat(15) + '.' + 'b'.repeat(20) + '.' + 'c'.repeat(20)];
   for (const excerpt of samples) {
@@ -72,7 +72,7 @@ test('network reference comes from a trusted proxy and rotates daily without sto
   const same = reportNetwork(headers('2001:db8:1:2::4'), '127.0.0.1', config, now);
   const tomorrow = reportNetwork(headers('2001:db8:1:2::3'), '127.0.0.1', config, new Date('2026-09-14T12:00:00Z'));
   assert.match(one, /^[a-f0-9]{64}$/); assert.equal(one, same); assert.notEqual(one, tomorrow);
-  assert.throws(() => reportNetwork({ ...headers(), 'x-mural-proxy-token': 'wrong', 'x-forwarded-for': '198.51.100.4' }, '127.0.0.1', config), { code: 'ai_reports_unavailable' });
+  assert.throws(() => reportNetwork({ ...headers(), 'x-fleunce-proxy-token': 'wrong', 'x-forwarded-for': '198.51.100.4' }, '127.0.0.1', config), { code: 'ai_reports_unavailable' });
   assert.throws(() => reportNetwork({}, '127.0.0.1', config), { code: 'ai_reports_unavailable' });
 });
 
@@ -147,7 +147,7 @@ integration('runtime submits without reading reports and can only prune expired 
   const role = `feedback_runtime_${suffix}`;
   await db!.query(`CREATE ROLE ${role}; GRANT USAGE ON SCHEMA ${schema} TO ${role}`);
   const grants = await readFile(new URL('../operations/feedback-runtime-grants.sql', import.meta.url), 'utf8');
-  await db!.query(grants.replaceAll('mural_runtime', role));
+  await db!.query(grants.replaceAll('fleunce_runtime', role));
   const runtimeURL = new URL(url!); runtimeURL.searchParams.set('options', `-c search_path=${schema} -c role=${role}`);
   const runtime = connectDatabase(runtimeURL.toString());
   try {
@@ -172,7 +172,7 @@ integration('review view stays inaccessible after default privileges and broad g
   const role = `feedback_view_runtime_${suffix}`;
   await db!.query(`CREATE ROLE ${role}; GRANT USAGE ON SCHEMA ${schema} TO ${role}`);
   const grants = (await readFile(new URL('../operations/feedback-runtime-grants.sql', import.meta.url), 'utf8'))
-    .replaceAll('mural_runtime', role);
+    .replaceAll('fleunce_runtime', role);
   const runtimeURL = new URL(url!); runtimeURL.searchParams.set('options', `-c search_path=${schema} -c role=${role}`);
   const runtime = connectDatabase(runtimeURL.toString());
   try {

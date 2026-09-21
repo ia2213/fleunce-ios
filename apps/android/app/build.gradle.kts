@@ -6,32 +6,32 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
 }
-val muralLocal = Properties().apply {
+val fleunceLocal = Properties().apply {
     rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
 }
-fun muralConfiguration(name: String): String = providers.gradleProperty(name).orNull ?: muralLocal.getProperty(name, "")
+fun fleunceConfiguration(name: String): String = providers.gradleProperty(name).orNull ?: fleunceLocal.getProperty(name, "")
 fun buildString(value: String): String = "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "").replace("\r", "") + "\""
-val muralMinutePurchases = muralConfiguration("mural.minutePurchasesEnabled").ifBlank { "false" }
-val muralPurchaseChannel = muralConfiguration("mural.purchaseChannel").ifBlank { "play" }
-require(muralPurchaseChannel in listOf("play", "stripe")) { "mural.purchaseChannel must be play or stripe" }
-val muralMinuteEnvironment = muralConfiguration("mural.minutePurchaseEnvironment").ifBlank { "test" }
-require(muralMinutePurchases in listOf("false", "true")) { "mural.minutePurchasesEnabled must be false or true" }
-require(muralMinuteEnvironment in listOf("test", "live")) { "mural.minutePurchaseEnvironment must be test or live" }
+val fleunceMinutePurchases = fleunceConfiguration("fleunce.minutePurchasesEnabled").ifBlank { "false" }
+val fleuncePurchaseChannel = fleunceConfiguration("fleunce.purchaseChannel").ifBlank { "play" }
+require(fleuncePurchaseChannel in listOf("play", "stripe")) { "fleunce.purchaseChannel must be play or stripe" }
+val fleunceMinuteEnvironment = fleunceConfiguration("fleunce.minutePurchaseEnvironment").ifBlank { "test" }
+require(fleunceMinutePurchases in listOf("false", "true")) { "fleunce.minutePurchasesEnabled must be false or true" }
+require(fleunceMinuteEnvironment in listOf("test", "live")) { "fleunce.minutePurchaseEnvironment must be test or live" }
 android {
-    namespace = "chat.mural"
+    namespace = "chat.fleunce"
     compileSdk = 36
     defaultConfig {
-        applicationId = "chat.mural.android"
+        applicationId = "chat.fleunce.android"
         minSdk = 26
         targetSdk = 36
         versionCode = 8
         versionName = "0.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "MANAGED_API_ORIGIN", buildString(muralConfiguration("mural.apiOrigin")))
-        buildConfigField("String", "GOOGLE_SERVER_CLIENT_ID", buildString(muralConfiguration("mural.googleServerClientID")))
-        buildConfigField("boolean", "MINUTE_PURCHASES_ENABLED", muralMinutePurchases)
-        buildConfigField("String", "PURCHASE_CHANNEL", buildString(muralPurchaseChannel))
-        buildConfigField("String", "MINUTE_PURCHASE_ENVIRONMENT", buildString(muralMinuteEnvironment))
+        buildConfigField("String", "MANAGED_API_ORIGIN", buildString(fleunceConfiguration("fleunce.apiOrigin")))
+        buildConfigField("String", "GOOGLE_SERVER_CLIENT_ID", buildString(fleunceConfiguration("fleunce.googleServerClientID")))
+        buildConfigField("boolean", "MINUTE_PURCHASES_ENABLED", fleunceMinutePurchases)
+        buildConfigField("String", "PURCHASE_CHANNEL", buildString(fleuncePurchaseChannel))
+        buildConfigField("String", "MINUTE_PURCHASE_ENVIRONMENT", buildString(fleunceMinuteEnvironment))
     }
     // A personal installation can preserve its local signing identity across SDK resets.
     // This file is ignored by Git; clean checkouts use Android's standard debug key.

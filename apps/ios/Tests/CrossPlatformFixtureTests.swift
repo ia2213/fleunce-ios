@@ -1,5 +1,5 @@
 import XCTest
-@testable import MuralCore
+@testable import FleunceCore
 
 /// Runs the same archive fixture as Android's CrossPlatformFixtureTest so both cores stay interchangeable.
 final class CrossPlatformFixtureTests: XCTestCase {

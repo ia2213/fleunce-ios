@@ -44,7 +44,7 @@ export class PlayMinuteProvider implements MinuteDeliveryAdapter {
     this.#exponents = Object.freeze({ ...config.currencyExponents }); this.#purchasesEnabled = config.purchasesEnabled === true;
   }
   #binding(purpose: string, value: string): string {
-    return createHmac('sha256', this.#bindingKey).update(JSON.stringify(['mural-play-v1', this.environment, this.merchant, purpose, value])).digest('hex');
+    return createHmac('sha256', this.#bindingKey).update(JSON.stringify(['fleunce-play-v1', this.environment, this.merchant, purpose, value])).digest('hex');
   }
   /** Set both returned values on BillingFlowParams; accountID must be the authenticated principal. */
   async prepare(accountID: string, orderID: string): Promise<{ orderID: string; obfuscatedAccountID: string; obfuscatedProfileID: string }> {

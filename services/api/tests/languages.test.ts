@@ -40,7 +40,7 @@ test('all native locales reach the provider with the intended regional speech ta
 
 // Read the shipped registries so a duplicated server-side locale list cannot hide drift.
 test('hosted admission accepts every locale shipped by Android and iOS', async () => {
-  const android = await readFile(new URL('../../../apps/android/app/src/main/java/chat/mural/core/Languages.kt', import.meta.url), 'utf8');
+  const android = await readFile(new URL('../../../apps/android/app/src/main/java/chat/fleunce/core/Languages.kt', import.meta.url), 'utf8');
   const androidLocales = [...android.matchAll(/locale = "([^"\n]+)"/g)].map(match => match[1]!).sort();
   const directory = new URL('../../../apps/ios/Core/Languages/', import.meta.url);
   const swift = await Promise.all((await readdir(directory)).filter(name => name.endsWith('.swift'))

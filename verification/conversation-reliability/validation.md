@@ -42,7 +42,7 @@ The initial combined iPhone run exposed a lost static-text accessibility trait i
 
 ## Preview 8 artifact
 
-The exact signed APK is `Mural-Android-direct-v8.apk`, 59,713,683 bytes, SHA-256 `c644419d09e2541f427ddc26649bda368181e1faf9935ce947ce4b273b4e2bdc`. Its certificate SHA-256 is `16cc94553e43e0d9dfbc0ac72f162eb163e7d26d330bcae455e212c0a790c022`, matching v7. Package `chat.mural.android`, version code 8, version name 0.1, minimum SDK 26, target SDK 36; release manifest has no debuggable or test-only flag. Public configuration retains `https://api.mural.chat`, the existing Google client ID, Stripe channel and live purchase environment.
+The exact signed APK is `Fleunce-Android-direct-v8.apk`, 59,713,683 bytes, SHA-256 `c644419d09e2541f427ddc26649bda368181e1faf9935ce947ce4b273b4e2bdc`. Its certificate SHA-256 is `16cc94553e43e0d9dfbc0ac72f162eb163e7d26d330bcae455e212c0a790c022`, matching v7. Package `chat.fleunce.android`, version code 8, version name 0.1, minimum SDK 26, target SDK 36; release manifest has no debuggable or test-only flag. Public configuration retains `https://api.fleunce.chat`, the existing Google client ID, Stripe channel and live purchase environment.
 
 The APK was installed directly over published v7 on an isolated 16 KB emulator without uninstalling or clearing data. This installation contained selected language settings, not an existing learner's history or sign-in. Native repository/account tests cover persistence separately. The full native suite on the 16 KB runtime also creates a real WebRTC audio/data offer without microphone or internet.
 

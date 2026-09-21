@@ -4,7 +4,7 @@ This paragraph is prepared for the approved actual-cost pricing model. It is exc
 
 ## Paragraph for the full description
 
-Top up when you want to keep talking. Your balance pays for actual AI usage, and Mural shows an estimate of the conversation minutes it can cover. Duration varies with meanings, teaching and topic searches. Before purchase, you see the amount available for AI, Mural's service fee, payment costs and any buffer separately. Remaining free minutes are used first; a top-up adds to your existing balance.
+Top up when you want to keep talking. Your balance pays for actual AI usage, and Fleunce shows an estimate of the conversation minutes it can cover. Duration varies with meanings, teaching and topic searches. Before purchase, you see the amount available for AI, Fleunce's service fee, payment costs and any buffer separately. Remaining free minutes are used first; a top-up adds to your existing balance.
 
 ## Required before use
 

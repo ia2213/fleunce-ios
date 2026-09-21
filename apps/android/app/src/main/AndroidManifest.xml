@@ -4,7 +4,7 @@
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
-    <application android:label="Mural" android:icon="@mipmap/ic_mural" android:roundIcon="@mipmap/ic_mural" android:theme="@style/Theme.Mural"
+    <application android:label="Fleunce" android:icon="@mipmap/ic_fleunce" android:roundIcon="@mipmap/ic_fleunce" android:theme="@style/Theme.Fleunce"
         android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules"
         android:usesCleartextTraffic="false" android:supportsRtl="true">
         <activity android:name=".MainActivity" android:exported="true" android:windowSoftInputMode="adjustResize">

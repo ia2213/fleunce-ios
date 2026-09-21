@@ -18,8 +18,8 @@ after(async () => { if (db) await db.end(); });
 const integration = (name: string, fn: () => Promise<void>) => test(name, { skip: !db && 'Set TEST_DATABASE_URL for PostgreSQL tests.' }, fn);
 const config = { hmacKey: 'a'.repeat(64), proxyToken: 'b'.repeat(64) };
 const body = (email = 'learner@example.test') => ({ email, consentVersion: 'waitlist-v1', source: 'website', website: '' });
-const headers = (address = '203.0.113.1') => ({ origin: 'https://mural.chat', 'content-type': 'application/json',
-  'x-mural-client-ip': address, 'x-mural-proxy-token': config.proxyToken });
+const headers = (address = '203.0.113.1') => ({ origin: 'https://fleunce.chat', 'content-type': 'application/json',
+  'x-fleunce-client-ip': address, 'x-fleunce-proxy-token': config.proxyToken });
 function app() { return createApp({ db: db!, auth: {}, accessRequests: new AccessRequests(db!, config) }); }
 async function count() { return Number((await db!.query('SELECT count(*) AS count FROM access_requests')).rows[0].count); }
 
@@ -34,7 +34,7 @@ test('access requests require explicit activation and separate secrets; local or
   assert.throws(() => accessRequestConfig({ ...env, ACCESS_REQUEST_PROXY_TOKEN: config.hmacKey }));
 });
 test('email normalization accepts ordinary plus addresses and rejects unsafe or unsupported forms', () => {
-  assert.equal(normalizeAccessEmail('  Learner+Mural@Example.COM  '), 'learner+mural@example.com');
+  assert.equal(normalizeAccessEmail('  Learner+Fleunce@Example.COM  '), 'learner+fleunce@example.com');
   for (const email of ['a@localhost', 'a..b@example.com', '.a@example.com', 'a.@example.com', 'a@-example.com',
     'a@example-.com', 'a@example..com', 'a@b@c.com', 'a\nb@example.com', 'é@example.com', 'x'.repeat(65) + '@example.com', 'a@' + 'b'.repeat(64) + '.com'])
     assert.throws(() => normalizeAccessEmail(email));
@@ -53,7 +53,7 @@ integration('HTTP access creation and duplicate refresh have identical generic r
     const second = await service.inject({ method: 'POST', url: '/v1/access-requests', headers: headers(), payload: body() });
     assert.equal(first.statusCode, 202); assert.equal(second.statusCode, 202);
     assert.deepEqual(first.json(), { accepted: true }); assert.equal(first.body, second.body);
-    assert.equal(first.headers['access-control-allow-origin'], 'https://mural.chat');
+    assert.equal(first.headers['access-control-allow-origin'], 'https://fleunce.chat');
     assert.equal(first.headers['access-control-allow-credentials'], undefined);
     assert.equal(first.headers['cache-control'], 'no-store');
     const row = (await db!.query('SELECT * FROM access_requests')).rows[0];
@@ -66,20 +66,20 @@ integration('HTTP access creation and duplicate refresh have identical generic r
 integration('origin and preflight rules run before parsing or storing body data', async () => {
   const service = app();
   try {
-    for (const origin of [undefined, 'null', 'https://mural.chat.evil.test', 'http://mural.chat', 'https://www.mural.chat']) {
+    for (const origin of [undefined, 'null', 'https://fleunce.chat.evil.test', 'http://fleunce.chat', 'https://www.fleunce.chat']) {
       const h: Record<string, string> = headers(); if (origin === undefined) delete h.origin; else h.origin = origin;
       const response = await service.inject({ method: 'POST', url: '/v1/access-requests', headers: h, payload: '{broken' });
       assert.equal(response.statusCode, 403); assert.equal(response.headers['access-control-allow-origin'], undefined);
     }
     const preflight = await service.inject({ method: 'OPTIONS', url: '/v1/access-requests', headers: {
-      origin: 'https://mural.chat', 'access-control-request-method': 'POST', 'access-control-request-headers': 'content-type' } });
+      origin: 'https://fleunce.chat', 'access-control-request-method': 'POST', 'access-control-request-headers': 'content-type' } });
     assert.equal(preflight.statusCode, 204); assert.equal(preflight.body, '');
     assert.equal(preflight.headers['access-control-allow-methods'], 'POST');
     const bad = await service.inject({ method: 'OPTIONS', url: '/v1/access-requests', headers: {
-      origin: 'https://mural.chat', 'access-control-request-method': 'DELETE' } });
+      origin: 'https://fleunce.chat', 'access-control-request-method': 'DELETE' } });
     assert.equal(bad.statusCode, 400);
     const unsafeHeaders = await service.inject({ method: 'OPTIONS', url: '/v1/access-requests', headers: {
-      origin: 'https://mural.chat', 'access-control-request-method': 'POST', 'access-control-request-headers': 'content-type,x-mural-proxy-token' } });
+      origin: 'https://fleunce.chat', 'access-control-request-method': 'POST', 'access-control-request-headers': 'content-type,x-fleunce-proxy-token' } });
     assert.equal(unsafeHeaders.statusCode, 400);
     assert.equal(await count(), 0);
   } finally { await service.close(); }
@@ -103,7 +103,7 @@ integration('spoofed forwarding headers cannot replace the proxy secret; IPv6 ad
   const service = app();
   try {
     const spoof = await service.inject({ method: 'POST', url: '/v1/access-requests', headers: { ...headers(),
-      'x-mural-proxy-token': 'wrong', 'x-forwarded-for': '192.0.2.1' }, payload: body() });
+      'x-fleunce-proxy-token': 'wrong', 'x-forwarded-for': '192.0.2.1' }, payload: body() });
     assert.equal(spoof.statusCode, 503);
     const ips = ['2001:db8:1234:1::1', '2001:0db8:1234:0001:0:0:0:1', '2001:db8:1234:1::2'];
     for (let i = 0; i < 6; i++) {
@@ -191,7 +191,7 @@ integration('launch traffic above the old daily and hourly limits can still join
   } finally { await service.close(); }
 });
 integration('private export excludes expired rows, protects file permissions, and deletion and pruning are idempotent', async () => {
-  const store = new AccessRequests(db!, config), dir = await mkdtemp(join(tmpdir(), 'mural-access-test-'));
+  const store = new AccessRequests(db!, config), dir = await mkdtemp(join(tmpdir(), 'fleunce-access-test-'));
   try {
     await store.submit(body(), '192.0.2.27');
     await db!.query("INSERT INTO access_requests(email,requested_at,consent_version,source) VALUES('expired@example.test',now()-interval '13 months','waitlist-v1','website')");

@@ -1,6 +1,6 @@
 # Security
 
-Mural’s current source version connects directly from the device to OpenAI using a key entered by the device’s owner. The key stays in Keychain and is not included in learning exports. A shared service key must never be embedded in a distributed app.
+Fleunce’s current source version connects directly from the device to OpenAI using a key entered by the device’s owner. The key stays in Keychain and is not included in learning exports. A shared service key must never be embedded in a distributed app.
 
 ## Report a vulnerability
 
