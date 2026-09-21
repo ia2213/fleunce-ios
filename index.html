@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Mural Teacher · Mini App</title>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          },
+          colors: {
+            mural: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              900: '#0c4a6e',
+              glow: '#38bdf8',
+              accent: '#8b5cf6',
+              surface: '#0f172a',
+              card: 'rgba(30, 41, 59, 0.7)',
+              border: 'rgba(255, 255, 255, 0.08)'
+            }
+          },
+          animation: {
+            'orb-pulse': 'orbPulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'orb-glow': 'orbGlow 3s ease-in-out infinite alternate',
+            'wave': 'wave 1.2s ease-in-out infinite',
+            'fade-in': 'fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+            'slide-up': 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+          },
+          keyframes: {
+            orbPulse: {
+              '0%, 100%': { transform: 'scale(1)', opacity: '0.9' },
+              '50%': { transform: 'scale(1.08)', opacity: '1' }
+            },
+            orbGlow: {
+              '0%': { filter: 'drop-shadow(0 0 25px rgba(56, 189, 248, 0.4))' },
+              '100%': { filter: 'drop-shadow(0 0 45px rgba(139, 92, 246, 0.6))' }
+            },
+            fadeIn: {
+              '0%': { opacity: '0', transform: 'translateY(6px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(100%)' },
+              '100%': { transform: 'translateY(0)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="./style.css?v=3.0">
+</head>
+<body class="bg-[#090d16] text-slate-100 min-h-screen flex flex-col font-sans select-none antialiased overflow-hidden">
+
+  <!-- TOP HEADER / APP BAR -->
+  <header class="sticky top-0 z-40 bg-[#090d16]/80 backdrop-blur-xl border-b border-white/[0.06] px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-sky-500/20">
+        <span class="text-white text-base">🎨</span>
+      </div>
+      <div>
+        <h1 class="font-display font-bold text-sm tracking-wide text-white flex items-center gap-1.5">
+          Mural Teacher
+          <span class="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">AI</span>
+        </h1>
+        <p id="headerScenario" class="text-[11px] text-slate-400 truncate max-w-[150px]">☕ Au Café</p>
+      </div>
+    </div>
+
+    <!-- Quick stats / Pills -->
+    <div class="flex items-center space-x-2">
+      <!-- Streak Pill -->
+      <div class="flex items-center space-x-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold">
+        <span>🔥</span>
+        <span id="headerStreak">1 j</span>
+      </div>
+
+      <!-- Language & Level Pill -->
+      <button id="headerLangBtn" onclick="switchTab('settings')" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 text-xs font-semibold transition">
+        <span id="headerLangFlag">🇩🇪</span>
+        <span id="headerLevelBadge" class="text-sky-400">B2</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN VIEWPORT / TAB CONTAINERS -->
+  <main class="flex-1 relative overflow-hidden flex flex-col">
+
+    <!-- TAB 1: CONVERSATION & LIVING ORB -->
+    <section id="tab-chat" class="tab-content flex-1 flex flex-col h-full overflow-hidden">
+      
+      <!-- Living Mural Orb & Scenario Context Banner -->
+      <div class="relative py-4 px-4 flex flex-col items-center justify-center bg-gradient-to-b from-sky-950/20 via-transparent to-transparent">
+        
+        <!-- Orb Container -->
+        <div class="relative w-28 h-28 flex items-center justify-center cursor-pointer group" onclick="triggerOrbVoice()">
+          <!-- Ambient Glow Ring -->
+          <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-sky-500/30 to-purple-600/30 blur-xl animate-orb-glow"></div>
+          
+          <!-- Ripple Waves (when speaking/listening) -->
+          <div id="orbWave1" class="absolute w-28 h-28 rounded-full border border-sky-400/40 opacity-0 scale-100 transition-all duration-700"></div>
+          <div id="orbWave2" class="absolute w-28 h-28 rounded-full border border-purple-400/30 opacity-0 scale-100 transition-all duration-1000"></div>
+
+          <!-- Central Living Gradient Orb -->
+          <div id="muralOrb" class="relative w-20 h-20 rounded-full bg-gradient-to-tr from-sky-400 via-indigo-500 to-purple-600 shadow-2xl shadow-sky-500/50 flex items-center justify-center animate-orb-pulse transition-transform duration-300 group-hover:scale-105">
+            <span id="orbIcon" class="text-2xl text-white drop-shadow-md">🎙️</span>
+          </div>
+        </div>
+
+        <!-- Orb Status Label -->
+        <div class="mt-2 text-center">
+          <p id="orbStatus" class="text-xs font-medium text-slate-300 tracking-wide">Touchez l'orbe pour parler</p>
+          <p id="orbSubStatus" class="text-[10px] text-slate-500">ou écrivez ci-dessous</p>
+        </div>
+      </div>
+
+      <!-- Messages Stream -->
+      <div id="messagesContainer" class="flex-1 overflow-y-auto px-4 py-2 space-y-3 scroll-smooth">
+        <!-- Initial Welcome Card injected via JS -->
+      </div>
+
+      <!-- Suggested Reply Pill -->
+      <div id="suggestionBox" class="hidden px-4 py-1.5 flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <span class="text-[11px] text-sky-400 font-semibold flex-shrink-0">💡 Idée :</span>
+        <button id="suggestionBtn" onclick="useSuggestion()" class="text-xs bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 px-3 py-1 rounded-full border border-sky-500/30 truncate max-w-xs transition text-left">
+          ...
+        </button>
+      </div>
+
+      <!-- Bottom Chat Bar / Input Toolbar -->
+      <div class="p-3 bg-[#0d1322]/90 backdrop-blur-xl border-t border-white/[0.06] flex items-center space-x-2">
+        <!-- Theme Switcher Quick Icon -->
+        <button onclick="switchTab('themes')" title="Changer de scénario" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-white/[0.08] transition flex items-center justify-center">
+          <span class="text-base">🎭</span>
+        </button>
+
+        <!-- Text Input -->
+        <div class="flex-1 relative">
+          <input type="text" id="chatInput" placeholder="Écrivez en allemand ou français..." 
+                 class="w-full bg-slate-900/90 text-white placeholder-slate-500 text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:border-sky-500/60 focus:ring-1 focus:ring-sky-500/40 transition">
+        </div>
+
+        <!-- Mic / Voice Record Button -->
+        <button id="micBtn" onclick="toggleVoiceRecord()" class="p-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white shadow-lg shadow-sky-500/20 active:scale-95 transition flex items-center justify-center">
+          <span id="micIcon" class="text-base">🎙️</span>
+        </button>
+
+        <!-- Send Message Button -->
+        <button id="sendBtn" onclick="sendTextMessage()" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-400 border border-white/10 active:scale-95 transition flex items-center justify-center">
+          <span class="text-base">➔</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- TAB 2: SCÉNARIOS & THÈMES (24 Scénarios) -->
+    <section id="tab-themes" class="tab-content hidden flex-1 flex flex-col h-full overflow-y-auto px-4 py-4 space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="font-display font-bold text-lg text-white">🎭 Scénarios d'Immersion</h2>
+          <p class="text-xs text-slate-400">Choisissez une situation réelle pour vous entraîner</p>
+        </div>
+      </div>
+
+      <!-- Categories Filter Tabs -->
+      <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 no-scrollbar">
+        <button onclick="filterThemes('all')" class="theme-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-sky-500 text-white">Tous</button>
+        <button onclick="filterThemes('daily')" class="theme-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700">☕ Quotidien</button>
+        <button onclick="filterThemes('professional')" class="theme-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700">💼 Médical & Pro</button>
+        <button onclick="filterThemes('travel')" class="theme-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700">✈️ Voyage</button>
+        <button onclick="filterThemes('culture')" class="theme-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700">🗣️ Débats</button>
+      </div>
+
+      <!-- Themes Grid -->
+      <div id="themesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pb-6">
+        <!-- Injected via JS -->
+      </div>
+    </section>
+
+    <!-- TAB 3: CARNET VOCABULAIRE & SRS FLASHCARDS -->
+    <section id="tab-srs" class="tab-content hidden flex-1 flex flex-col h-full overflow-y-auto px-4 py-4 space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="font-display font-bold text-lg text-white">📚 Mémorisation Espacée (SRS)</h2>
+          <p class="text-xs text-slate-400">Algorithme SuperMemo-2 pour ancrer le vocabulaire</p>
+        </div>
+        <div class="px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-semibold">
+          <span id="srsDueCount">0</span> à réviser
+        </div>
+      </div>
+
+      <!-- SRS Review Deck Area -->
+      <div id="srsCardArea" class="flex-1 flex flex-col items-center justify-center min-h-[300px]">
+        <!-- Active Flashcard -->
+        <div id="flashcard" class="w-full max-w-sm bg-gradient-to-b from-slate-800/90 to-slate-900/90 rounded-2xl p-6 border border-white/10 shadow-2xl flex flex-col justify-between min-h-[260px] transition-all duration-300">
+          
+          <div class="flex items-center justify-between">
+            <span id="srsCardLang" class="text-xs font-semibold text-slate-400">🇩🇪 Allemand</span>
+            <span id="srsCardRecall" class="text-xs px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-mono">[██░] Niv 2</span>
+          </div>
+
+          <div class="my-auto text-center py-4">
+            <h3 id="srsWordTarget" class="font-display font-extrabold text-2xl text-white tracking-wide">das Symptom</h3>
+            <p id="srsWordExample" class="text-xs text-slate-300 italic mt-2">« Welche Symptome haben Sie? »</p>
+            
+            <!-- Hidden Back Face / Translation -->
+            <div id="srsAnswerArea" class="hidden mt-4 pt-4 border-t border-white/10 animate-fade-in">
+              <p class="text-xs text-slate-400">Traduction :</p>
+              <h4 id="srsWordMeaning" class="font-display font-bold text-lg text-sky-300">le symptôme</h4>
+            </div>
+          </div>
+
+          <!-- Flip / Reveal Button -->
+          <div id="srsRevealBtnContainer">
+            <button onclick="revealSrsAnswer()" class="w-full py-3 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 text-white font-semibold text-xs tracking-wider uppercase transition shadow-lg shadow-sky-500/20">
+              👁️ Révéler la Réponse
+            </button>
+          </div>
+
+          <!-- 4-Grade Rating Bar (Shown after reveal) -->
+          <div id="srsGradeBtns" class="hidden grid grid-cols-4 gap-1.5 pt-2">
+            <button onclick="gradeSrsCard(1)" class="py-2.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 text-[11px] font-semibold flex flex-col items-center">
+              <span>🔴</span>
+              <span class="text-[9px] mt-0.5">1 jour</span>
+            </button>
+            <button onclick="gradeSrsCard(2)" class="py-2.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-[11px] font-semibold flex flex-col items-center">
+              <span>🟧</span>
+              <span class="text-[9px] mt-0.5">2 jours</span>
+            </button>
+            <button onclick="gradeSrsCard(3)" class="py-2.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 text-[11px] font-semibold flex flex-col items-center">
+              <span>🟦</span>
+              <span class="text-[9px] mt-0.5">5 jours</span>
+            </button>
+            <button onclick="gradeSrsCard(4)" class="py-2.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-[11px] font-semibold flex flex-col items-center">
+              <span>🟩</span>
+              <span class="text-[9px] mt-0.5">10 jours</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Vocabulary List Accordion -->
+      <div class="pt-2 pb-6">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Tous les mots enregistrés (<span id="totalWordsCount">0</span>)</h3>
+        <div id="vocabList" class="space-y-1.5 max-h-48 overflow-y-auto">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: PROGRESSION & STATS -->
+    <section id="tab-stats" class="tab-content hidden flex-1 flex flex-col h-full overflow-y-auto px-4 py-4 space-y-4">
+      <div>
+        <h2 class="font-display font-bold text-lg text-white">📊 Tableau de Bord & Succès</h2>
+        <p class="text-xs text-slate-400">Votre constance et niveau de maîtrise</p>
+      </div>
+
+      <!-- Hero Streak Card -->
+      <div class="bg-gradient-to-tr from-amber-500/20 via-orange-500/10 to-transparent p-5 rounded-2xl border border-amber-500/20 flex items-center justify-between">
+        <div>
+          <span class="text-xs font-semibold text-amber-400 uppercase tracking-wider">Série d'Assiduité</span>
+          <h3 id="statsStreakVal" class="font-display font-extrabold text-3xl text-white mt-1">7 Jours 🔥</h3>
+          <p class="text-xs text-slate-400 mt-1">Continuez chaque jour pour ne rien oublier !</p>
+        </div>
+        <div class="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center text-3xl">
+          🔥
+        </div>
+      </div>
+
+      <!-- 3 Mini Stats -->
+      <div class="grid grid-cols-3 gap-2">
+        <div class="bg-slate-800/60 p-3 rounded-xl border border-white/[0.06] text-center">
+          <p class="text-[10px] text-slate-400 uppercase">Mots Clés</p>
+          <h4 id="statsWordsVal" class="font-display font-bold text-lg text-sky-400 mt-0.5">48</h4>
+        </div>
+        <div class="bg-slate-800/60 p-3 rounded-xl border border-white/[0.06] text-center">
+          <p class="text-[10px] text-slate-400 uppercase">Échanges</p>
+          <h4 id="statsMessagesVal" class="font-display font-bold text-lg text-purple-400 mt-0.5">124</h4>
+        </div>
+        <div class="bg-slate-800/60 p-3 rounded-xl border border-white/[0.06] text-center">
+          <p class="text-[10px] text-slate-400 uppercase">Niveau Cible</p>
+          <h4 id="statsLevelVal" class="font-display font-bold text-lg text-emerald-400 mt-0.5">B2</h4>
+        </div>
+      </div>
+
+      <!-- CEFR Scale Progress Card -->
+      <div class="bg-slate-800/40 p-4 rounded-2xl border border-white/[0.06] space-y-3">
+        <h4 class="text-xs font-bold text-white flex items-center justify-between">
+          <span>Échelle CECRL & Maîtrise</span>
+          <span class="text-sky-400">Objectif B2</span>
+        </h4>
+        
+        <!-- CEFR Steps -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-400">A1 · Débutant</span>
+            <span class="text-emerald-400 font-semibold">100% Acquis</span>
+          </div>
+          <div class="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
+            <div class="h-full bg-emerald-500 w-full"></div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs pt-1">
+            <span class="text-slate-400">A2 · Élémentaire</span>
+            <span class="text-emerald-400 font-semibold">100% Acquis</span>
+          </div>
+          <div class="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
+            <div class="h-full bg-emerald-500 w-full"></div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs pt-1">
+            <span class="text-slate-400">B1 · Intermédiaire</span>
+            <span class="text-sky-400 font-semibold">85% Maîtrisé</span>
+          </div>
+          <div class="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
+            <div class="h-full bg-sky-500 w-[85%]"></div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs pt-1">
+            <span class="text-white font-semibold">B2 · Avancé / Médical</span>
+            <span class="text-purple-400 font-semibold">En cours (65%)</span>
+          </div>
+          <div class="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-sky-500 to-purple-500 w-[65%]"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: PARAMÈTRES -->
+    <section id="tab-settings" class="tab-content hidden flex-1 flex flex-col h-full overflow-y-auto px-4 py-4 space-y-4">
+      <div>
+        <h2 class="font-display font-bold text-lg text-white">⚙️ Paramètres d'Apprentissage</h2>
+        <p class="text-xs text-slate-400">Personnalisez votre tuteur selon vos besoins</p>
+      </div>
+
+      <!-- Language Selector -->
+      <div class="bg-slate-800/40 p-4 rounded-2xl border border-white/[0.06] space-y-2.5">
+        <label class="text-xs font-bold text-slate-300 uppercase tracking-wider">Langue Apprise</label>
+        <div id="settingsLangGrid" class="grid grid-cols-3 gap-2">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- CEFR Level Selector -->
+      <div class="bg-slate-800/40 p-4 rounded-2xl border border-white/[0.06] space-y-2.5">
+        <label class="text-xs font-bold text-slate-300 uppercase tracking-wider">Niveau Visé</label>
+        <div class="grid grid-cols-6 gap-1">
+          <button onclick="selectLevel('A1')" class="level-btn py-2 rounded-lg bg-slate-800 text-xs font-bold text-slate-300 hover:bg-slate-700">A1</button>
+          <button onclick="selectLevel('A2')" class="level-btn py-2 rounded-lg bg-slate-800 text-xs font-bold text-slate-300 hover:bg-slate-700">A2</button>
+          <button onclick="selectLevel('B1')" class="level-btn py-2 rounded-lg bg-slate-800 text-xs font-bold text-slate-300 hover:bg-slate-700">B1</button>
+          <button onclick="selectLevel('B2')" class="level-btn py-2 rounded-lg bg-sky-500 text-xs font-bold text-white">B2</button>
+          <button onclick="selectLevel('C1')" class="level-btn py-2 rounded-lg bg-slate-800 text-xs font-bold text-slate-300 hover:bg-slate-700">C1</button>
+          <button onclick="selectLevel('C2')" class="level-btn py-2 rounded-lg bg-slate-800 text-xs font-bold text-slate-300 hover:bg-slate-700">C2</button>
+        </div>
+      </div>
+
+      <!-- API Keys & AI Models Card -->
+      <div class="bg-slate-800/40 p-4 rounded-2xl border border-white/[0.06] space-y-3">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+            <span>🔑</span>
+            <span>Clé API & Modèle IA</span>
+          </label>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">Sécurisé</span>
+        </div>
+
+        <!-- Provider / Backend Selector -->
+        <div>
+          <label class="text-[11px] text-slate-400 block mb-1">Fournisseur d'IA :</label>
+          <select id="apiProviderSelect" onchange="handleProviderChange()" class="w-full bg-slate-900 text-white text-xs px-3 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:border-sky-500">
+            <option value="groq">Groq (Llama 3.3 70B, Whisper - Gratuit & Ultra Rapide)</option>
+            <option value="gemini">Google Gemini (Gemini 2.5 / 1.5 Flash)</option>
+            <option value="openai">OpenAI / Compatible</option>
+            <option value="local">Moteur IA Local Automatique</option>
+          </select>
+        </div>
+
+        <!-- API Key Input Field -->
+        <div id="apiKeyInputContainer">
+          <label class="text-[11px] text-slate-400 block mb-1">Clé API (<span id="apiKeyHint">gsk_...</span>) :</label>
+          <div class="relative flex items-center">
+            <input type="password" id="apiKeyInput" placeholder="Entrez votre clé API (ex: gsk_...)" 
+                   class="w-full bg-slate-900 text-white placeholder-slate-500 text-xs px-3.5 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:border-sky-500 pr-12 font-mono">
+            <button onclick="toggleApiKeyVisibility()" type="button" class="absolute right-2 px-2 py-1 text-[11px] text-slate-400 hover:text-white transition">
+              <span id="apiKeyEyeIcon">👁️</span>
+            </button>
+          </div>
+          <p id="apiKeyDocLink" class="text-[10px] text-slate-500 mt-1">Obtenez une clé gratuite sur <a href="https://console.groq.com/keys" target="_blank" class="text-sky-400 underline">console.groq.com</a></p>
+        </div>
+
+        <!-- AI Model Dropdown -->
+        <div>
+          <label class="text-[11px] text-slate-400 block mb-1">Modèle de Langue :</label>
+          <select id="aiModelSelect" class="w-full bg-slate-900 text-white text-xs px-3 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:border-sky-500">
+            <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile (Recommandé - Pédagogie & Nuances)</option>
+            <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant (Ultra rapide)</option>
+            <option value="mixtral-8x7b-32768">Mixtral 8x7B (Polyglotte)</option>
+            <option value="gemma2-9b-it">Gemma 2 9B IT (Google)</option>
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+          </select>
+        </div>
+
+        <!-- Save Key Button -->
+        <button onclick="saveApiKeySettings()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 text-white font-semibold text-xs tracking-wider uppercase transition shadow-lg shadow-sky-500/20 flex items-center justify-center gap-1.5">
+          <span>💾</span>
+          <span>Enregistrer ma Clé API</span>
+        </button>
+        <p id="apiKeyStatusMsg" class="hidden text-center text-xs text-emerald-400 font-medium"></p>
+      </div>
+
+      <!-- Toggles (Auto Audio, Subtitles) -->
+      <div class="bg-slate-800/40 p-4 rounded-2xl border border-white/[0.06] space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-white">Audio Vocal Automatique (TTS)</p>
+            <p class="text-[10px] text-slate-400">Joue la prononciation automatiquement</p>
+          </div>
+          <input type="checkbox" id="toggleAutoAudio" onchange="updateUserSetting('auto_audio', this.checked ? 1 : 0)" class="w-4 h-4 text-sky-500 rounded bg-slate-900 border-white/20">
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-white/[0.06]">
+          <div>
+            <p class="text-xs font-semibold text-white">Afficher la Traduction Française</p>
+            <p class="text-[10px] text-slate-400">Sous-titres d'aide dans les réponses</p>
+          </div>
+          <input type="checkbox" id="toggleSubtitles" checked onchange="updateUserSetting('show_subtitles', this.checked ? 1 : 0)" class="w-4 h-4 text-sky-500 rounded bg-slate-900 border-white/20">
+        </div>
+      </div>
+
+      <!-- Reset Context Button -->
+      <div class="pt-2 pb-6">
+        <button onclick="resetConversation()" class="w-full py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-semibold transition">
+          🔄 Réinitialiser la Conversation
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BOTTOM PERSISTENT NAVIGATION BAR -->
+  <nav class="sticky bottom-0 z-40 bg-[#090d16]/95 backdrop-blur-xl border-t border-white/[0.08] px-2 py-2 flex justify-around items-center">
+    <button onclick="switchTab('chat')" id="nav-chat" class="nav-btn flex flex-col items-center space-y-0.5 text-sky-400">
+      <span class="text-lg">💬</span>
+      <span class="text-[10px] font-medium">Direct</span>
+    </button>
+    <button onclick="switchTab('themes')" id="nav-themes" class="nav-btn flex flex-col items-center space-y-0.5 text-slate-400 hover:text-slate-200">
+      <span class="text-lg">🎭</span>
+      <span class="text-[10px] font-medium">Scénarios</span>
+    </button>
+    <button onclick="switchTab('srs')" id="nav-srs" class="nav-btn flex flex-col items-center space-y-0.5 text-slate-400 hover:text-slate-200">
+      <span class="text-lg">📚</span>
+      <span class="text-[10px] font-medium">SRS</span>
+    </button>
+    <button onclick="switchTab('stats')" id="nav-stats" class="nav-btn flex flex-col items-center space-y-0.5 text-slate-400 hover:text-slate-200">
+      <span class="text-lg">📊</span>
+      <span class="text-[10px] font-medium">Stats</span>
+    </button>
+    <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center space-y-0.5 text-slate-400 hover:text-slate-200">
+      <span class="text-lg">⚙️</span>
+      <span class="text-[10px] font-medium">Réglages</span>
+    </button>
+  </nav>
+
+  <!-- Scripts -->
+  <script src="./app.js?v=3.0"></script>
+</body>
+</html>

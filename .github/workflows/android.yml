@@ -1,0 +1,126 @@
+name: Android
+on:
+  push:
+    branches: [main]
+    paths: ['apps/android/**', 'shared/fixtures/**', 'release/android/**', 'scripts/export_android_content.py', 'scripts/check_android_release.py', 'scripts/tests/test_check_android_release.py', '.github/workflows/android.yml']
+  pull_request:
+    paths: ['apps/android/**', 'shared/fixtures/**', 'release/android/**', 'scripts/export_android_content.py', 'scripts/check_android_release.py', 'scripts/tests/test_check_android_release.py', '.github/workflows/android.yml']
+permissions:
+  contents: read
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  release-files:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Test release validator
+        run: python3 -m unittest scripts.tests.test_check_android_release -v
+      - name: Validate listing copy and available store assets
+        run: python3 scripts/check_android_release.py --output /tmp/android-release-files.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: android-release-file-checks
+          path: /tmp/android-release-files.json
+          retention-days: 14
+
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install SDK components
+        run: $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager 'platforms;android-36' 'build-tools;35.0.0'
+      - name: Test, lint and build Android
+        working-directory: apps/android
+        run: ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleUiTestAndroidTest :app:bundleRelease
+      - name: Inspect unsigned release bundle and native library layout
+        run: python3 scripts/check_android_release.py --aab apps/android/app/build/outputs/bundle/release/app-release.aab --output /tmp/android-release-native-checks.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: mural-android-debug
+          path: apps/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: mural-android-unsigned-bundle
+          path: |
+            apps/android/app/build/outputs/bundle/release/app-release.aab
+            /tmp/android-release-native-checks.json
+          retention-days: 14
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: android-test-reports
+          path: apps/android/app/build/reports/
+          retention-days: 14
+
+  emulator:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install SDK components
+        run: $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager 'platforms;android-36' 'build-tools;35.0.0'
+      - name: Build interface tests before starting the emulator
+        working-directory: apps/android
+        run: ./gradlew --no-daemon --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process :app:assembleUiTest :app:assembleUiTestAndroidTest
+      - name: Allow the test runner to use hardware virtualization
+        run: sudo chmod a+rw /dev/kvm
+      - name: Run native interface and compatibility checks
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: 36
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 4096M
+          disable-animations: true
+          # Use Mesa software rendering on the headless runner.
+          emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu lavapipe
+          working-directory: apps/android
+          script: |
+            mkdir -p build/device-diagnostics
+            adb logcat -c
+            adb logcat -v threadtime > build/device-diagnostics/logcat.txt &
+            ./gradlew --no-daemon --max-workers=2 -Pkotlin.compiler.execution.strategy=in-process :app:connectedUiTestAndroidTest
+      - name: Collect runner diagnostics
+        if: always()
+        run: |
+          mkdir -p apps/android/build/device-diagnostics
+          free -h > apps/android/build/device-diagnostics/memory.txt
+          sudo dmesg --ctime > apps/android/build/device-diagnostics/kernel.txt
+          sudo journalctl -u systemd-oomd --no-pager > apps/android/build/device-diagnostics/oomd.txt
+          df -h > apps/android/build/device-diagnostics/disk.txt
+          for report in /tmp/android-runner/emu-crash-*.db; do
+            if [ -e "$report" ]; then
+              cp -a "$report" apps/android/build/device-diagnostics/
+            fi
+          done
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: android-device-test-reports
+          path: |
+            apps/android/app/build/reports/androidTests/
+            apps/android/app/build/outputs/androidTest-results/
+            apps/android/build/device-diagnostics/
+          retention-days: 14

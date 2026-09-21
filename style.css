@@ -1,0 +1,91 @@
+/* Modern Glassmorphism & UI/UX Pro Max Styles */
+
+:root {
+  --app-height: 100%;
+}
+
+html, body {
+  height: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Glassmorphism Card */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Living Mural Orb Wave states */
+.wave-active-1 {
+  transform: scale(1.6);
+  opacity: 0.6 !important;
+}
+.wave-active-2 {
+  transform: scale(2.1);
+  opacity: 0.3 !important;
+}
+
+/* Flip Card 3D effect */
+.perspective-1000 {
+  perspective: 1000px;
+}
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* Chat bubble styling */
+.chat-bubble-teacher {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top-left-radius: 4px;
+}
+
+.chat-bubble-user {
+  background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
+  border-top-right-radius: 4px;
+}
+
+/* Sound wave bars */
+.sound-bar {
+  width: 3px;
+  border-radius: 2px;
+  background: #38bdf8;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { height: 4px; }
+  50% { height: 16px; }
+}

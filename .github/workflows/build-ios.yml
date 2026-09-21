@@ -1,0 +1,90 @@
+name: Build iOS IPA
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+jobs:
+  build-ipa:
+    runs-on: macos-15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build main app and widget
+        run: |
+          xcodebuild -project apps/ios/Mural.xcodeproj \
+            -scheme Mural \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            VALIDATE_WORKSPACE=NO \
+            clean build
+
+      - name: Find and package app + widget
+        run: |
+          mkdir -p Payload
+
+          # Main app from build directory
+          APP_PATH=$(find build -name "Mural.app" -type d | head -n 1)
+          echo "APP_PATH=$APP_PATH"
+          if [ -n "$APP_PATH" ]; then
+            cp -R "$APP_PATH" Payload/Mural.app
+          else
+            echo "ERROR: Mural.app not found in build/"
+            exit 1
+          fi
+
+          # Find widget extension
+          WIDGET_PATH=$(find build /Users/runner/Library/Developer/Xcode/DerivedData -name "*.appex" -type d 2>/dev/null | head -n 1)
+          if [ -z "$WIDGET_PATH" ]; then
+            echo "Building Widget Extension target directly..."
+            xcodebuild -project apps/ios/Mural.xcodeproj \
+              -target MuralWidgetExtension \
+              -sdk iphoneos \
+              -destination 'generic/platform=iOS' \
+              -configuration Release \
+              CODE_SIGNING_ALLOWED=NO \
+              CODE_SIGN_IDENTITY="" \
+              CODE_SIGNING_REQUIRED=NO \
+              VALIDATE_WORKSPACE=NO \
+              build || true
+            WIDGET_PATH=$(find /Users/runner/Library/Developer/Xcode/DerivedData build -name "*.appex" -type d 2>/dev/null | head -n 1)
+          fi
+
+          echo "WIDGET_PATH=$WIDGET_PATH"
+          if [ -n "$WIDGET_PATH" ]; then
+            mkdir -p Payload/Mural.app/PlugIns
+            cp -R "$WIDGET_PATH" Payload/Mural.app/PlugIns/
+            echo "✅ Widget extension embedded in Payload/Mural.app/PlugIns/"
+          else
+            echo "Warning: Widget extension could not be built or found."
+          fi
+
+          zip -r -y Mural-Gemini.ipa Payload
+          rm -rf Payload build_widget
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mural-Gemini-IPA
+          path: Mural-Gemini.ipa
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: always()
+        with:
+          tag_name: v2.0.0-mural-release
+          name: "Mural Native iOS v2.0.0 (SideStore / AltStore)"
+          body: "Application iOS native Mural issue du code source officiel avec 3 zones indépendantes (Hermes VPS, Gemini, Groq)."
+          files: Mural-Gemini.ipa
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

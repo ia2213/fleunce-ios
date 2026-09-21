@@ -1,0 +1,43 @@
+.DS_Store
+.env*
+!.env.example
+.build/
+DerivedData/
+**/xcuserdata/
+*.xcuserstate
+apps/ios/Config/Local.xcconfig
+# Existing iOS checkouts keep this ignored file until local settings are migrated.
+Config/Local.xcconfig
+*.p12
+*.p8
+*.mobileprovision
+*.provisionprofile
+*.xcarchive/
+*.xcresult/
+*.ipa
+*.dSYM/
+verification/*.log
+verification/*.zip
+verification/*.png
+release/private/
+release/screenshots/en-US/originals/
+site/.openai/hosting.json
+
+# Local planning and generated review artifacts are outside the public source release.
+plan/
+verification/*.json
+marketing/screenshots/*.zip
+marketing/demo/
+.swiftpm/
+node_modules/
+__pycache__/
+*.py[cod]
+
+# Android local tooling, build outputs and private signing material
+apps/android/.gradle/
+apps/android/.kotlin/
+apps/android/**/build/
+apps/android/local.properties
+apps/android/.idea/
+*.jks
+*.keystore
