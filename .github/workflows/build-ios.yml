@@ -72,7 +72,7 @@ jobs:
           rm -rf Payload build_widget
 
       - name: Upload IPA Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Fleunce-IPA
           path: Fleunce.ipa
