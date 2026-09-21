@@ -267,11 +267,11 @@ class StoreManager: ObservableObject {
     }
     
     func listenForTransactions() -> Task<Void, Never> {
-        return Task.detached {
+        return Task {
             for await result in Transaction.updates {
                 do {
                     let transaction = try Self.checkVerified(result)
-                    await Self.shared.updatePurchasedStatus()
+                    await self.updatePurchasedStatus()
                     await transaction.finish()
                 } catch {
                     print("Transaction failed verification")
@@ -330,7 +330,7 @@ class StoreManager: ObservableObject {
         return !purchasedProductIDs.isEmpty
     }
     
-    static func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
+    nonisolated static func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {
         case .unverified(_, _):
             throw StoreError.failedVerification
