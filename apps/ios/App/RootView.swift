@@ -108,6 +108,11 @@ struct TalkView: View {
     @State private var typing = false
     @State private var transcript: SessionRecord?
     @State private var lookup: WordLookup?
+    @State private var showPaywall = false
+    
+    @StateObject private var store = StoreManager.shared
+    @StateObject private var limits = FreeTierLimits.shared
+    
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
@@ -139,7 +144,13 @@ struct TalkView: View {
                             Button("Type instead", systemImage: "keyboard") { typing = true }
                             Button("A little help", systemImage: "sparkles") { coordinator.help() }
                         } else if coordinator.session == nil {
-                            Text("Reply in whichever language comes to you.").foregroundStyle(FleunceColor.secondary)
+                            if !store.isPro {
+                                Text("\(limits.remainingMessages) free talks left today.")
+                                    .foregroundStyle(FleunceColor.orange)
+                            } else {
+                                Text("Reply in whichever language comes to you.")
+                                    .foregroundStyle(FleunceColor.secondary)
+                            }
                         } else if !coordinator.isRunning {
                             Button("New conversation", systemImage: "arrow.counterclockwise") { coordinator.resetConversation() }
                                 .accessibilityIdentifier("new-conversation")
@@ -157,8 +168,9 @@ struct TalkView: View {
             TranscriptView(session: session, meaningLanguage: coordinator.store.preferences.meaningLanguage)
         }
         .sheet(item: $lookup) { item in LookupView(item: item, coordinator: coordinator) }
-    }
-    private var captionArea: some View {
+        .sheet(isPresented: $showPaywall) { PaywallView() }
+        }
+        private var captionArea: some View {
         VStack(spacing: 12) {
             Text(linkedCaption).font(.system(coordinator.assistantPassage == nil ? .largeTitle : .title2, design: .rounded, weight: .medium))
                 .tracking(-0.5).multilineTextAlignment(.center).tint(FleunceColor.ink)
@@ -216,7 +228,13 @@ struct TalkView: View {
                 .accessibilityValue(coordinator.store.preferences.meaningVisible ? "On" : "Off")
             Button {
                 if coordinator.state == .active { coordinator.toggleMute() }
-                else if !coordinator.isRunning { coordinator.start() }
+                else if !coordinator.isRunning {
+                    if store.isPro || limits.canSendFreeMessage {
+                        coordinator.start()
+                    } else {
+                        showPaywall = true
+                    }
+                }
             } label: {
                 ZStack {
                     Circle().fill(LinearGradient(colors: [Color(red: 1, green: 0.73, blue: 0.48), FleunceColor.orange], startPoint: .topLeading, endPoint: .bottomTrailing))
