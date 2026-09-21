@@ -254,7 +254,7 @@ class StoreManager: ObservableObject {
     private let productIDs = ["no.william.fleunce.pro.monthly", "no.william.fleunce.pro.yearly"]
     private var updatesTask: Task<Void, Never>?
     
-    init() {
+        init() {
         updatesTask = listenForTransactions()
         Task {
             await loadProducts()
@@ -267,9 +267,10 @@ class StoreManager: ObservableObject {
     }
     
     func listenForTransactions() -> Task<Void, Never> {
-        return Task.detached {
+        return Task.detached { [weak self] in
             for await result in Transaction.updates {
                 do {
+                    guard let self = self else { return }
                     let transaction = try self.checkVerified(result)
                     await self.updatePurchasedStatus()
                     await transaction.finish()
@@ -330,7 +331,7 @@ class StoreManager: ObservableObject {
         return !purchasedProductIDs.isEmpty
     }
     
-    private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
+    func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {
         case .unverified(_, _):
             throw StoreError.failedVerification
