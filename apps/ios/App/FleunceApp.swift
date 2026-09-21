@@ -267,12 +267,11 @@ class StoreManager: ObservableObject {
     }
     
     func listenForTransactions() -> Task<Void, Never> {
-        return Task.detached { [weak self] in
+        return Task.detached {
             for await result in Transaction.updates {
-                guard let self = self else { return }
                 do {
-                    let transaction = try self.checkVerified(result)
-                    await self.updatePurchasedStatus()
+                    let transaction = try Self.checkVerified(result)
+                    await Self.shared.updatePurchasedStatus()
                     await transaction.finish()
                 } catch {
                     print("Transaction failed verification")
@@ -295,7 +294,7 @@ class StoreManager: ObservableObject {
         
         switch result {
         case .success(let verification):
-            let transaction = try checkVerified(verification)
+            let transaction = try Self.checkVerified(verification)
             await updatePurchasedStatus()
             await transaction.finish()
         case .userCancelled:
@@ -311,7 +310,7 @@ class StoreManager: ObservableObject {
         var purchased: Set<String> = []
         for await result in Transaction.currentEntitlements {
             do {
-                let transaction = try checkVerified(result)
+                let transaction = try Self.checkVerified(result)
                 if transaction.productType == .autoRenewable || transaction.productType == .nonConsumable {
                     purchased.insert(transaction.productID)
                 }
@@ -331,7 +330,7 @@ class StoreManager: ObservableObject {
         return !purchasedProductIDs.isEmpty
     }
     
-    func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
+    static func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {
         case .unverified(_, _):
             throw StoreError.failedVerification
