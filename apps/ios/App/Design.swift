@@ -78,6 +78,7 @@ struct FleunceOrb: View {
                     Circle().stroke(FleunceColor.orange.opacity(listening ? 0.18 : 0), lineWidth: 1).padding(-6)
                     Circle().stroke(FleunceColor.orange.opacity(listening ? 0.10 : 0), lineWidth: 1).padding(-16)
                     ZStack {
+                    if #available(iOS 18.0, *) {
                         MeshGradient(width: 3, height: 3, points: [
                             [0,0], [0.5,0], [1,0],
                             [0,0.5], [Float(0.5 + sin(phase) * 0.08), Float(0.5 + cos(phase) * 0.06)], [1,0.5],
@@ -85,6 +86,9 @@ struct FleunceOrb: View {
                         ], colors: [Color(red: 1, green: 0.97, blue: 0.82), FleunceColor.butter, FleunceColor.peach,
                                     Color(red: 1, green: 0.70, blue: 0.42), FleunceColor.orange, Color(red: 0.80, green: 0.68, blue: 0.93),
                                     Color(red: 0.96, green: 0.42, blue: 0.35), Color(red: 0.99, green: 0.62, blue: 0.46), Color(red: 0.86, green: 0.75, blue: 0.95)])
+                    } else {
+                        LinearGradient(colors: [FleunceColor.butter, FleunceColor.orange], startPoint: .topLeading, endPoint: .bottomTrailing)
+                    }
                         Ellipse().fill(.white.opacity(0.65)).frame(width: side * 0.48, height: side * 0.15).blur(radius: 13)
                             .rotationEffect(.degrees(-28)).offset(x: -side * 0.17, y: -side * 0.28)
                         Ellipse().stroke(FleunceColor.butter.opacity(0.48), lineWidth: 16).frame(width: side * 1.2, height: side * 0.5)
