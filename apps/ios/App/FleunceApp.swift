@@ -1,20 +1,30 @@
 import SwiftUI
+import FleunceCore
 
 @main struct FleunceApp: App {
     @State private var store: LearningStore?
-    @State private var startupError: String?
+    
     init() {
-        do { _store = State(initialValue: try LearningStore(inMemory: ProcessInfo.processInfo.arguments.contains("--preview") || AudioVerification.requested)) }
-        catch { _startupError = State(initialValue: "Fleunce couldn’t open its learning record. Your existing data has not been replaced.") }
+        do {
+            _store = State(initialValue: try LearningStore(inMemory: false))
+        } catch {
+            print("Failed to init store: \(error)")
+        }
     }
+    
     var body: some Scene {
         WindowGroup {
-            if let store { 
+            if let store = store {
                 RootView(store: store)
                     .preferredColorScheme(.light)
             } else {
-                ContentUnavailableView("Let’s try again", systemImage: "externaldrive.badge.exclamationmark", description: Text(startupError ?? "The learning record is unavailable."))
-                    .preferredColorScheme(.light)
+                VStack {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.largeTitle)
+                        .padding()
+                    Text("Could not load Fleunce data.")
+                }
+                .preferredColorScheme(.light)
             }
         }
     }

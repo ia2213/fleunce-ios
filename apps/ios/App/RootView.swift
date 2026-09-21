@@ -5,106 +5,59 @@ struct RootView: View {
     @State private var coordinator: ConversationCoordinator
     @State private var tab = 0
     @State private var onboarding = false
-    @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    
     init(store: LearningStore) {
-        let coordinator = ConversationCoordinator(store: store)
-        #if DEBUG && targetEnvironment(simulator)
-        if ProcessInfo.processInfo.arguments.contains("--preview"), ProcessInfo.processInfo.arguments.contains("--preview-existing-user") {
-            store.updatePreferences { $0.hasOnboarded = true }
-        }
-        if let screen = ScreenshotPreview.screen { coordinator.prepareScreenshot(screen) }
-        coordinator.prepareTypedReplyPreview()
-        coordinator.prepareConversationPolicyPreview()
-        _tab = State(initialValue: ScreenshotPreview.tab)
-        #endif
-        _coordinator = State(initialValue: coordinator)
+        _coordinator = State(initialValue: ConversationCoordinator(store: store))
     }
+    
     var body: some View {
-        @Bindable var coordinator = coordinator
-        Group {
-            if horizontalSizeClass == .regular {
-                NavigationSplitView {
-                    List {
-                        Button { tab = 0 } label: { Label("Talk", systemImage: "waveform") }
-                        Button { tab = 1 } label: { Label("Themes", systemImage: "square.grid.2x2") }
-                        Button { tab = 2 } label: { Label("Words", systemImage: "book") }
-                        Button { coordinator.showSettings = true } label: { Label("Settings", systemImage: "slider.horizontal.3") }
-                    }
-                    .navigationTitle("Fleunce")
-                    .listStyle(.sidebar)
-                } detail: {
-                    shell {
-                        switch tab {
-                        case 0: TalkView(coordinator: coordinator)
-                        case 1: ThemesView(coordinator: coordinator) { theme in coordinator.chooseTheme(theme); tab = 0 }
-                        case 2: WordsView(coordinator: coordinator)
-                        default: TalkView(coordinator: coordinator)
-                        }
-                    }
-                }
-            } else {
-                TabView(selection: $tab) {
-                    shell { TalkView(coordinator: coordinator) }
-                        .tabItem { Label("Talk", systemImage: "waveform") }
-                        .tag(0)
-                    shell { ThemesView(coordinator: coordinator) { theme in coordinator.chooseTheme(theme); tab = 0 } }
-                        .tabItem { Label("Themes", systemImage: "square.grid.2x2") }
-                        .tag(1)
-                    shell { WordsView(coordinator: coordinator) }
-                        .tabItem { Label("Words", systemImage: "book") }
-                        .tag(2)
+        TabView(selection: $tab) {
+            NavigationStack {
+                TalkView(coordinator: coordinator)
+            }
+            .tabItem { Label("Talk", systemImage: "waveform") }
+            .tag(0)
+            
+            NavigationStack {
+                ThemesView(coordinator: coordinator) { theme in 
+                    coordinator.chooseTheme(theme)
+                    tab = 0 
                 }
             }
+            .tabItem { Label("Themes", systemImage: "square.grid.2x2") }
+            .tag(1)
+            
+            NavigationStack {
+                WordsView(coordinator: coordinator)
+            }
+            .tabItem { Label("Words", systemImage: "book") }
+            .tag(2)
         }
         .tint(FleunceColor.ink)
-        .sheet(isPresented: $coordinator.showSettings) { SettingsView(coordinator: coordinator) }
-        .sheet(isPresented: $coordinator.showAIConsent, onDismiss: { coordinator.resumeAfterAIConsent() }) {
-            AIConsentView(agree: { coordinator.acceptAIConsent() }, decline: { coordinator.declineAIConsent() })
-        }
-        .fullScreenCover(isPresented: $onboarding) { OnboardingView(coordinator: coordinator) { coordinator.store.updatePreferences { $0.hasOnboarded = true }; onboarding = false } }
-        .alert("A little interruption", isPresented: Binding(get: { coordinator.error != nil || coordinator.store.error != nil }, set: { if !$0 { coordinator.error = nil; coordinator.store.error = nil } })) {
-            Button("OK", role: .cancel) { coordinator.error = nil; coordinator.store.error = nil }
-        } message: { Text(coordinator.error ?? coordinator.store.error ?? "") }
         .onAppear {
-            let arguments = ProcessInfo.processInfo.arguments
-            #if DEBUG && targetEnvironment(simulator)
-            if arguments.contains("--preview") && arguments.contains("--preview-onboarding") {
-                onboarding = !coordinator.store.preferences.hasOnboarded
-                return
+            if !coordinator.store.preferences.hasOnboarded {
+                onboarding = true
             }
-            #endif
-            onboarding = !coordinator.store.preferences.hasOnboarded && !arguments.contains("--preview") && !AudioVerification.requested
         }
-        .onChange(of: scenePhase) { _, phase in
-            if phase == .background { coordinator.background() }
-            else if phase == .active { coordinator.resume() }
+        .fullScreenCover(isPresented: $onboarding) { 
+            OnboardingView(coordinator: coordinator) { 
+                coordinator.store.updatePreferences { $0.hasOnboarded = true }
+                onboarding = false 
+            } 
         }
-        #if DEBUG
-        .task {
-            #if targetEnvironment(simulator)
-            if ProcessInfo.processInfo.arguments.contains("--verify-network-recovery") {
-                coordinator.notice = await LiveTransport.verifyRecoveryLifecycle() ? "Network recovery lifecycle passed" : "Network recovery lifecycle failed"
-                return
-            }
-            #endif
-            if AudioVerification.requested { await AudioVerification.run(coordinator) }
-            else if ProcessInfo.processInfo.arguments.contains("--ended-conversation") { coordinator.prepareEndedPreview() }
+        .sheet(isPresented: $coordinator.showSettings) { 
+            SettingsView(coordinator: coordinator) 
         }
-        #endif
-    }
-    private func shell<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        NavigationStack {
-            content().background(FleunceColor.cream).toolbar {
-                ToolbarItem(placement: .topBarLeading) { Brand().fixedSize() }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button { coordinator.showSettings = true } label: { Image(systemName: "slider.horizontal.3") }
-                        .accessibilityLabel("Settings")
-                }
-            }.toolbarBackground(FleunceColor.cream, for: .navigationBar)
+        .sheet(isPresented: $coordinator.showAIConsent) {
+            AIConsentView(
+                agree: { coordinator.acceptAIConsent() }, 
+                decline: { coordinator.declineAIConsent() }
+            )
         }
     }
 }
+import SwiftUI
+import FleunceCore
 
 struct TalkView: View {
     @Bindable var coordinator: ConversationCoordinator
