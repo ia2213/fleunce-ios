@@ -45,11 +45,15 @@ struct RootView: View {
                 }
             } else {
                 TabView(selection: $tab) {
-                    Tab("Talk", systemImage: "waveform", value: 0) { shell { TalkView(coordinator: coordinator) } }
-                    Tab("Themes", systemImage: "square.grid.2x2", value: 1) {
-                        shell { ThemesView(coordinator: coordinator) { theme in coordinator.chooseTheme(theme); tab = 0 } }
-                    }
-                    Tab("Words", systemImage: "book", value: 2) { shell { WordsView(coordinator: coordinator) } }
+                    NavigationStack { TalkView(coordinator: coordinator).background(FleunceColor.cream) }
+                        .tabItem { Label("Talk", systemImage: "waveform") }
+                        .tag(0)
+                    NavigationStack { ThemesView(coordinator: coordinator) { theme in coordinator.chooseTheme(theme); tab = 0 }.background(FleunceColor.cream) }
+                        .tabItem { Label("Themes", systemImage: "square.grid.2x2") }
+                        .tag(1)
+                    NavigationStack { WordsView(coordinator: coordinator).background(FleunceColor.cream) }
+                        .tabItem { Label("Words", systemImage: "book") }
+                        .tag(2)
                 }
             }
         }

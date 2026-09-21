@@ -251,13 +251,17 @@ private struct OnboardingBackground: View {
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 20, paused: reduceMotion || scenePhase != .active)) { timeline in
             let phase = reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate * 0.14
-            MeshGradient(width: 3, height: 3, points: [
-                [0, 0], [0.5, 0], [1, 0],
-                [0, 0.5], [Float(0.5 + sin(phase) * 0.12), Float(0.45 + cos(phase) * 0.1)], [1, 0.5],
-                [0, 1], [0.5, 1], [1, 1]
-            ], colors: [FleunceColor.cream, FleunceColor.butter.opacity(0.7), FleunceColor.cream,
-                        FleunceColor.cream, FleunceColor.peach.opacity(0.75), FleunceColor.lilac.opacity(0.45),
-                        FleunceColor.cream, FleunceColor.cream, FleunceColor.cream])
+            if #available(iOS 18.0, *) {
+                MeshGradient(width: 3, height: 3, points: [
+                    [0, 0], [0.5, 0], [1, 0],
+                    [0, 0.5], [Float(0.5 + sin(phase) * 0.12), Float(0.45 + cos(phase) * 0.1)], [1, 0.5],
+                    [0, 1], [0.5, 1], [1, 1]
+                ], colors: [FleunceColor.cream, FleunceColor.butter.opacity(0.7), FleunceColor.cream,
+                            FleunceColor.cream, FleunceColor.peach.opacity(0.75), FleunceColor.lilac.opacity(0.45),
+                            FleunceColor.cream, FleunceColor.cream, FleunceColor.cream])
+            } else {
+                LinearGradient(colors: [FleunceColor.cream, FleunceColor.peach.opacity(0.75), FleunceColor.cream], startPoint: .topLeading, endPoint: .bottomTrailing)
+            }
         }.background(FleunceColor.cream).ignoresSafeArea().accessibilityHidden(true)
     }
 }
