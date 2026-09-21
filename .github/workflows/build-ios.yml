@@ -78,7 +78,7 @@ jobs:
           path: Fleunce.ipa
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         if: always()
         with:
           tag_name: v2.0.0-mural-release
