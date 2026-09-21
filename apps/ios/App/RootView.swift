@@ -45,13 +45,13 @@ struct RootView: View {
                 }
             } else {
                 TabView(selection: $tab) {
-                    NavigationStack { TalkView(coordinator: coordinator).background(FleunceColor.cream) }
+                    shell { TalkView(coordinator: coordinator) }
                         .tabItem { Label("Talk", systemImage: "waveform") }
                         .tag(0)
-                    NavigationStack { ThemesView(coordinator: coordinator) { theme in coordinator.chooseTheme(theme); tab = 0 }.background(FleunceColor.cream) }
+                    shell { ThemesView(coordinator: coordinator) { theme in coordinator.chooseTheme(theme); tab = 0 } }
                         .tabItem { Label("Themes", systemImage: "square.grid.2x2") }
                         .tag(1)
-                    NavigationStack { WordsView(coordinator: coordinator).background(FleunceColor.cream) }
+                    shell { WordsView(coordinator: coordinator) }
                         .tabItem { Label("Words", systemImage: "book") }
                         .tag(2)
                 }
