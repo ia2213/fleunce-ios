@@ -326,15 +326,12 @@ struct SettingsView: View {
                     }
                 }
                 Section {
-                    Picker("AI Provider Mode", selection: Binding(get: { store.preferences.providerID }, set: { val in store.updatePreferences { $0.providerID = val } })) {
-                        Text("Auto-Switch (Groq → Gemini → VPS)").tag("auto")
-                        Text("Personal Hermes VPS Agent").tag("hermes_vps")
-                        Text("Google Gemini API").tag("google")
-                        Text("Groq API Cloud").tag("groq")
+                    HStack {
+                        Text("Moteur Sélectionné").foregroundStyle(FleunceColor.secondary)
+                        Spacer()
+                        Text("100% Hermes VPS & OmniRoute").bold()
                     }
-                } header: { Text("Moteur IA Principal") } footer: {
-                    Text("En mode Auto, l'application bascule automatiquement entre Groq, Google Gemini et votre VPS personnel si un service est indisponible.")
-                }
+                } header: { Text("🏛️ Moteur IA Principal") }
 
                 Section {
                     TextField("VPS Endpoint URL", text: Binding(get: { store.preferences.vpsEndpoint }, set: { val in store.updatePreferences { $0.vpsEndpoint = val } }))
@@ -352,45 +349,6 @@ struct SettingsView: View {
                     Text("Connecté à votre serveur Oracle VPS personnel.")
                 }
 
-                Section {
-                    SecureField("Google API Key (AIzaSy...)", text: Binding(get: { store.preferences.googleAPIKey }, set: { val in store.updatePreferences { $0.googleAPIKey = val } }))
-                        .textInputAutocapitalization(.never).autocorrectionDisabled()
-                    Picker("Gemini Model", selection: Binding(get: { store.preferences.geminiModel }, set: { val in store.updatePreferences { $0.geminiModel = val } })) {
-                        Text("Gemini 2.0 Flash (Recommandé)").tag("gemini-2.0-flash")
-                        Text("Gemini 2.0 Flash Lite").tag("gemini-2.0-flash-lite")
-                        Text("Gemini 1.5 Flash").tag("gemini-1.5-flash")
-                        Text("Gemini 1.5 Pro").tag("gemini-1.5-pro")
-                    }
-                    Link("Obtenir une clé Gemini gratuite", destination: URL(string: "https://aistudio.google.com/app/apikey")!)
-                } header: { Text("🌐 Google Gemini Engine") }
-
-                Section {
-                    Picker("Groq Model", selection: Binding(get: { store.preferences.groqModel }, set: { val in store.updatePreferences { $0.groqModel = val } })) {
-                        Text("GPT-OSS 120B (Recommandé)").tag("openai/gpt-oss-120b")
-                        Text("GPT-OSS 20B").tag("openai/gpt-oss-20b")
-                        Text("Qwen 3.8 27B").tag("qwen/qwen3.8-27b")
-                        Text("Llama 3.3 70B Versatile").tag("llama-3.3-70b-versatile")
-                        Text("Llama 3.1 8B Instant").tag("llama-3.1-8b-instant")
-                    }
-                    DisclosureGroup(isExpanded: $showingAPIKey) {
-                        if hasKey { Label("Clé Groq sauvegardée sur cet iPhone", systemImage: "checkmark.shield") }
-                        SecureField(hasKey ? "Remplacer la clé Groq (gsk_...)" : "Clé Groq API (gsk_...)", text: $key)
-                            .textInputAutocapitalization(.never).autocorrectionDisabled().privacySensitive().accessibilityIdentifier("api-key")
-                        Button(hasKey ? "Enregistrer la nouvelle clé" : "Enregistrer la clé") {
-                            do { try CredentialStore.save(key); key = ""; hasKey = true; message = "Enregistré avec succès." }
-                            catch { message = error.localizedDescription }
-                        }.disabled(key.isEmpty || coordinator.isRunning)
-                        Link("Obtenir une clé Groq gratuite", destination: URL(string: "https://console.groq.com/keys")!)
-                        if hasKey {
-                            Button("Supprimer la clé", role: .destructive) {
-                                do { try CredentialStore.delete(); hasKey = false; message = "Clé supprimée." }
-                                catch { message = error.localizedDescription }
-                            }.disabled(coordinator.isRunning)
-                        }
-                    } label: { Label("Clé API Groq", systemImage: "key").accessibilityIdentifier("advanced-api-key") }
-                } header: { Text("⚡ Groq Engine Cloud") } footer: {
-                    Text("Select your preferred model on Groq. STT uses Groq Whisper Turbo and TTS uses your iPhone's native iOS voice.")
-                }
                 Section {
                     Picker("Moteur Vocal / Voice Engine", selection: Binding(get: { store.preferences.ttsEngine }, set: { val in store.updatePreferences { $0.ttsEngine = val } })) {
                         Text("Voix iOS Native (AVSpeechSynthesizer)").tag("ios")

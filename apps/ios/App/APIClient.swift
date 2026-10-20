@@ -67,13 +67,9 @@ struct APIResult { var text: String; var sources: [SourceLink]; var usage: APIUs
     }
 
     func respond(instructions: String, input: String, schema: [String: Any]? = nil, search: Bool = false, model: String = "", preferences: Preferences = Preferences()) async throws -> APIResult {
-        let mode = preferences.providerID.lowercased()
-        if mode == "hermes_vps" && !preferences.vpsEndpoint.isEmpty {
-            let history = [["role": "user", "content": input]]
+        let history = [["role": "user", "content": input]]
+        if !preferences.vpsEndpoint.isEmpty {
             return try await executeHermesVPS(instructions: instructions, history: history, prefs: preferences)
-        } else if mode == "google" && !preferences.googleAPIKey.isEmpty {
-            let history = [["role": "user", "content": input]]
-            return try await executeGemini(instructions: instructions, history: history, prefs: preferences)
         }
         
         if let key = CredentialStore.read(), !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -205,13 +201,7 @@ struct APIResult { var text: String; var sources: [SourceLink]; var usage: APIUs
     }
 
     func respondHistory(instructions: String, history: [[String: String]], model: String = "", preferences: Preferences = Preferences()) async throws -> APIResult {
-        let mode = preferences.providerID.lowercased()
-        let providersToTry: [String] = {
-            if mode == "hermes_vps" { return ["hermes_vps"] }
-            if mode == "google" { return ["google", "hermes_vps"] }
-            if mode == "groq" { return ["groq", "hermes_vps"] }
-            return ["hermes_vps", "google", "groq"]
-        }()
+        return try await executeHermesVPS(instructions: instructions, history: history, prefs: preferences)
         
         var lastError: Error? = nil
         for provider in providersToTry {

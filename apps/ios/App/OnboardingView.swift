@@ -216,7 +216,7 @@ struct OnboardingView: View {
 
 enum AIProcessingConsent {
     static let version = 1
-    static let summary = "With your permission, Fleunce sends audio and selected text to Groq (Llama 3.1 & Whisper Turbo) to provide conversations and meanings. Provider retention rules apply."
+    static let summary = "With your permission, Fluence sends audio and selected text to your personal Hermes VPS (OmniRoute) for conversations and meanings. All data stays on your own server."
     enum ConsentError: LocalizedError {
         case required
         var errorDescription: String? { "Before using AI features, open Talk and tap the microphone to review how Groq processes your audio and text." }
