@@ -102,7 +102,7 @@ jobs:
 
       - name: Create GitHub Release
         if: steps.build.outputs.build_successful == 'true'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v3.1.0-vps-fast
           name: "Fluence Native iOS v3.1.0 (Hermes VPS Fast)"
