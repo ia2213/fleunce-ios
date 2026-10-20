@@ -21,24 +21,41 @@ import FleunceCore
         migrationBackupURL = inMemory ? nil : URL.applicationSupportDirectory
             .appendingPathComponent("Fleunce", isDirectory: true)
             .appendingPathComponent("before-language-modules.json")
-        container = try ModelContainer(for: StoredArchive.self, configurations: ModelConfiguration(isStoredInMemoryOnly: inMemory, cloudKitDatabase: .none))
+        
+        let activeContainer: ModelContainer
+        do {
+            activeContainer = try ModelContainer(for: StoredArchive.self, configurations: ModelConfiguration(isStoredInMemoryOnly: inMemory, cloudKitDatabase: .none))
+        } catch {
+            print("Failed to create persistent ModelContainer: \(error), falling back to in-memory")
+            activeContainer = try ModelContainer(for: StoredArchive.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
+        }
+        self.container = activeContainer
+        
         let context = container.mainContext
-        if let existing = try context.fetch(FetchDescriptor<StoredArchive>()).first {
+        if let existing = try? context.fetch(FetchDescriptor<StoredArchive>()).first {
             document = existing
-            archive = try Archive.decode(existing.payload)
+            do {
+                archive = try Archive.decode(existing.payload)
+            } catch {
+                print("Failed to decode archive payload: \(error), resetting archive")
+                archive = Archive()
+                document.payload = (try? Archive().encoded()) ?? Data()
+            }
             if let backup = migrationBackupURL,
-               let root = try JSONSerialization.jsonObject(with: existing.payload) as? [String: Any], root["schemaVersion"] as? Int == 1 {
+               let root = (try? JSONSerialization.jsonObject(with: existing.payload)) as? [String: Any], root["schemaVersion"] as? Int == 1 {
                 let directory = backup.deletingLastPathComponent()
-                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
                 if !FileManager.default.fileExists(atPath: backup.path) {
-                    try existing.payload.write(to: backup, options: [.atomic, .completeFileProtection])
+                    try? existing.payload.write(to: backup, options: [.atomic, .completeFileProtection])
                 }
             }
             for i in archive.sessions.indices where archive.sessions[i].endedAt == nil {
                 archive.sessions[i].endedAt = .now; archive.sessions[i].endReason = "App closed before finalization"
             }
         } else {
-            document = StoredArchive(payload: try Archive().encoded()); context.insert(document)
+            let doc = StoredArchive(payload: (try? Archive().encoded()) ?? Data())
+            context.insert(doc)
+            document = doc
         }
         persist()
     }

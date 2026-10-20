@@ -4,21 +4,36 @@ import FleunceCore
 @main struct FleunceApp: App {
     @State private var store: LearningStore?
     
+    init() {
+        var s: LearningStore? = nil
+        do {
+            s = try LearningStore(inMemory: false)
+        } catch {
+            print("Failed to initialize persistent store: \(error). Falling back to inMemory.")
+            s = try? LearningStore(inMemory: true)
+        }
+        _store = State(initialValue: s)
+    }
+    
     var body: some Scene {
         WindowGroup {
             if let store = store {
                 RootView(store: store)
                     .preferredColorScheme(.light)
             } else {
-                ProgressView("Initializing Fleunce...")
-                    .task {
-                        do {
-                            // Heavy init moved to task
-                            store = try LearningStore(inMemory: false)
-                        } catch {
-                            print("Failed to init store: \(error)")
-                        }
+                VStack(spacing: 16) {
+                    ProgressView("Démarrage de Fluence...")
+                    Button("Réessayer") {
+                        store = (try? LearningStore(inMemory: false)) ?? (try? LearningStore(inMemory: true))
                     }
+                    .font(.footnote)
+                    .foregroundStyle(FleunceColor.orange)
+                }
+                .task {
+                    if store == nil {
+                        store = (try? LearningStore(inMemory: false)) ?? (try? LearningStore(inMemory: true))
+                    }
+                }
             }
         }
     }
