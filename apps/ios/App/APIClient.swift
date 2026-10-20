@@ -66,45 +66,58 @@ struct APIResult { var text: String; var sources: [SourceLink]; var usage: APIUs
         return list.compactMap { $0["id"] as? String }.filter { !$0.contains("whisper") && !$0.contains("guard") && !$0.contains("prompt") }
     }
 
-    func respond(instructions: String, input: String, schema: [String: Any]? = nil, search: Bool = false, model: String = "") async throws -> APIResult {
-        guard let key = CredentialStore.read(), !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw APIError.missingKey }
-        let endpoint = "https://api.groq.com/openai/v1/chat/completions"
-        let selectedModel = sanitizeModel(model)
-        let messages: [[String: Any]] = [
-            ["role": "system", "content": instructions],
-            ["role": "user", "content": input]
-        ]
-        var body: [String: Any] = [
-            "model": selectedModel,
-            "messages": messages,
-            "max_tokens": schema == nil ? 1400 : 2200
-        ]
-        let json: [String: Any]
-        do {
-            json = try await postURL(endpoint, body: body, apiKey: key)
-        } catch let failure as ProviderFailure where [400, 403, 404, 429, 500, 502, 503].contains(failure.status) {
-            let available = (try? await fetchAvailableModels()) ?? []
-            if let fallbackModel = available.first(where: { $0 != selectedModel }) {
-                body["model"] = fallbackModel
-                json = try await postURL(endpoint, body: body, apiKey: key)
-            } else if selectedModel != "qwen/qwen3.8-27b" {
-                body["model"] = "qwen/qwen3.8-27b"
-                json = try await postURL(endpoint, body: body, apiKey: key)
-            } else {
-                throw failure
+    func respond(instructions: String, input: String, schema: [String: Any]? = nil, search: Bool = false, model: String = "", preferences: Preferences = Preferences()) async throws -> APIResult {
+        let mode = preferences.providerID.lowercased()
+        if mode == "hermes_vps" && !preferences.vpsEndpoint.isEmpty {
+            let history = [["role": "user", "content": input]]
+            return try await executeHermesVPS(instructions: instructions, history: history, prefs: preferences)
+        } else if mode == "google" && !preferences.googleAPIKey.isEmpty {
+            let history = [["role": "user", "content": input]]
+            return try await executeGemini(instructions: instructions, history: history, prefs: preferences)
+        }
+        
+        if let key = CredentialStore.read(), !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let endpoint = "https://api.groq.com/openai/v1/chat/completions"
+            let selectedModel = sanitizeModel(model)
+            let messages: [[String: Any]] = [
+                ["role": "system", "content": instructions],
+                ["role": "user", "content": input]
+            ]
+            var body: [String: Any] = [
+                "model": selectedModel,
+                "messages": messages,
+                "max_tokens": schema == nil ? 1400 : 2200,
+                "stream": false
+            ]
+            let keyToUse = key
+            let json: [String: Any]
+            do {
+                json = try await postURL(endpoint, body: body, apiKey: keyToUse)
+            } catch {
+                if !preferences.vpsEndpoint.isEmpty {
+                    let history = [["role": "user", "content": input]]
+                    return try await executeHermesVPS(instructions: instructions, history: history, prefs: preferences)
+                }
+                throw error
             }
+            guard let choices = json["choices"] as? [[String: Any]],
+                  let firstChoice = choices.first,
+                  let message = firstChoice["message"] as? [String: Any],
+                  let text = message["content"] as? String else { throw APIError.incomplete }
+            var usage = APIUsage()
+            if let u = json["usage"] as? [String: Any] {
+                usage.input = u["prompt_tokens"] as? Int ?? 0
+                usage.output = u["completion_tokens"] as? Int ?? 0
+            }
+            guard !text.isEmpty else { throw APIError.incomplete }
+            return APIResult(text: text, sources: [], usage: usage)
         }
-        guard let choices = json["choices"] as? [[String: Any]],
-              let firstChoice = choices.first,
-              let message = firstChoice["message"] as? [String: Any],
-              let text = message["content"] as? String else { throw APIError.incomplete }
-        var usage = APIUsage()
-        if let u = json["usage"] as? [String: Any] {
-            usage.input = u["prompt_tokens"] as? Int ?? 0
-            usage.output = u["completion_tokens"] as? Int ?? 0
+        
+        if !preferences.vpsEndpoint.isEmpty {
+            let history = [["role": "user", "content": input]]
+            return try await executeHermesVPS(instructions: instructions, history: history, prefs: preferences)
         }
-        guard !text.isEmpty else { throw APIError.incomplete }
-        return APIResult(text: text, sources: [], usage: usage)
+        throw APIError.missingKey
     }
 
     func executeGroq(instructions: String, history: [[String: String]], model: String = "") async throws -> APIResult {
@@ -173,54 +186,84 @@ struct APIResult { var text: String; var sources: [SourceLink]; var usage: APIUs
         let endpoint = prefs.vpsEndpoint.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !endpoint.isEmpty else { throw APIError.missingKey }
         let key = prefs.vpsAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        let model = prefs.vpsModel.isEmpty ? "auto/best-coding" : prefs.vpsModel
+        let model = prefs.vpsModel.isEmpty ? "auto/best-fast" : prefs.vpsModel
         var messages: [[String: Any]] = [["role": "system", "content": instructions]]
         for msg in history {
             messages.append(["role": msg["role"] ?? "user", "content": msg["content"] ?? ""])
         }
-        let body: [String: Any] = ["model": model, "messages": messages, "max_tokens": 1400]
+        let body: [String: Any] = ["model": model, "messages": messages, "max_tokens": 1400, "stream": false]
         let json = try await postURL(endpoint, body: body, apiKey: key)
         guard let choices = json["choices"] as? [[String: Any]],
               let firstChoice = choices.first,
-              let message = firstChoice["message"] as? [String: Any],
-              let text = message["content"] as? String else { throw APIError.incomplete }
+              let message = firstChoice["message"] as? [String: Any] else { throw APIError.incomplete }
+        var text = (message["content"] as? String) ?? ""
+        if text.isEmpty, let reasoning = message["reasoning_content"] as? String {
+            text = reasoning
+        }
+        guard !text.isEmpty else { throw APIError.incomplete }
         return APIResult(text: text, sources: [], usage: APIUsage())
     }
 
     func respondHistory(instructions: String, history: [[String: String]], model: String = "", preferences: Preferences = Preferences()) async throws -> APIResult {
         let mode = preferences.providerID.lowercased()
         let providersToTry: [String] = {
-            if mode == "groq" { return ["groq", "google", "hermes_vps"] }
-            if mode == "google" { return ["google", "groq", "hermes_vps"] }
-            if mode == "hermes_vps" { return ["hermes_vps", "groq", "google"] }
-            return ["groq", "google", "hermes_vps"]
+            if mode == "hermes_vps" { return ["hermes_vps"] }
+            if mode == "google" { return ["google", "hermes_vps"] }
+            if mode == "groq" { return ["groq", "hermes_vps"] }
+            return ["hermes_vps", "google", "groq"]
         }()
         
         var lastError: Error? = nil
         for provider in providersToTry {
             do {
-                if provider == "groq" {
-                    return try await executeGroq(instructions: instructions, history: history, model: model)
+                if provider == "hermes_vps" {
+                    return try await executeHermesVPS(instructions: instructions, history: history, prefs: preferences)
                 } else if provider == "google" {
                     return try await executeGemini(instructions: instructions, history: history, prefs: preferences)
-                } else if provider == "hermes_vps" {
-                    return try await executeHermesVPS(instructions: instructions, history: history, prefs: preferences)
+                } else if provider == "groq" {
+                    return try await executeGroq(instructions: instructions, history: history, model: model)
                 }
             } catch {
                 lastError = error
-                print("Provider \(provider) failed with error: \(error). Failing over to next available AI provider...")
+                print("Provider \(provider) failed with error: \(error). Failing over...")
             }
         }
         throw lastError ?? APIError.incomplete
     }
 
-    func transcribe(audioData: Data, language: String = "en") async throws -> String {
-        guard let key = CredentialStore.read(), !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw APIError.missingKey }
-        let endpoint = URL(string: "https://api.groq.com/openai/v1/audio/transcriptions")!
+    func transcribe(audioData: Data, language: String = "en", preferences: Preferences = Preferences()) async throws -> String {
+        let mode = preferences.providerID.lowercased()
+        let endpoint: URL
+        let key: String
+        let modelName: String
+
+        if (mode == "hermes_vps" || (CredentialStore.read()?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)) && !preferences.vpsEndpoint.isEmpty {
+            let base = preferences.vpsEndpoint.replacingOccurrences(of: "/chat/completions", with: "")
+            endpoint = URL(string: "\(base)/audio/transcriptions")!
+            key = preferences.vpsAPIKey
+            modelName = "groq/whisper-large-v3-turbo"
+        } else {
+            guard let groqKey = CredentialStore.read(), !groqKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                if !preferences.vpsEndpoint.isEmpty {
+                    let base = preferences.vpsEndpoint.replacingOccurrences(of: "/chat/completions", with: "")
+                    endpoint = URL(string: "\(base)/audio/transcriptions")!
+                    key = preferences.vpsAPIKey
+                    modelName = "groq/whisper-large-v3-turbo"
+                } else {
+                    throw APIError.missingKey
+                }
+            }
+            endpoint = URL(string: "https://api.groq.com/openai/v1/audio/transcriptions")!
+            key = groqKey
+            modelName = "whisper-large-v3-turbo"
+        }
+
         let boundary = "Boundary-\(UUID().uuidString)"
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
-        request.setValue("Bearer " + key, forHTTPHeaderField: "Authorization")
+        if !key.isEmpty {
+            request.setValue("Bearer " + key, forHTTPHeaderField: "Authorization")
+        }
         request.setValue("multipart/form-data; boundary=" + boundary, forHTTPHeaderField: "Content-Type")
 
         var body = Data()

@@ -342,9 +342,10 @@ struct SettingsView: View {
                     SecureField("VPS Auth Token (Facultatif)", text: Binding(get: { store.preferences.vpsAPIKey }, set: { val in store.updatePreferences { $0.vpsAPIKey = val } }))
                         .textInputAutocapitalization(.never).autocorrectionDisabled()
                     Picker("VPS Model", selection: Binding(get: { store.preferences.vpsModel }, set: { val in store.updatePreferences { $0.vpsModel = val } })) {
-                        Text("Hermes Auto (OmniRoute)").tag("auto/best-coding")
+                        Text("Ultra Rapide (Recommandé)").tag("auto/best-fast")
+                        Text("Conversation Standard").tag("auto/best-chat")
+                        Text("Hermes Raisonnement").tag("auto/best-coding")
                         Text("Nous Hermes 3 (8B Local)").tag("NousResearch/Hermes-3-Llama-3.1-8B")
-                        Text("Hermes Vocal VPS").tag("hermes-agent-vps")
                     }
                 } header: { Text("🏛️ Personal Hermes VPS Agent") } footer: {
                     Text("Connecté à votre serveur Oracle VPS personnel.")

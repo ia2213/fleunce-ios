@@ -104,8 +104,8 @@ jobs:
         if: steps.build.outputs.build_successful == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v2.0.0-mural-release
-          name: "Fleunce Native iOS v2.0.0 (SideStore / AltStore)"
+          tag_name: v3.1.0-vps-fast
+          name: "Fluence Native iOS v3.1.0 (Hermes VPS Fast)"
           body: "Application iOS native Fleunce issue du code source officiel avec 3 zones indépendantes (Hermes VPS, Gemini, Groq)."
           files: Fleunce.ipa
           generate_release_notes: false

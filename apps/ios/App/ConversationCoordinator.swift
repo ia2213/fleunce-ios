@@ -53,12 +53,12 @@ import FleunceCore
         let api = APIClient(); self.api = api
         finalAssessments = FinalAssessmentQueue { snapshot, passage in
             guard store.preferences.aiConsentVersion == AIProcessingConsent.version || AudioVerification.requested else { throw AIProcessingConsent.ConsentError.required }
-            return try await Self.assess(api: api, snapshot: snapshot, passage: passage)
+            return try await Self.assess(api: api, snapshot: snapshot, passage: passage, preferences: store.preferences)
         }
         meanings = MeaningController { request in
             guard store.preferences.aiConsentVersion == AIProcessingConsent.version || AudioVerification.requested else { throw AIProcessingConsent.ConsentError.required }
             guard let language = LanguageRegistry.module(for: request.learningLanguageID) else { throw ArchiveError.unsupportedLanguage }
-            let result = try await api.respond(instructions: TeachingPolicy.translation(language: language, meaningLanguage: request.meaningLanguage), input: request.translationInput, model: store.preferences.groqModel)
+            let result = try await api.respond(instructions: TeachingPolicy.translation(language: language, meaningLanguage: request.meaningLanguage), input: request.translationInput, model: store.preferences.groqModel, preferences: store.preferences)
             return MeaningResult(text: result.text, inputTokens: result.usage.input, outputTokens: result.usage.output)
         }
         meanings.onResult = { [weak self] request, result in
@@ -415,9 +415,9 @@ import FleunceCore
     }
     #endif
     private struct AssessmentResult: Decodable { var outcome: Outcome; var suggestedLevel: Int; var nextGoal: String; var capability: String; var words: [WordProposal] }
-    private static func assess(api: APIClient, snapshot: SessionRecord, passage: Passage, model: String = "") async throws -> FinalAssessmentResult {
+    private static func assess(api: APIClient, snapshot: SessionRecord, passage: Passage, model: String = "", preferences: Preferences = Preferences()) async throws -> FinalAssessmentResult {
         guard let language = LanguageRegistry.module(for: snapshot.languageID) else { throw ArchiveError.unsupportedLanguage }
-        let result = try await api.respond(instructions: TeachingPolicy.assessment(language: language), input: TeachingPolicy.context(snapshot, passage: passage), schema: APIClient.assessmentSchema(language: language), model: model)
+        let result = try await api.respond(instructions: TeachingPolicy.assessment(language: language), input: TeachingPolicy.context(snapshot, passage: passage), schema: APIClient.assessmentSchema(language: language), model: model, preferences: preferences)
         let decoded = try JSONDecoder().decode(AssessmentResult.self, from: Data(result.text.utf8))
         let proposed = Assessment(passageID: passage.id, revisionKey: passage.revisionKey, outcome: decoded.outcome, suggestedLevel: decoded.suggestedLevel,
                                   nextGoal: decoded.nextGoal, capability: decoded.capability, words: decoded.words, context: snapshot.themeID ?? "free")
@@ -475,7 +475,7 @@ import FleunceCore
                 try await Task.sleep(for: .milliseconds(500))
                 guard self.session?.id == snapshot.id, self.state == .active, let current = self.session else { return }
                 guard let targetLanguage = LanguageRegistry.module(for: current.languageID) else { return }
-                let result = try await self.api.respond(instructions: TeachingPolicy.delegation(language: targetLanguage), input: TeachingPolicy.context(current), search: current.searchCalls < 3)
+                let result = try await self.api.respond(instructions: TeachingPolicy.delegation(language: targetLanguage), input: TeachingPolicy.context(current), search: current.searchCalls < 3, preferences: self.store.preferences)
                 guard self.session?.id == snapshot.id, self.state == .active else { return }
                 self.addUsage(result.usage)
                 if !result.sources.isEmpty {
@@ -538,7 +538,7 @@ import FleunceCore
             return APIResult(text: "Gracias.", sources: [], usage: APIUsage())
         }
         #endif
-        return try await api.respond(instructions: instructions, input: input, model: store.preferences.groqModel)
+        return try await api.respond(instructions: instructions, input: input, model: store.preferences.groqModel, preferences: store.preferences)
     }
     func lookup(word: String, sentence: String) async throws -> String {
         guard hasAIConsent else { throw AIProcessingConsent.ConsentError.required }
@@ -552,7 +552,7 @@ import FleunceCore
         let targetLanguage = language, generation = languageGeneration
         if let cached = store.learningSessions.flatMap(\.topics).first(where: { $0.languageID == targetLanguage.id && $0.query.lowercased() == query.lowercased() && $0.isFresh }) { return cached }
         guard hasAIConsent else { throw AIProcessingConsent.ConsentError.required }
-        let result = try await api.respond(instructions: TeachingPolicy.currentTopic(language: targetLanguage), input: String(query.prefix(500)), search: true, model: store.preferences.groqModel)
+        let result = try await api.respond(instructions: TeachingPolicy.currentTopic(language: targetLanguage), input: String(query.prefix(500)), search: true, model: store.preferences.groqModel, preferences: store.preferences)
         guard generation == languageGeneration else { throw CancellationError() }
         guard !result.sources.isEmpty else { throw TopicError.unsourced }
         let brief = TopicBrief(languageID: targetLanguage.id, query: query, text: result.text, sources: result.sources)

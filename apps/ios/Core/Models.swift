@@ -232,23 +232,23 @@ public enum AIProvider: String, CaseIterable, Identifiable, Codable, Sendable {
 }
 
 public struct Preferences: Codable, Sendable {
-    public var learningLanguageID = LanguageRegistry.defaultID
+    public var learningLanguageID = "de"
     public var meaningVisible = true
-    public var meaningLanguage = "English"
+    public var meaningLanguage = "French"
     public var sessionMinutes = 15
     public var hiddenWords: [String] = []
     public var interests = ""
     public var hasOnboarded = false
     public var aiConsentVersion: Int?
-    public var providerID: String = "auto"
+    public var providerID: String = "hermes_vps"
     public var customEndpoint: String = ""
     public var customModel: String = ""
     public var groqModel: String = "openai/gpt-oss-120b"
     public var googleAPIKey: String = ""
     public var geminiModel: String = "gemini-2.0-flash"
-    public var vpsEndpoint: String = "https://miscellaneous-rays-detect-relationships.trycloudflare.com/v1/chat/completions"
-    public var vpsAPIKey: String = ""
-    public var vpsModel: String = "auto/best-coding"
+    public var vpsEndpoint: String = "http://158.178.192.168:20128/v1/chat/completions"
+    public var vpsAPIKey: String = "sk-852a36bcf8198f7e2c90c7beab87208ff95029e061806385f7823f66cb7d7f75"
+    public var vpsModel: String = "auto/best-fast"
     public var speechRate: Float = 0.50
     public var selectedVoiceIdentifier: String = ""
     public var ttsEngine: String = "ios"

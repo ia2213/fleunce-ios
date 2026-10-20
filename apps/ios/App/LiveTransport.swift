@@ -156,7 +156,7 @@ final class NativeSynthesizer: NSObject, AVSpeechSynthesizerDelegate, Sendable {
         try? session.setActive(true)
         ownsAudioActivation = true
         
-        let initialResult = try await api.respond(instructions: instructions, input: "Start conversation")
+        let initialResult = try await api.respond(instructions: instructions, input: "Start conversation", preferences: preferences)
         guard attempt == token else { throw CancellationError() }
         let sessionID = UUID().uuidString
         onEvent?(["type": "fleunce.session.created", "session": ["id": sessionID]])
@@ -228,8 +228,8 @@ final class NativeSynthesizer: NSObject, AVSpeechSynthesizerDelegate, Sendable {
                     }
                 } else if speechDetected {
                     if silenceStart == nil { silenceStart = Date() }
-                    // 0.9s silence after speech triggers transcription
-                    if let start = silenceStart, Date().timeIntervalSince(start) >= 0.9 {
+                    // 0.45s silence after speech triggers transcription
+                    if let start = silenceStart, Date().timeIntervalSince(start) >= 0.45 {
                         speechDetected = false
                         speechDurationCount = 0
                         silenceStart = nil
@@ -263,7 +263,7 @@ final class NativeSynthesizer: NSObject, AVSpeechSynthesizerDelegate, Sendable {
         
         do {
             let lang = String(languageCode.prefix(2)).lowercased()
-            let userText = try await api.transcribe(audioData: data, language: lang).trimmingCharacters(in: .whitespacesAndNewlines)
+            let userText = try await api.transcribe(audioData: data, language: lang, preferences: preferences).trimmingCharacters(in: .whitespacesAndNewlines)
             try? FileManager.default.removeItem(at: url)
             
             let lower = userText.lowercased()
