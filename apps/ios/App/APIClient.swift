@@ -237,25 +237,24 @@ struct APIResult { var text: String; var sources: [SourceLink]; var usage: APIUs
         let key: String
         let modelName: String
 
-        if (mode == "hermes_vps" || (CredentialStore.read()?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)) && !preferences.vpsEndpoint.isEmpty {
+        let groqKey = CredentialStore.read()?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        if (mode == "hermes_vps" || groqKey.isEmpty) && !preferences.vpsEndpoint.isEmpty {
+            let base = preferences.vpsEndpoint.replacingOccurrences(of: "/chat/completions", with: "")
+            endpoint = URL(string: "\(base)/audio/transcriptions")!
+            key = preferences.vpsAPIKey
+            modelName = "groq/whisper-large-v3-turbo"
+        } else if !groqKey.isEmpty {
+            endpoint = URL(string: "https://api.groq.com/openai/v1/audio/transcriptions")!
+            key = groqKey
+            modelName = "whisper-large-v3-turbo"
+        } else if !preferences.vpsEndpoint.isEmpty {
             let base = preferences.vpsEndpoint.replacingOccurrences(of: "/chat/completions", with: "")
             endpoint = URL(string: "\(base)/audio/transcriptions")!
             key = preferences.vpsAPIKey
             modelName = "groq/whisper-large-v3-turbo"
         } else {
-            guard let groqKey = CredentialStore.read(), !groqKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                if !preferences.vpsEndpoint.isEmpty {
-                    let base = preferences.vpsEndpoint.replacingOccurrences(of: "/chat/completions", with: "")
-                    endpoint = URL(string: "\(base)/audio/transcriptions")!
-                    key = preferences.vpsAPIKey
-                    modelName = "groq/whisper-large-v3-turbo"
-                } else {
-                    throw APIError.missingKey
-                }
-            }
-            endpoint = URL(string: "https://api.groq.com/openai/v1/audio/transcriptions")!
-            key = groqKey
-            modelName = "whisper-large-v3-turbo"
+            throw APIError.missingKey
         }
 
         let boundary = "Boundary-\(UUID().uuidString)"
