@@ -156,7 +156,12 @@ final class NativeSynthesizer: NSObject, AVSpeechSynthesizerDelegate, Sendable {
         try? session.setActive(true)
         ownsAudioActivation = true
         
-        let initialResult = try await api.respond(instructions: instructions, input: "Start conversation", preferences: preferences)
+        let initialResult: APIResult
+        if preferences.providerID.lowercased() == "hermes_vps" && !preferences.vpsEndpoint.isEmpty {
+            initialResult = APIResult(text: "Bonjour ! C'est parti. Dis-moi ce que tu veux pratiquer aujourd'hui.", sources: [], usage: APIUsage())
+        } else {
+            initialResult = try await api.respond(instructions: instructions, input: "Start conversation", preferences: preferences)
+        }
         guard attempt == token else { throw CancellationError() }
         let sessionID = UUID().uuidString
         onEvent?(["type": "fleunce.session.created", "session": ["id": sessionID]])
