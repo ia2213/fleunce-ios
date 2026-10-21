@@ -7,7 +7,7 @@ import FleunceCore
 @Model final class StoredArchive {
     @Attribute(.unique) var key: String
     var payload: Data
-    init(payload: Data) { key = "fleunce-v1"; self.payload = payload }
+    init(payload: Data) { key = "fluence-v2"; self.payload = payload }
 }
 
 @MainActor @Observable final class LearningStore {
@@ -19,43 +19,29 @@ import FleunceCore
     private let migrationBackupURL: URL?
     init(inMemory: Bool = false) throws {
         migrationBackupURL = inMemory ? nil : URL.applicationSupportDirectory
-            .appendingPathComponent("Fleunce", isDirectory: true)
+            .appendingPathComponent("Fluence", isDirectory: true)
             .appendingPathComponent("before-language-modules.json")
-        
-        let activeContainer: ModelContainer
-        do {
-            activeContainer = try ModelContainer(for: StoredArchive.self, configurations: ModelConfiguration(isStoredInMemoryOnly: inMemory, cloudKitDatabase: .none))
-        } catch {
-            print("Failed to create persistent ModelContainer: \(error), falling back to in-memory")
-            activeContainer = try ModelContainer(for: StoredArchive.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
-        }
-        self.container = activeContainer
-        
+        container = try ModelContainer(for: StoredArchive.self, configurations: ModelConfiguration(isStoredInMemoryOnly: inMemory, cloudKitDatabase: .none))
         let context = container.mainContext
-        if let existing = try? context.fetch(FetchDescriptor<StoredArchive>()).first {
+        if let existing = try context.fetch(FetchDescriptor<StoredArchive>()).first {
             document = existing
-            do {
-                archive = try Archive.decode(existing.payload)
-            } catch {
-                print("Failed to decode archive payload: \(error), resetting archive")
-                archive = Archive()
-                document.payload = (try? Archive().encoded()) ?? Data()
+            archive = try Archive.decode(existing.payload)
+            if let legacyOwner = CredentialStore.read(for: "owner"), !legacyOwner.isEmpty {
+                KeychainHelper.shared.migrateLegacyKeys(from: [.owner: legacyOwner, .groq: legacyOwner])
             }
             if let backup = migrationBackupURL,
-               let root = (try? JSONSerialization.jsonObject(with: existing.payload)) as? [String: Any], root["schemaVersion"] as? Int == 1 {
+               let root = try JSONSerialization.jsonObject(with: existing.payload) as? [String: Any], root["schemaVersion"] as? Int == 1 {
                 let directory = backup.deletingLastPathComponent()
-                try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
                 if !FileManager.default.fileExists(atPath: backup.path) {
-                    try? existing.payload.write(to: backup, options: [.atomic, .completeFileProtection])
+                    try existing.payload.write(to: backup, options: [.atomic, .completeFileProtection])
                 }
             }
             for i in archive.sessions.indices where archive.sessions[i].endedAt == nil {
                 archive.sessions[i].endedAt = .now; archive.sessions[i].endReason = "App closed before finalization"
             }
         } else {
-            let doc = StoredArchive(payload: (try? Archive().encoded()) ?? Data())
-            context.insert(doc)
-            document = doc
+            document = StoredArchive(payload: try Archive().encoded()); context.insert(document)
         }
         persist()
     }
@@ -63,7 +49,7 @@ import FleunceCore
     var language: LanguageModule { LanguageRegistry.module(for: preferences.learningLanguageID)! }
     var sessions: [SessionRecord] { archive.sessions.sorted { $0.startedAt > $1.startedAt } }
     var learningSessions: [SessionRecord] { sessions.filter { $0.languageID == language.id } }
-    var learner: LearnerState { LearningEngine.project(archive.sessions, languageID: language.id, hiddenWords: archive.preferences.hiddenWords) }
+    var learner: LearnerState { LearningEngine.project(archive.sessions, languageID: language.id, hiddenWords: archive.preferences.hiddenWords, userBaseCEFR: archive.preferences.cefrLevel) }
     func selectLanguage(_ id: String) {
         guard LanguageRegistry.module(for: id) != nil else { return }
         archive.preferences.learningLanguageID = id; persist()
@@ -90,7 +76,7 @@ import FleunceCore
             do { try FileManager.default.removeItem(at: migrationBackupURL) }
             catch CocoaError.fileNoSuchFile { /* Most installations have no migration backup. */ }
             catch {
-                self.error = "Fleunce couldn’t delete the older learning backup. Your conversations are still here. Please try again."
+                self.error = "Fluence couldn’t delete the older learning backup. Your conversations are still here. Please try again."
                 return
             }
         }
@@ -110,11 +96,11 @@ import FleunceCore
             error = nil
             syncWidgetData()
         } catch {
-            self.error = "Fleunce couldn’t save your progress. Please export a backup and try again."
+            self.error = "Fluence couldn’t save your progress. Please export a backup and try again."
         }
     }
     func syncWidgetData() {
-        let defaults = UserDefaults(suiteName: "group.no.william.fleunce") ?? UserDefaults.standard
+        let defaults = UserDefaults(suiteName: "group.no.william.fluence") ?? UserDefaults.standard
         defaults.set(language.name, forKey: "widget_language")
         defaults.set(learner.words.count, forKey: "widget_word_count")
         defaults.set(learningSessions.count, forKey: "widget_streak")
@@ -126,37 +112,46 @@ import FleunceCore
 }
 
 enum CredentialStore {
-    private static let service = "no.william.fleunce.gemini"
-    private static var query: [String: Any] { [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: "owner", kSecAttrSynchronizable as String: false] }
-    static func read() -> String? {
-        var q = query; q[kSecReturnData as String] = true; q[kSecMatchLimit as String] = kSecMatchLimitOne
+    private static let service = "no.william.fluence.gemini"
+    private static func query(for account: String = "owner") -> [String: Any] {
+        [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: account, kSecAttrSynchronizable as String: false]
+    }
+    
+    static func read(for account: String = "owner") -> String? {
+        var q = query(for: account); q[kSecReturnData as String] = true; q[kSecMatchLimit as String] = kSecMatchLimitOne
         var item: CFTypeRef?
         guard SecItemCopyMatching(q as CFDictionary, &item) == errSecSuccess, let data = item as? Data else { return nil }
         return String(data: data, encoding: .utf8)
     }
-    static var hasKey: Bool { read() != nil }
-    static func save(_ key: String) throws {
+    
+    static func hasKey(for account: String = "owner") -> Bool { read(for: account) != nil }
+    static var hasKey: Bool { hasKey(for: "owner") }
+    
+    static func save(_ key: String, for account: String = "owner") throws {
         let value = key.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !value.isEmpty, !value.contains(where: \.isWhitespace) else { throw KeyError.invalid }
         let data = Data(value.utf8)
-        let status = SecItemUpdate(query as CFDictionary, [kSecValueData as String: data] as CFDictionary)
+        let q = query(for: account)
+        let status = SecItemUpdate(q as CFDictionary, [kSecValueData as String: data] as CFDictionary)
         if status == errSecItemNotFound {
-            var q = query; q[kSecValueData as String] = data
-            q[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
-            guard SecItemAdd(q as CFDictionary, nil) == errSecSuccess else { throw KeyError.save }
+            var addQ = q; addQ[kSecValueData as String] = data
+            addQ[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+            guard SecItemAdd(addQ as CFDictionary, nil) == errSecSuccess else { throw KeyError.save }
         } else if status != errSecSuccess { throw KeyError.save }
     }
-    static func delete() throws {
-        let status = SecItemDelete(query as CFDictionary)
+    
+    static func delete(for account: String = "owner") throws {
+        let status = SecItemDelete(query(for: account) as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else { throw KeyError.remove }
     }
+    
     enum KeyError: LocalizedError {
         case invalid, save, remove
         var errorDescription: String? {
             switch self {
-            case .invalid: "Enter a valid Gemini API key."
-            case .save: "The key couldn’t be saved to this device’s Keychain."
-            case .remove: "The key couldn’t be removed. Unlock this iPhone and try again."
+            case .invalid: "Entrez une clé API valide sans espaces."
+            case .save: "Impossible d'enregistrer la clé dans le Keychain sécurisé d'iOS."
+            case .remove: "Impossible de supprimer la clé. Déverrouillez l'iPhone et réessayez."
             }
         }
     }
