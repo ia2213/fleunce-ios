@@ -3,7 +3,7 @@ import Foundation
 import NaturalLanguage
 import AVFoundation
 import WebRTC
-import FleunceCore
+import FluenceCore
 
 extension AudioVerification {
     /// Explicit device check using synthetic typed turns and the existing in-memory verification store.

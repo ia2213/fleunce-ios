@@ -1,6 +1,6 @@
 import SwiftUI
 import AuthenticationServices
-import FleunceCore
+import FluenceCore
 
 /// Ready for a Settings navigation destination when managed accounts are configured.
 struct ManagedAccountView: View {
@@ -9,12 +9,12 @@ struct ManagedAccountView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                FleunceOrb(active: !store.isBusy).frame(width: 112, height: 112).padding(.top, 16)
+                FluenceAura(active: !store.isBusy).frame(width: 112, height: 112).padding(.top, 16)
                 VStack(spacing: 8) {
-                    Text(store.session == nil ? "Welcome to Fleunce" : "Your Fleunce account")
+                    Text(store.session == nil ? "Welcome to Fluence" : "Your Fluence account")
                         .font(.system(.title, design: .rounded, weight: .semibold)).multilineTextAlignment(.center)
                     Text("Your conversations and learning history stay on this iPhone.")
-                        .font(.subheadline).foregroundStyle(FleunceColor.secondary).multilineTextAlignment(.center)
+                        .font(.subheadline).foregroundStyle(FluenceColor.secondary).multilineTextAlignment(.center)
                 }
                 if store.configuration == nil {
                     Text("Accounts aren’t available in this build yet. You can keep practising with your own Gemini API key in Settings.")
@@ -29,7 +29,7 @@ struct ManagedAccountView: View {
                                 .accessibilityIdentifier("managed-account-email")
                         }
                         Text("Purchases and hosted conversations aren’t available in this build.")
-                            .font(.footnote).foregroundStyle(FleunceColor.secondary)
+                            .font(.footnote).foregroundStyle(FluenceColor.secondary)
                         Button("Refresh account", action: store.refresh).buttonStyle(.bordered)
                         Button("Sign out on all devices", action: store.signOut).buttonStyle(.bordered)
                         Button("Delete account", role: .destructive) { confirmDeletion = true }
@@ -37,10 +37,10 @@ struct ManagedAccountView: View {
                         .disabled(store.isBusy)
                 } else {
                     VStack(spacing: 14) {
-                        Text("Fleunce stores your sign-in details and account sessions. You can practise with your own API key without an account.")
-                            .font(.footnote).foregroundStyle(FleunceColor.secondary).multilineTextAlignment(.center)
-                        Text("By signing in, you agree to the [Terms of use](https://fleunce.chat/terms/) and acknowledge the [Privacy policy](https://fleunce.chat/privacy/).")
-                            .font(.footnote).multilineTextAlignment(.center).tint(FleunceColor.ink)
+                        Text("Fluence stores your sign-in details and account sessions. You can practise with your own API key without an account.")
+                            .font(.footnote).foregroundStyle(FluenceColor.secondary).multilineTextAlignment(.center)
+                        Text("By signing in, you agree to the [Terms of use](https://fluence.chat/terms/) and acknowledge the [Privacy policy](https://fluence.chat/privacy/).")
+                            .font(.footnote).multilineTextAlignment(.center).tint(FluenceColor.ink)
                             .accessibilityIdentifier("managed-sign-in-agreement")
                         if store.configuration?.providers.contains(.google) == true {
                             Button { store.signIn(.google) } label: {
@@ -60,16 +60,16 @@ struct ManagedAccountView: View {
                         .accessibilityIdentifier("managedAccountMessage")
                 }
                 HStack(spacing: 24) {
-                    Link("Privacy policy", destination: URL(string: "https://fleunce.chat/privacy/")!)
-                    Link("Terms", destination: URL(string: "https://fleunce.chat/terms/")!)
-                }.font(.footnote).tint(FleunceColor.ink)
+                    Link("Privacy policy", destination: URL(string: "https://fluence.chat/privacy/")!)
+                    Link("Terms", destination: URL(string: "https://fluence.chat/terms/")!)
+                }.font(.footnote).tint(FluenceColor.ink)
             }.padding(24).frame(maxWidth: 520).frame(maxWidth: .infinity)
         }
-        .background(FleunceColor.cream).foregroundStyle(FleunceColor.ink)
+        .background(FluenceColor.cream).foregroundStyle(FluenceColor.ink)
         .navigationTitle("Account").navigationBarTitleDisplayMode(.inline)
         .task { store.refresh() }
         .onDisappear { store.cancelSignIn() }
-        .confirmationDialog("Delete your Fleunce account?", isPresented: $confirmDeletion, titleVisibility: .visible) {
+        .confirmationDialog("Delete your Fluence account?", isPresented: $confirmDeletion, titleVisibility: .visible) {
             Button("Delete account", role: .destructive, action: store.deleteAccount)
             Button("Keep account", role: .cancel) {}
         } message: {

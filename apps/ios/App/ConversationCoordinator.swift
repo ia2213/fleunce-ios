@@ -3,7 +3,7 @@ import Observation
 import NaturalLanguage
 import AVFoundation
 import UIKit
-import FleunceCore
+import FluenceCore
 
 @MainActor @Observable final class ConversationCoordinator {
     let store: LearningStore
@@ -15,7 +15,9 @@ import FleunceCore
     private(set) var isMuted = false
     private let meanings: MeaningController
     private let finalAssessments: FinalAssessmentQueue
-    var meaning: String { meanings.text }
+    var meaning: String {
+        meanings.text.replacingOccurrences(of: #"\s*\[FSRS_REVIEW:.*?\]"#, with: "", options: .regularExpression).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
     var translating: Bool { meanings.isLoading }
     var meaningError: String? { meanings.error }
     private(set) var working = false
@@ -25,7 +27,8 @@ import FleunceCore
     var showSettings = false
     var showAIConsent = false
     private var startAfterConsent = false
-    private let api: APIClient
+    let api: APIClient
+    var apiClient: APIClient { api }
     private let transport = LiveTransport()
     private var connectionTask: Task<Void, Never>?
     private var assessmentTask: Task<Void, Never>?
@@ -53,12 +56,12 @@ import FleunceCore
         let api = APIClient(); self.api = api
         finalAssessments = FinalAssessmentQueue { snapshot, passage in
             guard store.preferences.aiConsentVersion == AIProcessingConsent.version || AudioVerification.requested else { throw AIProcessingConsent.ConsentError.required }
-            return try await Self.assess(api: api, snapshot: snapshot, passage: passage, preferences: store.preferences)
+            return try await Self.assess(api: api, snapshot: snapshot, passage: passage)
         }
         meanings = MeaningController { request in
             guard store.preferences.aiConsentVersion == AIProcessingConsent.version || AudioVerification.requested else { throw AIProcessingConsent.ConsentError.required }
             guard let language = LanguageRegistry.module(for: request.learningLanguageID) else { throw ArchiveError.unsupportedLanguage }
-            let result = try await api.respond(instructions: TeachingPolicy.translation(language: language, meaningLanguage: request.meaningLanguage), input: request.translationInput, model: store.preferences.groqModel, preferences: store.preferences)
+            let result = try await api.respond(instructions: TeachingPolicy.translation(language: language, meaningLanguage: request.meaningLanguage), input: request.translationInput, model: store.preferences.groqModel)
             return MeaningResult(text: result.text, inputTokens: result.usage.input, outputTokens: result.usage.output)
         }
         meanings.onResult = { [weak self] request, result in
@@ -92,13 +95,16 @@ import FleunceCore
     var language: LanguageModule { store.language }
     var assistantPassage: Passage? { session?.passages.last(where: { $0.speaker == .assistant }) }
     var userPassage: Passage? { session?.passages.last(where: { $0.speaker == .user }) }
-    var caption: String { assistantPassage?.text ?? language.greeting }
+    var caption: String {
+        let raw = assistantPassage?.text ?? language.greeting
+        return raw.replacingOccurrences(of: #"\s*\[FSRS_REVIEW:.*?\]"#, with: "", options: .regularExpression).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
     var status: String {
         if state == .active, let seconds = inactivitySeconds { return "Ending in \(seconds)s\nReply to continue" }
         return switch state {
         case .idle: "Ready when you are"
         case .connecting: "Getting comfortable…"
-        case .active: outputLevel > 0.02 ? "Fleunce is speaking" : inputLevel > 0.02 ? "I’m listening" : "Take your time"
+        case .active: outputLevel > 0.02 ? "Fluence is speaking" : inputLevel > 0.02 ? "I’m listening" : "Take your time"
         case .closing: "Saving our conversation…"
         case .ended: "Until next time"
         case .failed: "Let’s try again"
@@ -111,13 +117,31 @@ import FleunceCore
         default: "Microphone off"
         }
     }
+    private var hasConfiguredProvider: Bool {
+        if KeychainHelper.shared.hasKey(for: .owner) { return true }
+        if KeychainHelper.shared.hasKey(for: .groq) { return true }
+        if KeychainHelper.shared.hasKey(for: .openai) { return true }
+        if KeychainHelper.shared.hasKey(for: .anthropic) { return true }
+        if KeychainHelper.shared.hasKey(for: .google) { return true }
+        if KeychainHelper.shared.hasKey(for: .deepseek) { return true }
+        if KeychainHelper.shared.hasKey(for: .mistral) { return true }
+        if KeychainHelper.shared.hasKey(for: .openrouter) { return true }
+        if !store.preferences.googleAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return true }
+        if !store.preferences.vpsEndpoint.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return true }
+        return false
+    }
+
     func start() {
         guard !isRunning else { return }
         guard hasAIConsent else { startAfterConsent = true; showAIConsent = true; return }
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--preview") { showSettings = true; return }
         #endif
-        guard CredentialStore.hasKey else { showSettings = true; return }
+        guard hasConfiguredProvider else {
+            error = "Veuillez renseigner votre clé API (Groq ou Google Gemini) dans les Réglages pour démarrer."
+            showSettings = true
+            return
+        }
         cancelReset(); meanings.reset()
         error = nil; notice = nil; lastAssessmentKey = ""
         lastLanguageCheck = ""; pendingCommands = [:]
@@ -127,9 +151,38 @@ import FleunceCore
         session = record; store.save(record)
         let generation = record.id
         let learner = store.learner
-        // Each new conversation starts fresh; learned vocabulary and difficulty still carry forward.
+        
+        // Build rich memory of recent conversations
+        var memoryEntries: [String] = []
+        let pastSessions = store.learningSessions.suffix(5)
+        for (idx, past) in pastSessions.enumerated() {
+            let userTurns = past.passages.filter { $0.speaker == .user }.map(\.text).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+            let assistantTurns = past.passages.filter { $0.speaker == .assistant }.map(\.text).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+            if !userTurns.isEmpty || !assistantTurns.isEmpty {
+                let uSnippet = userTurns.prefix(2).joined(separator: " | ")
+                let aSnippet = assistantTurns.prefix(1).joined(separator: " | ")
+                memoryEntries.append("• Séance \(idx + 1) [\(past.title)]: Sujet: \"\(past.title)\". Extraits récents: Élève: \"\(uSnippet.prefix(100))\" / Prof: \"\(aSnippet.prefix(100))\".")
+            }
+        }
+        let conversationalMemory = memoryEntries.isEmpty ? "Nouvel élève démarrant l'apprentissage." : memoryEntries.joined(separator: "\n")
+        
+        // Each new conversation starts fresh with full memory injected into instructions
         let history: [[String: Any]] = []
-        let instructions = TeachingPolicy.voice(language: language, learner: learner, theme: selectedTheme, interests: store.preferences.interests, meaningLanguage: store.preferences.meaningLanguage, correctionLevel: store.preferences.correctionLevel)
+        let recentSessionTitles = store.learningSessions.suffix(4).compactMap { $0.title }
+        let cefr = store.learner.levelLabel.isEmpty ? "A1" : store.learner.levelLabel
+        let baseInstructions = TeachingPolicy.voice(
+            language: language,
+            learner: learner,
+            theme: selectedTheme,
+            interests: store.preferences.interests,
+            meaningLanguage: store.preferences.meaningLanguage,
+            correctionLevel: store.preferences.correctionLevel,
+            cefrLevel: cefr,
+            recentTopics: recentSessionTitles,
+            pedagogicalMode: store.preferences.pedagogicalMode,
+            conversationalMemory: conversationalMemory
+        )
+        let instructions = FSRSPromptPolicy.buildVoiceConversationPrompt(basePolicyPrompt: baseInstructions, languageID: language.id, level: cefr)
         connectionTask = Task { [weak self] in
             guard let self else { return }
             do { try await self.transport.connect(api: self.api, instructions: instructions, history: history, languageCode: self.language.id, speechRate: self.store.preferences.speechRate, voiceIdentifier: self.store.preferences.selectedVoiceIdentifier, preferences: self.store.preferences) }
@@ -202,8 +255,13 @@ import FleunceCore
         conversationPace.askForHelp(after: userPassage)
         append("instructions", conversationPace.instruction)
         append("instructions", TeachingPolicy.help(language: language))
-        notice = "Fleunce will make that a little simpler."
+        notice = "Fluence will make that a little simpler."
     }
+    func replayAudio(_ text: String) {
+        guard !text.isEmpty else { return }
+        transport.speak(text, languageCode: language.id, rate: store.preferences.speechRate, voiceIdentifier: store.preferences.selectedVoiceIdentifier)
+    }
+
     func end(reason: String = "Ended by you") {
         guard state == .active || state == .connecting else { return }
         let wasConnecting = state == .connecting
@@ -222,7 +280,7 @@ import FleunceCore
     }
     func background() {
         guard isRunning else { return }
-        backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "Close Fleunce conversation") { [weak self] in
+        backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "Close Fluence conversation") { [weak self] in
             Task { @MainActor in self?.finish(final: false) }
         }
         end(reason: "App moved to background")
@@ -237,7 +295,7 @@ import FleunceCore
         save(); state = .ended
         if let session { finalAssessments.submit(session) }
         scheduleTranslation(); scheduleReset()
-        let endNotices = ["You’ve reached your conversation time limit.", "Fleunce ended this quiet session to avoid running up usage."]
+        let endNotices = ["You’ve reached your conversation time limit.", "Fluence ended this quiet session to avoid running up usage."]
         if !endNotices.contains(notice ?? "") {
             notice = !final && session?.providerID != nil ? "Conversation saved. Final voice usage is unconfirmed." : nil
         }
@@ -271,7 +329,7 @@ import FleunceCore
     private func handle(_ event: [String: Any]) {
         guard let type = event["type"] as? String, session != nil else { return }
         switch type {
-        case "fleunce.session.created":
+        case "fluence.session.created":
             session?.providerID = (event["session"] as? [String: Any])?["id"] as? String
             session?.voiceSeconds = 15; save()
         case "session.started":
@@ -303,7 +361,7 @@ import FleunceCore
         case "error":
             let details = event["error"] as? [String: Any]
             if let id = details?["client_event_id"] as? String { pendingCommands.removeValue(forKey: id) }
-            notice = "A voice update was rejected. If Fleunce stops responding, end this conversation and start again."
+            notice = "A voice update was rejected. If Fluence stops responding, end this conversation and start again."
         default:
             if type.hasSuffix(".appended"), let id = event["client_event_id"] as? String { pendingCommands.removeValue(forKey: id) }
         }
@@ -322,7 +380,7 @@ import FleunceCore
                 case .checkIn: self.append("instructions", TeachingPolicy.checkIn(language: self.language))
                 case .warning(let seconds): self.inactivitySeconds = seconds
                 case .end:
-                    self.notice = "Fleunce ended this quiet session to avoid running up usage."; self.end(reason: "Inactivity"); return
+                    self.notice = "Fluence ended this quiet session to avoid running up usage."; self.end(reason: "Inactivity"); return
                 case .wait: break
                 }
                 self.pendingCommands = self.pendingCommands.filter { Date().timeIntervalSince($0.value) <= 20 }
@@ -372,7 +430,7 @@ import FleunceCore
         let checkNotice = arguments.contains("--test-end-notice")
         if checkNotice {
             record.providerID = "fixture-only"
-            notice = arguments.contains("--test-inactivity") ? "Fleunce ended this quiet session to avoid running up usage." : "Fleunce will make that a little simpler."
+            notice = arguments.contains("--test-inactivity") ? "Fluence ended this quiet session to avoid running up usage." : "Fluence will make that a little simpler."
         }
         session = record; state = .closing; finish(final: !checkNotice)
     }
@@ -415,9 +473,9 @@ import FleunceCore
     }
     #endif
     private struct AssessmentResult: Decodable { var outcome: Outcome; var suggestedLevel: Int; var nextGoal: String; var capability: String; var words: [WordProposal] }
-    private static func assess(api: APIClient, snapshot: SessionRecord, passage: Passage, model: String = "", preferences: Preferences = Preferences()) async throws -> FinalAssessmentResult {
+    private static func assess(api: APIClient, snapshot: SessionRecord, passage: Passage, model: String = "") async throws -> FinalAssessmentResult {
         guard let language = LanguageRegistry.module(for: snapshot.languageID) else { throw ArchiveError.unsupportedLanguage }
-        let result = try await api.respond(instructions: TeachingPolicy.assessment(language: language), input: TeachingPolicy.context(snapshot, passage: passage), schema: APIClient.assessmentSchema(language: language), model: model, preferences: preferences)
+        let result = try await api.respond(instructions: TeachingPolicy.assessment(language: language), input: TeachingPolicy.context(snapshot, passage: passage), schema: APIClient.assessmentSchema(language: language), model: model)
         let decoded = try JSONDecoder().decode(AssessmentResult.self, from: Data(result.text.utf8))
         let proposed = Assessment(passageID: passage.id, revisionKey: passage.revisionKey, outcome: decoded.outcome, suggestedLevel: decoded.suggestedLevel,
                                   nextGoal: decoded.nextGoal, capability: decoded.capability, words: decoded.words, context: snapshot.themeID ?? "free")
@@ -439,6 +497,24 @@ import FleunceCore
                 self.session?.assessments.removeAll { $0.passageID == p.id }; self.session?.assessments.append(validated)
                 self.lastAssessmentKey = p.revisionKey
                 self.addUsage(APIUsage(input: result.inputTokens, output: result.outputTokens, searches: result.searchCalls)); self.save()
+                
+                // Update FSRS memory scheduler based on spoken words
+                for word in validated.words {
+                    let rating: FSRSRating = word.kind == .independent ? (validated.outcome == .success ? .easy : .good) : (validated.outcome == .breakdown ? .again : .hard)
+                    let fsrsItem = FSRSItem(
+                        term: word.lemma,
+                        meaning: word.meaning,
+                        example: word.quote,
+                        contextCategory: "Vocal",
+                        level: "B2",
+                        languageID: snapshot.languageID
+                    )
+                    FSRSStoreManager.shared.saveItem(fsrsItem)
+                    if let savedItem = FSRSStoreManager.shared.loadItems(for: snapshot.languageID).first(where: { $0.term.lowercased() == word.lemma.lowercased() }) {
+                        FSRSStoreManager.shared.recordReview(itemId: savedItem.id, rating: rating, duration: 5)
+                    }
+                }
+                
                 let learner = self.store.learner
                 if self.conversationPace.observe(validated, passage: p, languageID: snapshot.languageID) {
                     self.append("instructions", self.conversationPace.instruction)
@@ -475,7 +551,7 @@ import FleunceCore
                 try await Task.sleep(for: .milliseconds(500))
                 guard self.session?.id == snapshot.id, self.state == .active, let current = self.session else { return }
                 guard let targetLanguage = LanguageRegistry.module(for: current.languageID) else { return }
-                let result = try await self.api.respond(instructions: TeachingPolicy.delegation(language: targetLanguage), input: TeachingPolicy.context(current), search: current.searchCalls < 3, preferences: self.store.preferences)
+                let result = try await self.api.respond(instructions: TeachingPolicy.delegation(language: targetLanguage), input: TeachingPolicy.context(current), search: current.searchCalls < 3)
                 guard self.session?.id == snapshot.id, self.state == .active else { return }
                 self.addUsage(result.usage)
                 if !result.sources.isEmpty {
@@ -538,7 +614,7 @@ import FleunceCore
             return APIResult(text: "Gracias.", sources: [], usage: APIUsage())
         }
         #endif
-        return try await api.respond(instructions: instructions, input: input, model: store.preferences.groqModel, preferences: store.preferences)
+        return try await api.respond(instructions: instructions, input: input, model: store.preferences.groqModel)
     }
     func lookup(word: String, sentence: String) async throws -> String {
         guard hasAIConsent else { throw AIProcessingConsent.ConsentError.required }
@@ -552,7 +628,7 @@ import FleunceCore
         let targetLanguage = language, generation = languageGeneration
         if let cached = store.learningSessions.flatMap(\.topics).first(where: { $0.languageID == targetLanguage.id && $0.query.lowercased() == query.lowercased() && $0.isFresh }) { return cached }
         guard hasAIConsent else { throw AIProcessingConsent.ConsentError.required }
-        let result = try await api.respond(instructions: TeachingPolicy.currentTopic(language: targetLanguage), input: String(query.prefix(500)), search: true, model: store.preferences.groqModel, preferences: store.preferences)
+        let result = try await api.respond(instructions: TeachingPolicy.currentTopic(language: targetLanguage), input: String(query.prefix(500)), search: true, model: store.preferences.groqModel)
         guard generation == languageGeneration else { throw CancellationError() }
         guard !result.sources.isEmpty else { throw TopicError.unsourced }
         let brief = TopicBrief(languageID: targetLanguage.id, query: query, text: result.text, sources: result.sources)

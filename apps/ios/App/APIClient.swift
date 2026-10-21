@@ -1,5 +1,5 @@
 import Foundation
-import FleunceCore
+import FluenceCore
 
 final class NoRedirect: NSObject, URLSessionTaskDelegate {
     func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) { completionHandler(nil) }
@@ -17,44 +17,38 @@ struct APIResult { var text: String; var sources: [SourceLink]; var usage: APIUs
         session = URLSession(configuration: config, delegate: NoRedirect(), delegateQueue: nil)
     }
     
-    func postURL(_ urlString: String, body: [String: Any], apiKey: String = "") async throws -> [String: Any] {
+    func postURL(_ urlString: String, body: [String: Any], token: String = "", customHeaders: [String: String] = [:]) async throws -> [String: Any] {
         guard let url = URL(string: urlString) else { throw APIError.invalidResponse }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if !apiKey.isEmpty {
-            request.setValue("Bearer " + apiKey, forHTTPHeaderField: "Authorization")
+        if !token.isEmpty {
+            request.setValue("Bearer " + token, forHTTPHeaderField: "Authorization")
+        }
+        for (k, v) in customHeaders {
+            request.setValue(v, forHTTPHeaderField: k)
         }
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         let (data, response) = try await session.data(for: request)
         try Task.checkCancellation()
         guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
-        guard (200..<300).contains(http.statusCode) else { throw ProviderFailure(status: http.statusCode, body: data, reference: http.value(forHTTPHeaderField: "x-request-id") ?? http.value(forHTTPHeaderField: "x-goog-request-id")) }
+        guard (200..<300).contains(http.statusCode) else {
+            throw ProviderFailure(status: http.statusCode, body: data, reference: http.value(forHTTPHeaderField: "x-request-id") ?? http.value(forHTTPHeaderField: "x-goog-request-id"))
+        }
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { throw APIError.invalidResponse }
         return json
-    }
-
-    func post(_ path: String, body: [String: Any], provider: AIProvider = .hermes, customEndpoint: String = "", customModel: String = "") async throws -> [String: Any] {
-        let key = CredentialStore.read() ?? ""
-        if path.contains("http") { return try await postURL(path, body: body, apiKey: key) }
-        let endpoint: String = {
-            if (provider == .custom || provider == .hermes) && !customEndpoint.isEmpty { return customEndpoint }
-            return provider.defaultEndpoint
-        }()
-        return try await postURL(endpoint, body: body, apiKey: key)
     }
 
     private func sanitizeModel(_ model: String) -> String {
         let clean = model.trimmingCharacters(in: .whitespacesAndNewlines)
         if clean.isEmpty || clean.contains("llama") { return "qwen/qwen3.8-27b" }
-        if clean.lowercased().hasPrefix("ilama") {
-            return "qwen/qwen3.8-27b"
-        }
+        if clean.lowercased().hasPrefix("ilama") { return "qwen/qwen3.8-27b" }
         return clean
     }
 
     func fetchAvailableModels() async throws -> [String] {
-        guard let key = CredentialStore.read(), !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return [] }
+        let key = KeychainHelper.shared.read(for: .groq) ?? KeychainHelper.shared.read(for: .owner) ?? ""
+        guard !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return [] }
         let endpoint = URL(string: "https://api.groq.com/openai/v1/models")!
         var request = URLRequest(url: endpoint)
         request.httpMethod = "GET"
@@ -67,63 +61,23 @@ struct APIResult { var text: String; var sources: [SourceLink]; var usage: APIUs
     }
 
     func respond(instructions: String, input: String, schema: [String: Any]? = nil, search: Bool = false, model: String = "", preferences: Preferences = Preferences()) async throws -> APIResult {
-        let history = [["role": "user", "content": input]]
-        if !preferences.vpsEndpoint.isEmpty {
-            return try await executeHermesVPS(instructions: instructions, history: history, prefs: preferences)
-        }
-        
-        if let key = CredentialStore.read(), !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            let endpoint = "https://api.groq.com/openai/v1/chat/completions"
-            let selectedModel = sanitizeModel(model)
-            let messages: [[String: Any]] = [
-                ["role": "system", "content": instructions],
-                ["role": "user", "content": input]
-            ]
-            var body: [String: Any] = [
-                "model": selectedModel,
-                "messages": messages,
-                "max_tokens": schema == nil ? 1400 : 2200,
-                "stream": false
-            ]
-            let keyToUse = key
-            let json: [String: Any]
-            do {
-                json = try await postURL(endpoint, body: body, apiKey: keyToUse)
-            } catch {
-                if !preferences.vpsEndpoint.isEmpty {
-                    let history = [["role": "user", "content": input]]
-                    return try await executeHermesVPS(instructions: instructions, history: history, prefs: preferences)
-                }
-                throw error
-            }
-            guard let choices = json["choices"] as? [[String: Any]],
-                  let firstChoice = choices.first,
-                  let message = firstChoice["message"] as? [String: Any],
-                  let text = message["content"] as? String else { throw APIError.incomplete }
-            var usage = APIUsage()
-            if let u = json["usage"] as? [String: Any] {
-                usage.input = u["prompt_tokens"] as? Int ?? 0
-                usage.output = u["completion_tokens"] as? Int ?? 0
-            }
-            guard !text.isEmpty else { throw APIError.incomplete }
-            return APIResult(text: text, sources: [], usage: usage)
-        }
-        
-        if !preferences.vpsEndpoint.isEmpty {
-            let history = [["role": "user", "content": input]]
-            return try await executeHermesVPS(instructions: instructions, history: history, prefs: preferences)
-        }
-        throw APIError.missingKey
+        try checkAIConsent(preferences: preferences)
+        return try await respondHistory(
+            instructions: instructions,
+            history: [["role": "user", "content": input]],
+            model: model,
+            preferences: preferences
+        )
     }
 
-    func executeGroq(instructions: String, history: [[String: String]], model: String = "") async throws -> APIResult {
-        guard let key = CredentialStore.read(), !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw APIError.missingKey }
+    // MARK: - 1. Groq Cloud (Ultra-Rapide)
+    func executeGroq(instructions: String, history: [[String: String]], model: String = "", prefs: Preferences = Preferences()) async throws -> APIResult {
+        let key = prefs.groqAPIKey.isEmpty ? (KeychainHelper.shared.read(for: .groq) ?? KeychainHelper.shared.read(for: .owner) ?? "") : prefs.groqAPIKey
+        guard !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw APIError.missingKey }
         let endpoint = "https://api.groq.com/openai/v1/chat/completions"
-        let selectedModel = sanitizeModel(model)
+        let selectedModel = model.isEmpty ? prefs.groqModel : sanitizeModel(model)
         
-        var messages: [[String: Any]] = [
-            ["role": "system", "content": instructions]
-        ]
+        var messages: [[String: Any]] = [["role": "system", "content": instructions]]
         for msg in history {
             messages.append(["role": msg["role"] ?? "user", "content": msg["content"] ?? ""])
         }
@@ -135,15 +89,15 @@ struct APIResult { var text: String; var sources: [SourceLink]; var usage: APIUs
         ]
         let json: [String: Any]
         do {
-            json = try await postURL(endpoint, body: body, apiKey: key)
+            json = try await postURL(endpoint, body: body, token: key)
         } catch let failure as ProviderFailure where [400, 403, 404, 429, 500, 502, 503].contains(failure.status) {
             let available = (try? await fetchAvailableModels()) ?? []
             if let fallbackModel = available.first(where: { $0 != selectedModel }) {
                 body["model"] = fallbackModel
-                json = try await postURL(endpoint, body: body, apiKey: key)
+                json = try await postURL(endpoint, body: body, token: key)
             } else if selectedModel != "qwen/qwen3.8-27b" {
                 body["model"] = "qwen/qwen3.8-27b"
-                json = try await postURL(endpoint, body: body, apiKey: key)
+                json = try await postURL(endpoint, body: body, token: key)
             } else {
                 throw failure
             }
@@ -161,16 +115,19 @@ struct APIResult { var text: String; var sources: [SourceLink]; var usage: APIUs
         return APIResult(text: text, sources: [], usage: usage)
     }
 
-    func executeGemini(instructions: String, history: [[String: String]], prefs: Preferences) async throws -> APIResult {
-        let key = prefs.googleAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        let endpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
-        let model = prefs.geminiModel.isEmpty ? "gemini-2.5-flash" : prefs.geminiModel
+    // MARK: - 2. OpenAI (ChatGPT / GPT-4o / o1 / o3-mini)
+    func executeOpenAI(instructions: String, history: [[String: String]], prefs: Preferences) async throws -> APIResult {
+        let key = prefs.openaiAPIKey.isEmpty ? (KeychainHelper.shared.read(for: .openai) ?? "") : prefs.openaiAPIKey
+        guard !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw APIError.missingKey }
+        let endpoint = "https://api.openai.com/v1/chat/completions"
+        let model = prefs.openaiModel.isEmpty ? "gpt-4o-mini" : prefs.openaiModel
+        
         var messages: [[String: Any]] = [["role": "system", "content": instructions]]
         for msg in history {
             messages.append(["role": msg["role"] ?? "user", "content": msg["content"] ?? ""])
         }
         let body: [String: Any] = ["model": model, "messages": messages, "max_tokens": 1400]
-        let json = try await postURL(endpoint, body: body, apiKey: key)
+        let json = try await postURL(endpoint, body: body, token: key)
         guard let choices = json["choices"] as? [[String: Any]],
               let firstChoice = choices.first,
               let message = firstChoice["message"] as? [String: Any],
@@ -178,81 +135,294 @@ struct APIResult { var text: String; var sources: [SourceLink]; var usage: APIUs
         return APIResult(text: text, sources: [], usage: APIUsage())
     }
 
-    func executeHermesVPS(instructions: String, history: [[String: String]], prefs: Preferences) async throws -> APIResult {
-        let endpoint = prefs.vpsEndpoint.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !endpoint.isEmpty else { throw APIError.missingKey }
-        let key = prefs.vpsAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        let model = prefs.vpsModel.isEmpty ? "auto/best-fast" : prefs.vpsModel
+    // MARK: - 3. Anthropic Claude (Claude 3.5 Sonnet / Haiku / Opus)
+    func executeAnthropic(instructions: String, history: [[String: String]], prefs: Preferences) async throws -> APIResult {
+        let key = prefs.anthropicAPIKey.isEmpty ? (KeychainHelper.shared.read(for: .anthropic) ?? "") : prefs.anthropicAPIKey
+        guard !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw APIError.missingKey }
+        let endpoint = "https://api.anthropic.com/v1/messages"
+        let model = prefs.anthropicModel.isEmpty ? "claude-3-5-sonnet-20241022" : prefs.anthropicModel
+        
+        var messages: [[String: Any]] = []
+        for msg in history {
+            let role = (msg["role"] ?? "user") == "assistant" ? "assistant" : "user"
+            messages.append(["role": role, "content": msg["content"] ?? ""])
+        }
+        if messages.isEmpty {
+            messages.append(["role": "user", "content": "Hallo!"])
+        }
+        
+        let body: [String: Any] = [
+            "model": model,
+            "max_tokens": 1400,
+            "system": instructions,
+            "messages": messages
+        ]
+        let headers: [String: String] = [
+            "x-api-key": key,
+            "anthropic-version": "2023-06-01"
+        ]
+        let json = try await postURL(endpoint, body: body, token: "", customHeaders: headers)
+        guard let contentList = json["content"] as? [[String: Any]],
+              let firstContent = contentList.first,
+              let text = firstContent["text"] as? String else { throw APIError.incomplete }
+        return APIResult(text: text, sources: [], usage: APIUsage())
+    }
+
+    // MARK: - 4. Google Gemini (2.0 Flash / Pro)
+    func executeGemini(instructions: String, history: [[String: String]], prefs: Preferences) async throws -> APIResult {
+        let key = prefs.googleAPIKey.isEmpty ? (KeychainHelper.shared.read(for: .google) ?? "") : prefs.googleAPIKey
+        guard !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw APIError.missingKey }
+        let endpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+        let model = prefs.geminiModel.isEmpty ? "gemini-2.0-flash" : prefs.geminiModel
         var messages: [[String: Any]] = [["role": "system", "content": instructions]]
         for msg in history {
             messages.append(["role": msg["role"] ?? "user", "content": msg["content"] ?? ""])
         }
-        let body: [String: Any] = ["model": model, "messages": messages, "max_tokens": 1400, "stream": false]
-        let json = try await postURL(endpoint, body: body, apiKey: key)
+        let body: [String: Any] = ["model": model, "messages": messages, "max_tokens": 1400]
+        let json = try await postURL(endpoint, body: body, token: key)
         guard let choices = json["choices"] as? [[String: Any]],
               let firstChoice = choices.first,
-              let message = firstChoice["message"] as? [String: Any] else { throw APIError.incomplete }
-        var text = (message["content"] as? String) ?? ""
-        if text.isEmpty, let reasoning = message["reasoning_content"] as? String {
-            text = reasoning
-        }
-        guard !text.isEmpty else { throw APIError.incomplete }
+              let message = firstChoice["message"] as? [String: Any],
+              let text = message["content"] as? String else { throw APIError.incomplete }
         return APIResult(text: text, sources: [], usage: APIUsage())
     }
 
+    // MARK: - 5. DeepSeek (DeepSeek V3 / R1)
+    func executeDeepSeek(instructions: String, history: [[String: String]], prefs: Preferences) async throws -> APIResult {
+        let key = prefs.deepseekAPIKey.isEmpty ? (KeychainHelper.shared.read(for: .deepseek) ?? "") : prefs.deepseekAPIKey
+        guard !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw APIError.missingKey }
+        let endpoint = "https://api.deepseek.com/chat/completions"
+        let model = prefs.deepseekModel.isEmpty ? "deepseek-chat" : prefs.deepseekModel
+        var messages: [[String: Any]] = [["role": "system", "content": instructions]]
+        for msg in history {
+            messages.append(["role": msg["role"] ?? "user", "content": msg["content"] ?? ""])
+        }
+        let body: [String: Any] = ["model": model, "messages": messages, "max_tokens": 1400]
+        let json = try await postURL(endpoint, body: body, token: key)
+        guard let choices = json["choices"] as? [[String: Any]],
+              let firstChoice = choices.first,
+              let message = firstChoice["message"] as? [String: Any],
+              let text = message["content"] as? String else { throw APIError.incomplete }
+        return APIResult(text: text, sources: [], usage: APIUsage())
+    }
+
+    // MARK: - 6. Mistral AI (Mistral Large / Small / Codestral)
+    func executeMistral(instructions: String, history: [[String: String]], prefs: Preferences) async throws -> APIResult {
+        let key = prefs.mistralAPIKey.isEmpty ? (KeychainHelper.shared.read(for: .mistral) ?? "") : prefs.mistralAPIKey
+        guard !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw APIError.missingKey }
+        let endpoint = "https://api.mistral.ai/v1/chat/completions"
+        let model = prefs.mistralModel.isEmpty ? "mistral-small-latest" : prefs.mistralModel
+        var messages: [[String: Any]] = [["role": "system", "content": instructions]]
+        for msg in history {
+            messages.append(["role": msg["role"] ?? "user", "content": msg["content"] ?? ""])
+        }
+        let body: [String: Any] = ["model": model, "messages": messages, "max_tokens": 1400]
+        let json = try await postURL(endpoint, body: body, token: key)
+        guard let choices = json["choices"] as? [[String: Any]],
+              let firstChoice = choices.first,
+              let message = firstChoice["message"] as? [String: Any],
+              let text = message["content"] as? String else { throw APIError.incomplete }
+        return APIResult(text: text, sources: [], usage: APIUsage())
+    }
+
+    // MARK: - 7. OpenRouter (100+ Modèles)
+    func executeOpenRouter(instructions: String, history: [[String: String]], prefs: Preferences) async throws -> APIResult {
+        let key = prefs.openrouterAPIKey.isEmpty ? (KeychainHelper.shared.read(for: .openrouter) ?? "") : prefs.openrouterAPIKey
+        guard !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw APIError.missingKey }
+        let endpoint = "https://openrouter.ai/api/v1/chat/completions"
+        let model = prefs.openrouterModel.isEmpty ? "meta-llama/llama-3.3-70b-instruct:free" : prefs.openrouterModel
+        var messages: [[String: Any]] = [["role": "system", "content": instructions]]
+        for msg in history {
+            messages.append(["role": msg["role"] ?? "user", "content": msg["content"] ?? ""])
+        }
+        let body: [String: Any] = ["model": model, "messages": messages, "max_tokens": 1400]
+        let json = try await postURL(endpoint, body: body, token: key)
+        guard let choices = json["choices"] as? [[String: Any]],
+              let firstChoice = choices.first,
+              let message = firstChoice["message"] as? [String: Any],
+              let text = message["content"] as? String else { throw APIError.incomplete }
+        return APIResult(text: text, sources: [], usage: APIUsage())
+    }
+
+    // MARK: - 8. Custom OpenAI-compatible Server (Ollama / LM Studio / vLLM)
+    func executeCustom(instructions: String, history: [[String: String]], prefs: Preferences) async throws -> APIResult {
+        let endpoint = prefs.customEndpoint.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !endpoint.isEmpty else { throw APIError.missingKey }
+        let key = prefs.customAPIKey.isEmpty ? (KeychainHelper.shared.read(for: .custom) ?? "") : prefs.customAPIKey
+        let model = prefs.customModel.isEmpty ? "llama3" : prefs.customModel
+        var messages: [[String: Any]] = [["role": "system", "content": instructions]]
+        for msg in history {
+            messages.append(["role": msg["role"] ?? "user", "content": msg["content"] ?? ""])
+        }
+        let body: [String: Any] = ["model": model, "messages": messages, "max_tokens": 1400]
+        let json = try await postURL(endpoint, body: body, token: key)
+        guard let choices = json["choices"] as? [[String: Any]],
+              let firstChoice = choices.first,
+              let message = firstChoice["message"] as? [String: Any],
+              let text = message["content"] as? String else { throw APIError.incomplete }
+        return APIResult(text: text, sources: [], usage: APIUsage())
+    }
+
+    // MARK: - 9. Hermes VPS Personnel
+    func executeHermesVPS(instructions: String, history: [[String: String]], prefs: Preferences) async throws -> APIResult {
+        let endpoint = prefs.vpsEndpoint.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !endpoint.isEmpty else { throw APIError.missingKey }
+        let key = prefs.vpsAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        let model = prefs.vpsModel.isEmpty ? "auto/best-coding" : prefs.vpsModel
+        var messages: [[String: Any]] = [["role": "system", "content": instructions]]
+        for msg in history {
+            messages.append(["role": msg["role"] ?? "user", "content": msg["content"] ?? ""])
+        }
+        let body: [String: Any] = ["model": model, "messages": messages, "max_tokens": 1400]
+        let json = try await postURL(endpoint, body: body, token: key)
+        guard let choices = json["choices"] as? [[String: Any]],
+              let firstChoice = choices.first,
+              let message = firstChoice["message"] as? [String: Any],
+              let text = message["content"] as? String else { throw APIError.incomplete }
+        return APIResult(text: text, sources: [], usage: APIUsage())
+    }
+
+    // MARK: - Smart Failover Dispatcher
     func respondHistory(instructions: String, history: [[String: String]], model: String = "", preferences: Preferences = Preferences()) async throws -> APIResult {
-        return try await executeHermesVPS(instructions: instructions, history: history, prefs: preferences)
+        try checkAIConsent(preferences: preferences)
+        let mode = preferences.providerID.lowercased()
+        
+        let allProviders = ["groq", "openai", "anthropic", "google", "deepseek", "mistral", "openrouter", "hermes_vps", "custom"]
+        let providersToTry: [String] = {
+            if mode != "auto" && allProviders.contains(mode) {
+                var list = [mode]
+                list.append(contentsOf: allProviders.filter { $0 != mode })
+                return list
+            }
+            return allProviders
+        }()
         
         var lastError: Error? = nil
         for provider in providersToTry {
             do {
-                if provider == "hermes_vps" {
-                    return try await executeHermesVPS(instructions: instructions, history: history, prefs: preferences)
-                } else if provider == "google" {
+                switch provider {
+                case "groq":
+                    return try await executeGroq(instructions: instructions, history: history, model: model, prefs: preferences)
+                case "openai":
+                    return try await executeOpenAI(instructions: instructions, history: history, prefs: preferences)
+                case "anthropic":
+                    return try await executeAnthropic(instructions: instructions, history: history, prefs: preferences)
+                case "google":
                     return try await executeGemini(instructions: instructions, history: history, prefs: preferences)
-                } else if provider == "groq" {
-                    return try await executeGroq(instructions: instructions, history: history, model: model)
+                case "deepseek":
+                    return try await executeDeepSeek(instructions: instructions, history: history, prefs: preferences)
+                case "mistral":
+                    return try await executeMistral(instructions: instructions, history: history, prefs: preferences)
+                case "openrouter":
+                    return try await executeOpenRouter(instructions: instructions, history: history, prefs: preferences)
+                case "custom":
+                    return try await executeCustom(instructions: instructions, history: history, prefs: preferences)
+                case "hermes_vps":
+                    return try await executeHermesVPS(instructions: instructions, history: history, prefs: preferences)
+                default:
+                    break
                 }
             } catch {
                 lastError = error
-                print("Provider \(provider) failed with error: \(error). Failing over...")
             }
         }
         throw lastError ?? APIError.incomplete
     }
 
     func transcribe(audioData: Data, language: String = "en", preferences: Preferences = Preferences()) async throws -> String {
-        let mode = preferences.providerID.lowercased()
-        let endpoint: URL
-        let key: String
-        let modelName: String
+        try checkAIConsent(preferences: preferences)
 
-        let groqKey = CredentialStore.read()?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-
-        if (mode == "hermes_vps" || groqKey.isEmpty) && !preferences.vpsEndpoint.isEmpty {
-            let base = preferences.vpsEndpoint.replacingOccurrences(of: "/chat/completions", with: "")
-            endpoint = URL(string: "\(base)/audio/transcriptions")!
-            key = preferences.vpsAPIKey
-            modelName = "groq/whisper-large-v3-turbo"
-        } else if !groqKey.isEmpty {
-            endpoint = URL(string: "https://api.groq.com/openai/v1/audio/transcriptions")!
-            key = groqKey
-            modelName = "whisper-large-v3-turbo"
-        } else if !preferences.vpsEndpoint.isEmpty {
-            let base = preferences.vpsEndpoint.replacingOccurrences(of: "/chat/completions", with: "")
-            endpoint = URL(string: "\(base)/audio/transcriptions")!
-            key = preferences.vpsAPIKey
-            modelName = "groq/whisper-large-v3-turbo"
-        } else {
-            throw APIError.missingKey
+        // ZDR / COPPA-RGPD-K : aucune voix d'enfant ne quitte l'appareil
+        if preferences.isKidsModeActive {
+            throw APIError.kidsModeAudioBlocked
         }
 
+        let groqKey = preferences.groqAPIKey.isEmpty ? (KeychainHelper.shared.read(for: .groq) ?? KeychainHelper.shared.read(for: .owner) ?? "") : preferences.groqAPIKey
+        let openaiKey = preferences.openaiAPIKey.isEmpty ? (KeychainHelper.shared.read(for: .openai) ?? "") : preferences.openaiAPIKey
+        let geminiKey = preferences.googleAPIKey.isEmpty ? (KeychainHelper.shared.read(for: .google) ?? "") : preferences.googleAPIKey
+        
+        // 1. Try Groq Whisper Turbo
+        if !groqKey.isEmpty {
+            do {
+                return try await transcribeGroq(audioData: audioData, language: language, key: groqKey)
+            } catch {
+                print("Groq Whisper transcription failed: \(error). Trying fallback...")
+            }
+        }
+        
+        // 2. Try OpenAI Whisper
+        if !openaiKey.isEmpty {
+            do {
+                return try await transcribeOpenAI(audioData: audioData, language: language, key: openaiKey)
+            } catch {
+                print("OpenAI Whisper transcription failed: \(error). Trying fallback...")
+            }
+        }
+        
+        // 3. Fallback to Gemini 2.0 Flash Audio Transcription
+        if !geminiKey.isEmpty {
+            do {
+                return try await transcribeGemini(audioData: audioData, key: geminiKey)
+            } catch {
+                print("Gemini transcription failed: \(error)")
+            }
+        }
+        
+        if groqKey.isEmpty && openaiKey.isEmpty && geminiKey.isEmpty {
+            throw APIError.missingKey
+        }
+        throw APIError.incomplete
+    }
+    
+    private func transcribeOpenAI(audioData: Data, language: String, key: String) async throws -> String {
+        let endpoint = URL(string: "https://api.openai.com/v1/audio/transcriptions")!
         let boundary = "Boundary-\(UUID().uuidString)"
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
-        if !key.isEmpty {
-            request.setValue("Bearer " + key, forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer " + key, forHTTPHeaderField: "Authorization")
+        request.setValue("multipart/form-data; boundary=" + boundary, forHTTPHeaderField: "Content-Type")
+
+        var body = Data()
+        let crlf = Data([0x0D, 0x0A])
+        func addField(_ name: String, _ value: String) {
+            body.append(Data("--\(boundary)".utf8))
+            body.append(crlf)
+            body.append(Data("Content-Disposition: form-data; name=\"\(name)\"".utf8))
+            body.append(crlf)
+            body.append(crlf)
+            body.append(Data(value.utf8))
+            body.append(crlf)
         }
+        addField("model", "whisper-1")
+        addField("response_format", "json")
+        if !language.isEmpty { addField("language", language) }
+
+        body.append(Data("--\(boundary)".utf8))
+        body.append(crlf)
+        body.append(Data("Content-Disposition: form-data; name=\"file\"; filename=\"audio.m4a\"".utf8))
+        body.append(crlf)
+        body.append(Data("Content-Type: audio/m4a".utf8))
+        body.append(crlf)
+        body.append(crlf)
+        body.append(audioData)
+        body.append(crlf)
+        body.append(Data("--\(boundary)--".utf8))
+        body.append(crlf)
+
+        request.httpBody = body
+        let (data, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let text = json["text"] as? String else { throw APIError.incomplete }
+        return text
+    }
+
+    private func transcribeGroq(audioData: Data, language: String, key: String) async throws -> String {
+        let endpoint = URL(string: "https://api.groq.com/openai/v1/audio/transcriptions")!
+        let boundary = "Boundary-\(UUID().uuidString)"
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("Bearer " + key, forHTTPHeaderField: "Authorization")
         request.setValue("multipart/form-data; boundary=" + boundary, forHTTPHeaderField: "Content-Type")
 
         var body = Data()
@@ -284,12 +454,37 @@ struct APIResult { var text: String; var sources: [SourceLink]; var usage: APIUs
 
         request.httpBody = body
         let (data, response) = try await session.data(for: request)
-        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-            throw ProviderFailure(status: (response as? HTTPURLResponse)?.statusCode ?? 500, body: data)
-        }
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let text = json["text"] as? String else { throw APIError.incomplete }
         return text
+    }
+
+    private func transcribeGemini(audioData: Data, key: String) async throws -> String {
+        let endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=\(key)"
+        let base64Audio = audioData.base64EncodedString()
+        let body: [String: Any] = [
+            "contents": [[
+                "parts": [
+                    ["text": "Transcribe the spoken words in this audio exactly as uttered. Return ONLY the transcribed text, nothing else."],
+                    ["inline_data": ["mime_type": "audio/m4a", "data": base64Audio]]
+                ]
+            ]],
+            "generationConfig": ["temperature": 0.0]
+        ]
+        let json = try await postURL(endpoint, body: body)
+        guard let candidates = json["candidates"] as? [[String: Any]],
+              let first = candidates.first,
+              let content = first["content"] as? [String: Any],
+              let parts = content["parts"] as? [[String: Any]],
+              let text = parts.first?["text"] as? String else { throw APIError.incomplete }
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func checkAIConsent(preferences: Preferences) throws {
+        guard preferences.aiConsentVersion == AIProcessingConsent.version else {
+            throw APIError.consentRequired
+        }
     }
 
     static func object(_ fields: [String: Any]) -> [String: Any] { ["type": "OBJECT", "properties": fields, "required": fields.keys.sorted()] }
@@ -304,16 +499,18 @@ struct APIResult { var text: String; var sources: [SourceLink]; var usage: APIUs
         ])]
     ]) }
     enum APIError: LocalizedError {
-        case missingKey, invalidResponse, incomplete, refused, http(Int)
+        case missingKey, invalidResponse, incomplete, refused, http(Int), consentRequired, kidsModeAudioBlocked
         var errorDescription: String? {
             switch self {
-            case .missingKey: "Please enter your API Key for the selected provider in Settings."
-            case .invalidResponse, .incomplete: "The AI provider returned an incomplete response. Please try again."
-            case .refused: "Fleunce couldn’t complete that request. Try a different topic."
-            case .http(401), .http(403): "Your API key or endpoint wasn’t accepted. Check Settings."
-            case .http(404): "This model or endpoint was not found. Check your provider settings."
-            case .http(429): "The provider's rate limit was reached. Try again shortly."
-            case .http(let status): "The AI service couldn’t complete the request (HTTP \(status)). Please try again."
+            case .missingKey: "Veuillez entrer votre clé API dans les Réglages pour le fournisseur sélectionné."
+            case .invalidResponse, .incomplete: "Le fournisseur d'IA a retourné une réponse incomplète. Veuillez réessayer."
+            case .refused: "Fluence n'a pas pu compléter cette requête. Essayez un autre sujet."
+            case .http(401), .http(403): "Votre clé API ou endpoint n'a pas été accepté (Erreur HTTP 401/403)."
+            case .http(404): "Le modèle sélectionné n'a pas été trouvé chez le fournisseur (Erreur HTTP 404)."
+            case .http(429): "La limite de requêtes (Rate Limit) de l'API a été atteinte. Réessayez dans un instant."
+            case .http(let status): "Le service d'IA a rencontré une erreur (HTTP \\(status))."
+            case .consentRequired: "Vous devez accepter le consentement IA avant d'utiliser les fonctionnalités de traitement par IA."
+            case .kidsModeAudioBlocked: "Mode Enfant actif : la transcription vocale cloud est désactivée pour protéger la voix de l'enfant (ZDR/COPPA). Utilisez l'instructeur d'accent sur l'appareil."
             }
         }
     }

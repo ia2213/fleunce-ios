@@ -1,5 +1,5 @@
 import SwiftUI
-import FleunceCore
+import FluenceCore
 
 struct OnboardingView: View {
     let coordinator: ConversationCoordinator
@@ -18,12 +18,12 @@ struct OnboardingView: View {
         self.coordinator = coordinator
         self.done = done
         _targetID = State(initialValue: coordinator.language.id)
-        _meaningLanguage = State(initialValue: coordinator.store.preferences.meaningLanguage)
+        _meaningLanguage = State(initialValue: coordinator.store.preferences.meaningLanguage.isEmpty ? "Français" : coordinator.store.preferences.meaningLanguage)
         _hasChosenMeaning = State(initialValue: coordinator.store.preferences.meaningLanguage != Preferences().meaningLanguage)
-        _apiKeyInput = State(initialValue: CredentialStore.read() ?? "")
+        _apiKeyInput = State(initialValue: KeychainHelper.shared.read(for: .groq) ?? "")
     }
 
-    private var target: LanguageModule { LanguageRegistry.module(for: targetID) ?? .norwegian }
+    private var target: LanguageModule { LanguageRegistry.module(for: targetID) ?? .german }
     private var greeting: String { reduceMotion ? target.greeting : LanguageRegistry.all[greetingIndex].greeting }
 
     var body: some View {
@@ -32,56 +32,70 @@ struct OnboardingView: View {
                 if step > 0 {
                     Button { move(to: step - 1) } label: {
                         Image(systemName: "chevron.left").font(.system(size: 20, weight: .medium)).frame(width: 44, height: 44)
-                            .modifier(SoftGlass())
-                    }.accessibilityLabel("Back").accessibilityIdentifier("onboarding-back")
+                            .background(FluenceColor.surfaceSecondary, in: Circle())
+                    }.accessibilityLabel("Retour").accessibilityIdentifier("onboarding-back")
                 } else { Brand() }
                 Spacer()
                 HStack(spacing: 6) {
                     ForEach(0..<3) { index in
-                        Capsule().fill(index == step ? FleunceColor.orange : FleunceColor.peach)
+                        Capsule().fill(index == step ? FluenceColor.accent : FluenceColor.secondary.opacity(0.25))
                             .frame(width: index == step ? 24 : 8, height: 6)
                     }
-                }.accessibilityElement(children: .ignore).accessibilityLabel("Step \(step + 1) of 3")
-            }.padding(.horizontal, 26).padding(.top, 8).frame(height: 54)
+                }.accessibilityElement(children: .ignore).accessibilityLabel("Étape \(step + 1) sur 3")
+            }.padding(.horizontal, 24).padding(.top, 12).frame(height: 54)
 
             ScrollView {
-                VStack(spacing: step == 0 ? 22 : 18) {
-                    VStack(spacing: 4) {
-                        FleunceOrb().frame(height: typeSize.isAccessibilitySize ? 80 : step == 0 ? 134 : 74)
+                VStack(spacing: step == 0 ? 20 : 18) {
+                    VStack(spacing: 6) {
                         Text(greeting)
-                            .font(.system(size: typeSize.isAccessibilitySize ? 46 : step == 0 ? 60 : 48, weight: .medium, design: .rounded))
-                            .tracking(-2).id(greeting)
+                            .font(.system(size: typeSize.isAccessibilitySize ? 44 : 52, weight: .bold, design: .rounded))
+                            .tracking(-1.5).id(greeting)
+                            .foregroundStyle(FluenceColor.ink)
                             .transition(.opacity)
-                            .frame(height: step == 0 ? 76 : 60)
+                            .frame(height: 64)
                             .accessibilityIdentifier("onboarding-greeting")
-                    }.padding(.top, step == 0 ? 8 : 0).accessibilityElement(children: .ignore).accessibilityLabel("Welcome to Fleunce")
+                    }.padding(.top, 8).accessibilityElement(children: .ignore).accessibilityLabel("Bienvenue sur Fluence")
 
                     Group {
                         if step == 0 { languageStep }
                         else if step == 1 { meaningStep }
-                        else { keyStep }
+                        else { aiEngineStep }
                     }.id(step).transition(reduceMotion ? .identity : .opacity.combined(with: .offset(y: 14)))
+                    
                     if step == 1 && typeSize.isAccessibilitySize { consentDetails }
-                }.padding(.horizontal, 26).padding(.bottom, 22)
+                }.padding(.horizontal, 24).padding(.bottom, 24)
             }.scrollIndicators(.hidden).id(step)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 12) {
                 if step == 1 && !typeSize.isAccessibilitySize { consentDetails }
-                Button(step < 2 ? "Continue" : "Start Conversation") { advance() }
-                    .font(.system(.headline, design: .rounded)).multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity).padding(.vertical, 19)
-                    .background(FleunceColor.orange, in: Capsule())
-                    .accessibilityIdentifier("onboarding-continue")
-                if !typeSize.isAccessibilitySize {
-                    Text(step == 0 ? "We’ll find your pace through conversation." : (step == 1 ? "You can change both languages in Settings." : "Your key stays encrypted on this iPhone."))
-                        .font(.caption).foregroundStyle(FleunceColor.secondary).multilineTextAlignment(.center)
+                Button {
+                    advance()
+                } label: {
+                    Text(step < 2 ? "Continuer" : "🚀 Commencer l'apprentissage")
+                        .font(.headline.bold())
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 18)
+                        .background(FluenceColor.accent, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .shadow(color: FluenceColor.accent.opacity(0.3), radius: 8, y: 3)
                 }
-            }.padding(.horizontal, 26).padding(.top, 16).padding(.bottom, 16)
-                .background(FleunceColor.cream)
+                .accessibilityIdentifier("onboarding-continue")
+                
+                if !typeSize.isAccessibilitySize {
+                    Text(step == 0 ? "Nous adapterons le rythme de la conversation à votre niveau." : (step == 1 ? "Vous pouvez modifier ces deux langues à tout moment dans les Réglages." : "Vos données et clés restent chiffrées sur votre iPhone."))
+                        .font(.caption)
+                        .foregroundStyle(FluenceColor.secondary)
+                        .multilineTextAlignment(.center)
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 16)
+            .padding(.bottom, 16)
+            .background(FluenceColor.surface.ignoresSafeArea())
         }
-        .background(OnboardingBackground())
-        .foregroundStyle(FleunceColor.ink).tint(FleunceColor.ink)
+        .background(FluenceColor.background.ignoresSafeArea())
+        .foregroundStyle(FluenceColor.ink).tint(FluenceColor.accent)
         .interactiveDismissDisabled()
         .sensoryFeedback(.selection, trigger: targetID)
         .task(id: reduceMotion) {
@@ -97,39 +111,87 @@ struct OnboardingView: View {
     }
 
     private var consentDetails: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             Text(AIProcessingConsent.summary)
-                .font(.footnote).foregroundStyle(FleunceColor.secondary).multilineTextAlignment(.center)
+                .font(.footnote).foregroundStyle(FluenceColor.secondary).multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("onboarding-ai-consent")
-            Link("Privacy policy", destination: URL(string: "https://fleunce.chat/privacy/")!)
-                .font(.footnote).underline().accessibilityIdentifier("onboarding-privacy-policy")
+            Link("Politique de confidentialité", destination: URL(string: "https://fluence.chat/privacy/")!)
+                .font(.footnote).underline().foregroundStyle(FluenceColor.accent).accessibilityIdentifier("onboarding-privacy-policy")
+        }
+    }
+
+    private func frenchName(for id: String, fallback: String) -> String {
+        switch id {
+        case "de": return "Allemand"
+        case "fr": return "Français"
+        case "en-US": return "Anglais (Américain)"
+        case "en-GB": return "Anglais (Britannique)"
+        case "es": return "Espagnol"
+        case "it": return "Italien"
+        case "ro": return "Roumain"
+        case "pt": return "Portugais"
+        case "zh": return "Chinois (Mandarin)"
+        case "ja": return "Japonais"
+        case "ru": return "Russe"
+        case "ar": return "Arabe"
+        case "he": return "Hébreu"
+        case "no": return "Norvégien"
+        default: return fallback
         }
     }
 
     private var languageStep: some View {
         VStack(spacing: 18) {
-            Text("What would you\nlike to speak?")
-                .font(.system(.title2, design: .rounded, weight: .semibold)).tracking(-0.5)
-                .multilineTextAlignment(.center).accessibilityIdentifier("onboarding-language-title")
-            VStack(spacing: 10) {
+            VStack(spacing: 6) {
+                Text("Quelle langue souhaitez-vous parler ?")
+                    .font(.title2.bold())
+                    .foregroundStyle(FluenceColor.ink)
+                    .multilineTextAlignment(.center)
+                Text("Choisissez votre langue d'apprentissage principale")
+                    .font(.subheadline)
+                    .foregroundStyle(FluenceColor.secondary)
+            }
+            .padding(.bottom, 2)
+            
+            LazyVStack(spacing: 10) {
                 ForEach(LanguageRegistry.all) { language in
-                    Button { targetID = language.id } label: {
+                    let isSelected = targetID == language.id
+                    Button {
+                        targetID = language.id
+                    } label: {
                         HStack(spacing: 14) {
+                            Text(language.flag)
+                                .font(.system(size: 30))
+                                .frame(width: 42, height: 42)
+                                .background(isSelected ? FluenceColor.accent.opacity(0.18) : FluenceColor.surfaceSecondary, in: Circle())
+                            
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(language.nativeName).font(.system(.headline, design: .rounded))
-                                Text(language.settingsTitle).font(.caption).foregroundStyle(FleunceColor.secondary)
+                                Text(frenchName(for: language.id, fallback: language.nativeName))
+                                    .font(.headline.bold())
+                                    .foregroundStyle(FluenceColor.ink)
+                                Text("\(language.nativeName) · \(language.variety)")
+                                    .font(.caption)
+                                    .foregroundStyle(FluenceColor.secondary)
                             }
+                            
                             Spacer()
-                            Image(systemName: targetID == language.id ? "checkmark.circle.fill" : "circle")
-                                .font(.title3).foregroundStyle(targetID == language.id ? FleunceColor.orange : FleunceColor.secondary.opacity(0.4))
-                        }.padding(.horizontal, 18).padding(.vertical, 13).frame(maxWidth: .infinity)
-                            .background(targetID == language.id ? .white.opacity(0.92) : .white.opacity(0.52), in: RoundedRectangle(cornerRadius: 22))
-                            .overlay { RoundedRectangle(cornerRadius: 22).strokeBorder(targetID == language.id ? FleunceColor.orange.opacity(0.55) : .clear, lineWidth: 1.5) }
-                    }.buttonStyle(.plain)
-                        .accessibilityLabel(language.settingsTitle)
-                        .accessibilityAddTraits(targetID == language.id ? .isSelected : [])
-                        .accessibilityIdentifier("onboarding-language-\(language.id)")
+                            
+                            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                                .font(.title3.bold())
+                                .foregroundStyle(isSelected ? FluenceColor.accent : FluenceColor.secondary.opacity(0.35))
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 13)
+                        .frame(maxWidth: .infinity)
+                        .background(isSelected ? FluenceColor.surfaceSecondary : FluenceColor.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .strokeBorder(isSelected ? FluenceColor.accent : Color.primary.opacity(0.08), lineWidth: isSelected ? 2 : 1)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("onboarding-language-\(language.id)")
                 }
             }
         }
@@ -137,49 +199,122 @@ struct OnboardingView: View {
 
     private var meaningStep: some View {
         VStack(spacing: 22) {
-            VStack(spacing: 10) {
-                Text("A little help,\nin your language.")
-                    .font(.system(.title2, design: .rounded, weight: .semibold)).tracking(-0.5)
-                Text("Fleunce speaks \(target.name). Choose the language you read most easily for meanings.")
-                    .font(.subheadline).foregroundStyle(FleunceColor.secondary)
-            }.multilineTextAlignment(.center).accessibilityIdentifier("onboarding-meaning-title")
-            Picker("Subtitle language", selection: Binding(get: { meaningLanguage }, set: { meaningLanguage = $0; hasChosenMeaning = true })) {
-                ForEach(MeaningLanguages.all, id: \.self) { Text($0).tag($0) }
-            }.pickerStyle(.menu).font(.system(.headline, design: .rounded))
-                .padding(20).frame(maxWidth: .infinity)
-                .background(.white.opacity(0.8), in: RoundedRectangle(cornerRadius: 22))
-                .accessibilityIdentifier("onboarding-meaning-picker")
-            VStack(spacing: 8) {
-                Text(target.greeting).font(.system(.title2, design: .rounded, weight: .medium))
-                if target.id == "zh", let reading = MandarinPinyin.reading(target.greeting) {
-                    Text(reading).font(.callout).foregroundStyle(FleunceColor.secondary)
+            VStack(spacing: 6) {
+                Text("Une aide dans votre langue")
+                    .font(.title2.bold())
+                    .foregroundStyle(FluenceColor.ink)
+                Text("Fluence s'exprime en \(frenchName(for: target.id, fallback: target.name)). Choisissez votre langue de confort pour la traduction et les explications pédagogiques.")
+                    .font(.subheadline)
+                    .foregroundStyle(FluenceColor.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Langue des explications et sous-titres")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(FluenceColor.ink)
+                
+                Picker("Langue de traduction", selection: Binding(get: { meaningLanguage }, set: { meaningLanguage = $0; hasChosenMeaning = true })) {
+                    ForEach(MeaningLanguages.all, id: \.self) { Text($0).tag($0) }
                 }
-                Text(MeaningLanguages.greeting(in: meaningLanguage)).font(.body).foregroundStyle(FleunceColor.secondary)
-                    .accessibilityIdentifier("onboarding-meaning-example")
-                Text("Turn meanings on whenever you need a hand.").font(.caption).foregroundStyle(FleunceColor.secondary).padding(.top, 8)
-            }.multilineTextAlignment(.center).padding(.vertical, 12)
+                .pickerStyle(.menu)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(FluenceColor.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .strokeBorder(FluenceColor.accent.opacity(0.5), lineWidth: 1.5)
+                }
+            }
+            
+            // Live Preview Card
+            VStack(spacing: 12) {
+                HStack(spacing: 12) {
+                    Text(target.flag)
+                        .font(.title3)
+                    Text(target.greeting)
+                        .font(.headline.bold())
+                        .foregroundStyle(FluenceColor.ink)
+                    Spacer()
+                    Text("Original")
+                        .font(.caption2.bold())
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(FluenceColor.surfaceSecondary, in: Capsule())
+                        .foregroundStyle(FluenceColor.secondary)
+                }
+                
+                Divider()
+                
+                HStack(spacing: 12) {
+                    Text(meaningFlag(for: meaningLanguage))
+                        .font(.title3)
+                    Text(MeaningLanguages.greeting(in: meaningLanguage))
+                        .font(.subheadline)
+                        .foregroundStyle(FluenceColor.secondary)
+                    Spacer()
+                    Text("Traduction")
+                        .font(.caption2.bold())
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(FluenceColor.accent.opacity(0.15), in: Capsule())
+                        .foregroundStyle(FluenceColor.accent)
+                }
+            }
+            .padding(18)
+            .background(FluenceColor.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+            }
         }
     }
 
-    private var keyStep: some View {
+    private var aiEngineStep: some View {
         VStack(spacing: 20) {
-            VStack(spacing: 10) {
-                Image(systemName: "key.fill").font(.system(size: 36, weight: .light)).foregroundStyle(FleunceColor.orange)
-                Text("Groq API Key")
-                    .font(.system(.title2, design: .rounded, weight: .semibold)).tracking(-0.5)
-                Text("Enter your free Groq API key (gsk_...). It is saved securely on your iPhone's Keychain.")
-                    .font(.subheadline).foregroundStyle(FleunceColor.secondary).multilineTextAlignment(.center)
+            VStack(spacing: 8) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 38, weight: .semibold))
+                    .foregroundStyle(FluenceColor.accent)
+                Text("Moteur d'Intelligence Artificielle")
+                    .font(.title2.bold())
+                    .foregroundStyle(FluenceColor.ink)
+                Text("Fluence fonctionne immédiatement avec le Mode Auto intelligent. Vous pouvez également connecter vos propres clés API (OpenAI ChatGPT, Claude, Gemini, Groq, DeepSeek, Mistral, OpenRouter ou VPS).")
+                    .font(.subheadline)
+                    .foregroundStyle(FluenceColor.secondary)
+                    .multilineTextAlignment(.center)
             }
+            
             VStack(spacing: 12) {
-                SecureField("Groq API key (gsk_...)", text: $apiKeyInput)
-                    .textInputAutocapitalization(.never).autocorrectionDisabled()
-                    .padding(16)
-                    .background(.white.opacity(0.85), in: RoundedRectangle(cornerRadius: 16))
+                HStack(spacing: 14) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.title2)
+                        .foregroundStyle(FluenceColor.accent)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Mode Auto Activé")
+                            .font(.headline.bold())
+                            .foregroundStyle(FluenceColor.ink)
+                        Text("Groq · Gemini · ChatGPT · Claude · VPS")
+                            .font(.caption)
+                            .foregroundStyle(FluenceColor.secondary)
+                    }
+                    Spacer()
+                }
+                .padding(16)
+                .background(FluenceColor.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .strokeBorder(FluenceColor.accent.opacity(0.3), lineWidth: 1)
+                }
                 
-                Link("Get a free API key at console.groq.com", destination: URL(string: "https://console.groq.com/keys")!)
-                    .font(.caption).underline()
+                Text("Vous pourrez ajouter vos clés API personnelles à tout moment dans Réglages > Fournisseurs d'IA.")
+                    .font(.caption)
+                    .foregroundStyle(FluenceColor.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 4)
             }
-            .padding(.top, 10)
+            .padding(.top, 6)
         }
     }
 
@@ -189,10 +324,10 @@ struct OnboardingView: View {
                 let preferredNames = Locale.preferredLanguages.map { identifier in
                     let code = Locale(identifier: identifier).language.languageCode?.identifier ?? identifier
                     if code == "zh" { return "Chinese (Simplified)" }
-                    return LanguageRegistry.module(for: code)?.name ?? Locale(identifier: "en").localizedString(forLanguageCode: code)?.capitalized ?? ""
+                    return LanguageRegistry.module(for: code)?.name ?? Locale(identifier: "fr").localizedString(forLanguageCode: code)?.capitalized ?? ""
                 }
                 meaningLanguage = preferredNames.first { MeaningLanguages.all.contains($0) && $0 != target.name }
-                    ?? MeaningLanguages.all.first { $0 != target.name } ?? "English"
+                    ?? MeaningLanguages.all.first { $0 != target.name } ?? "Français"
             }
             move(to: 1)
         } else if step == 1 {
@@ -200,12 +335,30 @@ struct OnboardingView: View {
         } else {
             let cleanKey = apiKeyInput.trimmingCharacters(in: .whitespacesAndNewlines)
             if !cleanKey.isEmpty {
-                try? CredentialStore.save(cleanKey)
+                try? KeychainHelper.shared.save(cleanKey, for: .groq)
+                try? KeychainHelper.shared.save(cleanKey, for: .owner)
             }
             coordinator.selectLanguage(targetID)
             coordinator.selectMeaningLanguage(meaningLanguage)
             coordinator.store.updatePreferences { $0.meaningVisible = true; $0.aiConsentVersion = AIProcessingConsent.version }
             done()
+        }
+    }
+
+    private func meaningFlag(for language: String) -> String {
+        switch language.lowercased() {
+        case "français", "french": return "🇫🇷"
+        case "english", "anglais": return "🇬🇧"
+        case "deutsch", "allemand", "german": return "🇩🇪"
+        case "español", "espagnol", "spanish": return "🇪🇸"
+        case "italiano", "italien", "italian": return "🇮🇹"
+        case "português", "portugais", "portuguese": return "🇵🇹"
+        case "română", "roumain", "romanian": return "🇷🇴"
+        case "العربية", "arabe", "arabic": return "🇸🇦"
+        case "中文", "chinois", "chinese (simplified)": return "🇨🇳"
+        case "polski", "polonais", "polish": return "🇵🇱"
+        case "українська", "ukrainien", "ukrainian": return "🇺🇦"
+        default: return "🌐"
         }
     }
 
@@ -215,11 +368,11 @@ struct OnboardingView: View {
 }
 
 enum AIProcessingConsent {
-    static let version = 1
-    static let summary = "With your permission, Fluence sends audio and selected text to your personal Hermes VPS (OmniRoute) for conversations and meanings. All data stays on your own server."
+    static let version = 2
+    static let summary = "Avec votre accord, Fluence transmet votre audio et vos phrases au moteur d'IA sélectionné (Groq, OpenAI, Gemini, Claude ou votre VPS) pour générer les conversations interactives. Vos données restent strictement privées."
     enum ConsentError: LocalizedError {
         case required
-        var errorDescription: String? { "Before using AI features, open Talk and tap the microphone to review how Groq processes your audio and text." }
+        var errorDescription: String? { "Avant d'utiliser les fonctionnalités vocales d'IA, ouvrez l'onglet Parler pour valider le consentement de traitement audio." }
     }
 }
 
@@ -228,40 +381,20 @@ struct AIConsentView: View {
     let decline: () -> Void
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
-            Image(systemName: "waveform.bubble").font(.system(size: 32, weight: .light)).foregroundStyle(FleunceColor.orange)
-            Text("Before we talk.").font(.system(.title, design: .rounded, weight: .semibold))
+            Image(systemName: "waveform.bubble").font(.system(size: 32, weight: .light)).foregroundStyle(FluenceColor.accent)
+            Text("Avant de commencer").font(.system(.title, design: .rounded, weight: .bold))
                 .accessibilityIdentifier("ai-consent-title")
             Text(AIProcessingConsent.summary).font(.body)
-            Text("Your learning record is stored on this iPhone. Fleunce does not save raw audio. You can keep browsing your saved words and conversations without agreeing.")
-                .font(.subheadline).foregroundStyle(FleunceColor.secondary)
-            Link("Privacy policy", destination: URL(string: "https://fleunce.chat/privacy/")!).font(.subheadline).underline()
-            Button("Agree and continue", action: agree).font(.headline).frame(maxWidth: .infinity).padding(18)
-                .background(FleunceColor.orange, in: Capsule()).accessibilityIdentifier("ai-consent-agree")
-            Button("Not now", action: decline).font(.subheadline).frame(maxWidth: .infinity)
+            Text("Votre progression et vos données d'apprentissage restent enregistrées sur cet iPhone. Fluence ne stocke aucun enregistrement audio brut. Vous pouvez explorer vos fiches et cours librement sans accepter.")
+                .font(.subheadline).foregroundStyle(FluenceColor.secondary)
+            Link("Politique de confidentialité", destination: URL(string: "https://fluence.chat/privacy/")!).font(.subheadline).underline().foregroundStyle(FluenceColor.accent)
+            Button("Accepter et continuer", action: agree).font(.headline).frame(maxWidth: .infinity).padding(18)
+                .background(FluenceColor.accent, in: Capsule()).foregroundStyle(.white).accessibilityIdentifier("ai-consent-agree")
+            Button("Pas maintenant", action: decline).font(.subheadline).frame(maxWidth: .infinity)
+                .foregroundStyle(FluenceColor.secondary)
                 .accessibilityIdentifier("ai-consent-decline")
-        }.padding(28).foregroundStyle(FleunceColor.ink).tint(FleunceColor.ink)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).background(FleunceColor.cream)
+        }.padding(28).foregroundStyle(FluenceColor.ink).tint(FluenceColor.accent)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).background(FluenceColor.background)
             .presentationDetents([.large]).interactiveDismissDisabled()
-    }
-}
-
-private struct OnboardingBackground: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.scenePhase) private var scenePhase
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 20, paused: reduceMotion || scenePhase != .active)) { timeline in
-            let phase = reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate * 0.14
-            if #available(iOS 18.0, *) {
-                MeshGradient(width: 3, height: 3, points: [
-                    [0, 0], [0.5, 0], [1, 0],
-                    [0, 0.5], [Float(0.5 + sin(phase) * 0.12), Float(0.45 + cos(phase) * 0.1)], [1, 0.5],
-                    [0, 1], [0.5, 1], [1, 1]
-                ], colors: [FleunceColor.cream, FleunceColor.butter.opacity(0.7), FleunceColor.cream,
-                            FleunceColor.cream, FleunceColor.peach.opacity(0.75), FleunceColor.lilac.opacity(0.45),
-                            FleunceColor.cream, FleunceColor.cream, FleunceColor.cream])
-            } else {
-                LinearGradient(colors: [FleunceColor.cream, FleunceColor.peach.opacity(0.75), FleunceColor.cream], startPoint: .topLeading, endPoint: .bottomTrailing)
-            }
-        }.background(FleunceColor.cream).ignoresSafeArea().accessibilityHidden(true)
     }
 }

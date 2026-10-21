@@ -9,13 +9,59 @@
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
+	<string>Fluence</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
+	<key>CFBundleIcons</key>
+	<dict>
+		<key>CFBundlePrimaryIcon</key>
+		<dict>
+			<key>CFBundleIconFiles</key>
+			<array>
+				<string>AppIcon60x60</string>
+				<string>AppIcon20x20</string>
+				<string>AppIcon29x29</string>
+				<string>AppIcon40x40</string>
+				<string>AppIcon</string>
+				<string>Icon</string>
+				<string>Icon-60</string>
+				<string>FluenceIcon</string>
+			</array>
+			<key>CFBundleIconName</key>
+			<string>AppIcon</string>
+			<key>UIPrerenderedIcon</key>
+			<false/>
+		</dict>
+	</dict>
+	<key>CFBundleIcons~ipad</key>
+	<dict>
+		<key>CFBundlePrimaryIcon</key>
+		<dict>
+			<key>CFBundleIconFiles</key>
+			<array>
+				<string>AppIcon60x60</string>
+				<string>AppIcon76x76</string>
+				<string>AppIcon83.5x83.5</string>
+				<string>AppIcon20x20</string>
+				<string>AppIcon29x29</string>
+				<string>AppIcon40x40</string>
+				<string>AppIcon</string>
+				<string>Icon</string>
+				<string>Icon-76</string>
+				<string>FluenceIcon</string>
+			</array>
+			<key>CFBundleIconName</key>
+			<string>AppIcon</string>
+			<key>UIPrerenderedIcon</key>
+			<false/>
+		</dict>
+	</dict>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>$(MARKETING_VERSION)</string>
+	<string>2.2.0</string>
 	<key>CFBundleVersion</key>
-	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<string>1</string>
 	<key>UIDeviceFamily</key>
 	<array>
 		<integer>1</integer>
@@ -29,11 +75,13 @@
 		<true/>
 	</dict>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Fleunce listens while you practise speaking. Your voice is sent to Gemini during a conversation.</string>
+	<string>Fluence écoute pendant que vous parlez pour corriger votre prononciation.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Fleunce uses speech recognition to process your spoken practice in real-time.</string>
+	<string>Fluence utilise la reconnaissance vocale pour traiter votre voix en temps réel.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Fleunce uses the camera to scan learning materials and visual prompts for interactive conversations.</string>
+	<string>Fluence utilise la caméra pour analyser vos supports d'apprentissage.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Fluence vous permet d'importer des photos de vos cours.</string>
 	<key>UIUserInterfaceStyle</key>
 	<string>Light</string>
 	<key>UILaunchScreen</key>
@@ -58,17 +106,46 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<key>FleunceManagedAccountsEnabled</key>
-	<string>$(FLEUNCE_MANAGED_ACCOUNTS_ENABLED)</string>
-	<key>FleunceManagedAPIURL</key>
-	<string>$(FLEUNCE_MANAGED_API_URL)</string>
-	<key>FleunceGoogleSignInEnabled</key>
-	<string>$(FLEUNCE_GOOGLE_SIGN_IN_ENABLED)</string>
-	<key>FleunceGoogleClientID</key>
-	<string>$(FLEUNCE_GOOGLE_CLIENT_ID)</string>
-	<key>FleunceAppleSignInEnabled</key>
-	<string>$(FLEUNCE_APPLE_SIGN_IN_ENABLED)</string>
-	<key>FleunceAppleClientID</key>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>All Documents and Decks</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.item</string>
+				<string>public.content</string>
+				<string>public.data</string>
+				<string>public.folder</string>
+				<string>public.directory</string>
+				<string>public.zip-archive</string>
+				<string>public.archive</string>
+				<string>com.pkware.zip-archive</string>
+				<string>public.plain-text</string>
+				<string>com.adobe.pdf</string>
+				<string>public.json</string>
+			</array>
+		</dict>
+	</array>
+	<key>FluenceManagedAccountsEnabled</key>
+	<string>$(FLUENCE_MANAGED_ACCOUNTS_ENABLED)</string>
+	<key>FluenceManagedAPIURL</key>
+	<string>$(FLUENCE_MANAGED_API_URL)</string>
+	<key>FluenceGoogleSignInEnabled</key>
+	<string>$(FLUENCE_GOOGLE_SIGN_IN_ENABLED)</string>
+	<key>FluenceGoogleClientID</key>
+	<string>$(FLUENCE_GOOGLE_CLIENT_ID)</string>
+	<key>FluenceAppleSignInEnabled</key>
+	<string>$(FLUENCE_APPLE_SIGN_IN_ENABLED)</string>
+	<key>FluenceAppleClientID</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
@@ -79,7 +156,7 @@
 			<string>Google sign-in</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>$(FLEUNCE_GOOGLE_CALLBACK_SCHEME)</string>
+				<string>$(FLUENCE_GOOGLE_CALLBACK_SCHEME)</string>
 			</array>
 		</dict>
 	</array>

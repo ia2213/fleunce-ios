@@ -1,5 +1,5 @@
 import SwiftUI
-import FleunceCore
+import FluenceCore
 
 /// Keeps Han text selectable and word links intact, with an optional reading below it.
 struct PinyinHelp: View {
@@ -17,7 +17,7 @@ struct PinyinHelp: View {
                     Text(reading).font(.callout).textSelection(.enabled)
                         .accessibilityIdentifier("pinyin-reading")
                 }
-            }.foregroundStyle(FleunceColor.secondary)
+            }.foregroundStyle(FluenceColor.secondary)
         }
     }
 }

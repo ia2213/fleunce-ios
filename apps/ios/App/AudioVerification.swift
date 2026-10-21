@@ -14,7 +14,7 @@ enum AudioVerification {
 import AVFoundation
 import UIKit
 import WebRTC
-import FleunceCore
+import FluenceCore
 
 extension AudioVerification {
     private struct Playback: Codable {

@@ -1,7 +1,7 @@
 import AuthenticationServices
 import Security
 import UIKit
-import FleunceCore
+import FluenceCore
 
 @MainActor
 final class ManagedAccountIdentity: NSObject, ASWebAuthenticationPresentationContextProviding,

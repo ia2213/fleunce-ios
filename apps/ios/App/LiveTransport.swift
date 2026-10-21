@@ -1,6 +1,6 @@
 import Foundation
 import AVFoundation
-import FleunceCore
+import FluenceCore
 
 enum ConnectionState: Equatable { case idle, connecting, active, closing, ended, failed }
 
@@ -134,6 +134,12 @@ final class NativeSynthesizer: NSObject, AVSpeechSynthesizerDelegate, Sendable {
     private var conversationHistory: [[String: String]] = []
     private var preferences = Preferences()
     
+    private func cleanModelText(_ raw: String) -> String {
+        // Strip backend internal review tags: [FSRS_REVIEW: {"term": "...", "rating": 2}]
+        let pattern = #"\s*\[FSRS_REVIEW:.*?\]"#
+        return raw.replacingOccurrences(of: pattern, with: "", options: .regularExpression).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
     func connect(api: APIClient, instructions: String, history: [[String: Any]], languageCode: String = "de-DE", speechRate: Float = 0.50, voiceIdentifier: String = "", preferences: Preferences = Preferences()) async throws {
         disconnect()
         closing = false
@@ -156,22 +162,28 @@ final class NativeSynthesizer: NSObject, AVSpeechSynthesizerDelegate, Sendable {
         try? session.setActive(true)
         ownsAudioActivation = true
         
-        let initialResult: APIResult
-        if preferences.providerID.lowercased() == "hermes_vps" && !preferences.vpsEndpoint.isEmpty {
-            initialResult = APIResult(text: "Bonjour ! C'est parti. Dis-moi ce que tu veux pratiquer aujourd'hui.", sources: [], usage: APIUsage())
-        } else {
-            initialResult = try await api.respond(instructions: instructions, input: "Start conversation", preferences: preferences)
-        }
+        let startPrompt = """
+        Démarre la séance en tant que Professeur Fluence.
+        Consignes impératives :
+        - Parle en allemand avec une phrase courte et claire adaptée au niveau de l'élève.
+        - INTERDICTION ABSOLUE de répéter 'Wie geht's?' ou 'Wie heißt du?' si l'élève a déjà discuté.
+        - Si c'est une continuation ou nouvelle leçon, annonce directement le mini-thème ou la notion du jour et pose ta première consigne ou question d'apprentissage.
+        - Reste concis, chaleureux et pédagogique.
+        """
+        let initialResult = try await api.respond(instructions: instructions, input: startPrompt, model: preferences.groqModel, preferences: preferences)
         guard attempt == token else { throw CancellationError() }
         let sessionID = UUID().uuidString
-        onEvent?(["type": "fleunce.session.created", "session": ["id": sessionID]])
+        onEvent?(["type": "fluence.session.created", "session": ["id": sessionID]])
         started = true
         onEvent?(["type": "session.started", "session": ["id": sessionID]])
         
         if !initialResult.text.isEmpty {
-            conversationHistory.append(["role": "assistant", "content": initialResult.text])
-            onEvent?(["type": "session.output_transcript.delta", "delta": initialResult.text, "start_ms": 0, "end_ms": 1000, "event_id": UUID().uuidString])
-            synthesizer.speak(text: initialResult.text, languageCode: languageCode, rate: speechRate, voiceIdentifier: voiceIdentifier)
+            let cleaned = cleanModelText(initialResult.text)
+            if !cleaned.isEmpty {
+                conversationHistory.append(["role": "assistant", "content": cleaned])
+                onEvent?(["type": "session.output_transcript.delta", "delta": cleaned, "start_ms": 0, "end_ms": 1000, "event_id": UUID().uuidString])
+                synthesizer.speak(text: cleaned, languageCode: languageCode, rate: speechRate, voiceIdentifier: voiceIdentifier)
+            }
         }
         
         startRecording()
@@ -180,7 +192,7 @@ final class NativeSynthesizer: NSObject, AVSpeechSynthesizerDelegate, Sendable {
     
     private func startRecording() {
         guard !closing else { return }
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("fleunce_mic_\(UUID().uuidString).m4a")
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("fluence_mic_\(UUID().uuidString).m4a")
         audioURL = url
         
         let settings: [String: Any] = [
@@ -205,27 +217,42 @@ final class NativeSynthesizer: NSObject, AVSpeechSynthesizerDelegate, Sendable {
             var speechDetected = false
             var speechDurationCount = 0
             var silenceStart: Date? = nil
+            var synthPhase: Double = 0
+            var smoothedUserLevel: Double = 0
             
             while !Task.isCancelled {
-                try? await Task.sleep(for: .milliseconds(100))
+                try? await Task.sleep(for: .milliseconds(50))
                 guard let self, self.started, !self.isMuted, !self.isProcessingSpeech else { continue }
                 
-                // Do not process audio while the phone speaker is playing TTS
+                // When TTS is speaking, emit smooth, gentle, organic vocal envelope
                 if self.synthesizer.isSpeaking {
                     speechDetected = false
                     speechDurationCount = 0
                     silenceStart = nil
+                    synthPhase += 0.045
+                    let wave1 = sin(synthPhase)
+                    let wave2 = sin(synthPhase * 1.6 + 0.4)
+                    let outputLevel = 0.35 + 0.22 * (0.65 * wave1 + 0.35 * wave2)
+                    self.onLevels?(0, max(0.12, min(0.68, outputLevel)))
                     continue
                 }
+                
                 guard let rec = self.recorder, rec.isRecording else { continue }
                 
                 rec.updateMeters()
                 let power = rec.averagePower(forChannel: 0)
-                let level = max(0.0, min(1.0, Double(power + 50) / 50.0))
-                self.onLevels?(level, 0)
+                let rawNorm = max(0.0, min(1.0, Double(power + 48) / 38.0))
+                let instantaneousLevel = pow(rawNorm, 1.3)
+                // Smooth with organic attack/decay envelope
+                if instantaneousLevel > smoothedUserLevel {
+                    smoothedUserLevel = smoothedUserLevel * 0.55 + instantaneousLevel * 0.45
+                } else {
+                    smoothedUserLevel = smoothedUserLevel * 0.88 + instantaneousLevel * 0.12
+                }
+                self.onLevels?(smoothedUserLevel, 0)
                 
-                // VAD Threshold: -42 dB ensures normal spoken voice is reliably caught
-                if power > -42 {
+                // VAD Threshold: -48 dB ensures soft speech, breathing pauses, and natural speech rhythm are captured
+                if power > -48 {
                     speechDurationCount += 1
                     if speechDurationCount >= 2 {
                         speechDetected = true
@@ -233,8 +260,9 @@ final class NativeSynthesizer: NSObject, AVSpeechSynthesizerDelegate, Sendable {
                     }
                 } else if speechDetected {
                     if silenceStart == nil { silenceStart = Date() }
-                    // 0.45s silence after speech triggers transcription
-                    if let start = silenceStart, Date().timeIntervalSince(start) >= 0.45 {
+                    // 1.85s silence required after speech before concluding the turn is finished
+                    // This allows natural pauses, grammatical thinking, and complex clauses
+                    if let start = silenceStart, Date().timeIntervalSince(start) >= 1.85 {
                         speechDetected = false
                         speechDurationCount = 0
                         silenceStart = nil
@@ -271,24 +299,24 @@ final class NativeSynthesizer: NSObject, AVSpeechSynthesizerDelegate, Sendable {
             let userText = try await api.transcribe(audioData: data, language: lang, preferences: preferences).trimmingCharacters(in: .whitespacesAndNewlines)
             try? FileManager.default.removeItem(at: url)
             
-            let lower = userText.lowercased()
-            let isHallucination = lower.contains("untertitel") || lower.contains("amara.org") || lower.contains("vielen dank") || lower.contains("subtitles") || lower.contains("thank you for watching")
+            let lower = userText.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+            let isSubtitleArtifact = lower.hasPrefix("untertitel von") || lower.hasPrefix("untertitelung") || lower == "amara.org" || lower == "thank you for watching" || lower == "thank you for watching." || lower == "vielen dank fürs zuschauen." || lower == "vielen dank fürs zuschauen" || lower.hasPrefix("subtitles by")
             
-            if !userText.isEmpty && userText.count >= 2 && !isHallucination && !synthesizer.isSpeaking {
+            if !userText.isEmpty && userText.count >= 2 && !isSubtitleArtifact && !synthesizer.isSpeaking {
                 let startMS = Int(Date().timeIntervalSince1970 * 1000) % 1000000
                 onEvent?(["type": "session.input_transcript.delta", "delta": userText, "start_ms": startMS, "end_ms": startMS + 500, "event_id": UUID().uuidString])
                 
                 conversationHistory.append(["role": "user", "content": userText])
-                let result = try await api.respondHistory(instructions: instructions, history: conversationHistory, preferences: preferences)
+                // Keep only last 5 turns to protect token costs and avoid runaway bills
+                let trimmedHistory = Array(conversationHistory.suffix(5))
+                let result = try await api.respondHistory(instructions: instructions, history: trimmedHistory, preferences: preferences)
                 if !result.text.isEmpty {
-                    conversationHistory.append(["role": "assistant", "content": result.text])
-                    let sentences = result.text.components(separatedBy: CharacterSet(charactersIn: ".!?\n")).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
-                    for (index, sentence) in sentences.enumerated() {
-                        guard !closing else { break }
+                    let cleaned = cleanModelText(result.text)
+                    if !cleaned.isEmpty {
+                        conversationHistory.append(["role": "assistant", "content": cleaned])
                         let cStartMS = Int(Date().timeIntervalSince1970 * 1000) % 1000000
-                        let chunk = index == 0 ? sentence : " " + sentence
-                        onEvent?(["type": "session.output_transcript.delta", "delta": chunk, "start_ms": cStartMS, "end_ms": cStartMS + 500, "event_id": UUID().uuidString])
-                        await synthesizer.speakAsync(text: sentence, languageCode: languageCode, rate: speechRate, voiceIdentifier: voiceIdentifier)
+                        onEvent?(["type": "session.output_transcript.delta", "delta": cleaned, "start_ms": cStartMS, "end_ms": cStartMS + 1000, "event_id": UUID().uuidString])
+                        await synthesizer.speakAsync(text: cleaned, languageCode: languageCode, rate: speechRate, voiceIdentifier: voiceIdentifier)
                     }
                 }
             }
@@ -351,7 +379,7 @@ final class NativeSynthesizer: NSObject, AVSpeechSynthesizerDelegate, Sendable {
         case microphone, connection, timeout
         var errorDescription: String? {
             switch self {
-            case .microphone: "Allow microphone access in iPhone Settings → Fleunce to start a conversation."
+            case .microphone: "Allow microphone access in iPhone Settings → Fluence to start a conversation."
             case .connection: "The voice connection couldn’t be established. Check your connection and try again."
             case .timeout: "The voice connection took too long. Please try again."
             }

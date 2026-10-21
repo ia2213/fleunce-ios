@@ -1,110 +1,187 @@
 import SwiftUI
 
-enum FleunceColor {
-    static let cream = Color(red: 1, green: 0.975, blue: 0.933)
-    static let ink = Color(red: 0.212, green: 0.165, blue: 0.133)
-    static let secondary = Color(red: 0.45, green: 0.355, blue: 0.29)
-    static let orange = Color(red: 1, green: 0.54, blue: 0.30)
-    static let peach = Color(red: 1, green: 0.89, blue: 0.81)
-    static let lilac = Color(red: 0.932, green: 0.902, blue: 0.98)
-    static let sage = Color(red: 0.917, green: 0.937, blue: 0.84)
-    static let butter = Color(red: 1, green: 0.944, blue: 0.78)
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (1, 1, 1, 0)
+        }
+        self.init(
+            .sRGB,
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue:  Double(b) / 255,
+            opacity: Double(a) / 255
+        )
+    }
+}
+
+enum FluenceColor {
+    static let background = Color(UIColor { trait in
+        trait.userInterfaceStyle == .dark
+            ? UIColor(red: 0.07, green: 0.08, blue: 0.10, alpha: 1.0)
+            : UIColor(red: 0.97, green: 0.98, blue: 0.99, alpha: 1.0)
+    })
+    static let surface = Color(UIColor { trait in
+        trait.userInterfaceStyle == .dark
+            ? UIColor(red: 0.11, green: 0.13, blue: 0.16, alpha: 1.0)
+            : UIColor(white: 1.0, alpha: 1.0)
+    })
+    static let surfaceSecondary = Color(UIColor { trait in
+        trait.userInterfaceStyle == .dark
+            ? UIColor(red: 0.15, green: 0.18, blue: 0.22, alpha: 1.0)
+            : UIColor(red: 0.92, green: 0.94, blue: 0.96, alpha: 1.0)
+    })
+    static let ink = Color(UIColor { trait in
+        trait.userInterfaceStyle == .dark
+            ? UIColor(red: 0.94, green: 0.96, blue: 0.98, alpha: 1.0)
+            : UIColor(red: 0.08, green: 0.10, blue: 0.14, alpha: 1.0)
+    })
+    static let secondary = Color(UIColor { trait in
+        trait.userInterfaceStyle == .dark
+            ? UIColor(red: 0.58, green: 0.64, blue: 0.72, alpha: 1.0)
+            : UIColor(red: 0.42, green: 0.48, blue: 0.56, alpha: 1.0)
+    })
+    static let accent = Color(red: 0.36, green: 0.48, blue: 0.92) // Calm Apple Indigo
+    static let emerald = Color(red: 0.20, green: 0.78, blue: 0.50) // Soft Forest Mint
+    static let coral = Color(red: 0.92, green: 0.45, blue: 0.38)
+    
+    // Legacy mapping to avoid breaking other views immediately
+    static let cream = surface
+    static let orange = accent
+    static let peach = Color(red: 0.85, green: 0.88, blue: 0.95)
+    static let lilac = Color(red: 0.80, green: 0.82, blue: 0.95)
+    static let sage = Color(red: 0.80, green: 0.90, blue: 0.90)
+    static let butter = Color(red: 0.92, green: 0.90, blue: 0.80)
     static let panels = [peach, lilac, sage, butter]
 }
 
 struct Brand: View {
     var body: some View {
         HStack(spacing: 8) {
-            Circle().fill(RadialGradient(colors: [FleunceColor.butter, FleunceColor.orange], center: .topLeading, startRadius: 0, endRadius: 18)).frame(width: 17, height: 17)
-            Text("fleunce").font(.system(size: 30, weight: .bold, design: .rounded)).tracking(-1.6)
-        }.foregroundStyle(FleunceColor.ink).accessibilityLabel("Fleunce")
+            Text("fluence").font(.system(size: 26, weight: .bold, design: .rounded)).tracking(-1.0)
+        }.foregroundStyle(FluenceColor.ink).accessibilityLabel("Fluence")
     }
 }
 
+// MARK: - Sober Glass Card Modifier
 struct SoftGlass: ViewModifier {
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     var tint: Color = .white.opacity(0.45)
     func body(content: Content) -> some View {
-        if reduceTransparency { content.background(.white, in: Capsule()) }
-        else { content.background(.ultraThinMaterial, in: Capsule()) }
+        content.background(FluenceColor.surface, in: Capsule())
     }
 }
 
-struct OrbShape: Shape {
-    var phase: Double
-    var energy: Double
-    func path(in rect: CGRect) -> Path {
-        let points: [CGPoint] = (0..<12).map { (index: Int) -> CGPoint in
-            let a: Double = Double(index) / 12.0 * .pi * 2.0
-            let term1: Double = sin(a * 3.0 + phase) * 0.021
-            let term2: Double = cos(a * 2.0 - phase * 0.7) * (0.012 + energy * 0.025)
-            let wave: Double = term1 + term2
-            let baseSize: Double = Double(min(rect.width, rect.height))
-            let radius: Double = baseSize * (0.47 + wave)
-            let x: Double = Double(rect.midX) + cos(a) * radius
-            let y: Double = Double(rect.midY) + sin(a) * radius
-            return CGPoint(x: x, y: y)
-        }
-        var p = Path()
-        for i in 0..<12 {
-            let current = points[i], next = points[(i + 1) % 12]
-            let midpoint = CGPoint(x: (current.x + next.x) / 2, y: (current.y + next.y) / 2)
-            if i == 0 {
-                let previous = points[11]
-                p.move(to: CGPoint(x: (previous.x + current.x) / 2, y: (previous.y + current.y) / 2))
+struct OrganicGlass: ViewModifier {
+    var cornerRadius: CGFloat = 20
+    @Environment(\.colorScheme) private var colorScheme
+    
+    func body(content: Content) -> some View {
+        content
+            .background {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(FluenceColor.surface)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .stroke(
+                                colorScheme == .dark
+                                    ? Color.white.opacity(0.08)
+                                    : Color.black.opacity(0.06),
+                                lineWidth: 1
+                            )
+                    )
             }
-            p.addQuadCurve(to: midpoint, control: current)
-        }
-        p.closeSubpath(); return p
     }
 }
 
-struct FleunceOrb: View {
+extension View {
+    func organicGlass(cornerRadius: CGFloat = 20) -> some View {
+        self.modifier(OrganicGlass(cornerRadius: cornerRadius))
+    }
+}
+
+// MARK: - SOBER & CALM VOICE WAVEFORM PRESENCE (Fin des effets agressifs)
+struct SoberWaveformView: View {
+    var energy: Double = 0
+    var isListening: Bool = false
+    var isSpeaking: Bool = false
+    var onTap: (() -> Void)? = nil
+    
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    
+    private let barCount = 5
+    
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 45, paused: reduceMotion || scenePhase != .active)) { timeline in
+            let t = reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate
+            let rawE = min(1.0, max(0.0, energy))
+            let dynamicE = reduceMotion ? 0.15 : rawE
+            
+            Button {
+                let haptic = UIImpactFeedbackGenerator(style: .light)
+                haptic.impactOccurred()
+                onTap?()
+            } label: {
+                HStack(spacing: 7) {
+                    ForEach(0..<barCount, id: \.self) { index in
+                        let phase = Double(index) * 0.75
+                        let wave = (isListening || isSpeaking) ? sin(t * 4.5 + phase) : sin(t * 1.8 + phase)
+                        let baseHeight: CGFloat = (isListening || isSpeaking)
+                            ? 14 + CGFloat(abs(wave)) * 16 + CGFloat(dynamicE * 28)
+                            : 8 + CGFloat(abs(wave)) * 8
+                        
+                        Capsule()
+                            .fill(
+                                isListening
+                                    ? FluenceColor.emerald
+                                    : isSpeaking
+                                        ? FluenceColor.accent
+                                        : FluenceColor.secondary.opacity(0.40)
+                            )
+                            .frame(width: 5, height: max(6, min(50, baseHeight)))
+                    }
+                }
+                .frame(width: 80, height: 60)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(isListening ? "Écoute en cours" : isSpeaking ? "Fluence parle" : "Activer la voix")
+        }
+    }
+}
+
+// MARK: - FluenceAura (Supprimé pour éliminer tout éblouissement)
+struct FluenceAura: View {
     var energy: Double = 0
     var listening = false
     var active = true
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.scenePhase) private var scenePhase
+    
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion || !active || scenePhase != .active)) { timeline in
-            let t = reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate
-            let phase = t * 0.72
-            let e = reduceMotion ? 0 : min(1, max(0, energy))
-            GeometryReader { geometry in
-                let side = min(geometry.size.width, geometry.size.height)
-                ZStack {
-                    Ellipse().fill(FleunceColor.orange.opacity(0.14)).frame(width: side * 0.57, height: side * 0.075)
-                        .blur(radius: 10).offset(y: side * 0.47)
-                    Circle().stroke(FleunceColor.orange.opacity(listening ? 0.18 : 0), lineWidth: 1).padding(-6)
-                    Circle().stroke(FleunceColor.orange.opacity(listening ? 0.10 : 0), lineWidth: 1).padding(-16)
-                    ZStack {
-                    if #available(iOS 18.0, *) {
-                        MeshGradient(width: 3, height: 3, points: [
-                            [0,0], [0.5,0], [1,0],
-                            [0,0.5], [Float(0.5 + sin(phase) * 0.08), Float(0.5 + cos(phase) * 0.06)], [1,0.5],
-                            [0,1], [0.5,1], [1,1]
-                        ], colors: [Color(red: 1, green: 0.97, blue: 0.82), FleunceColor.butter, FleunceColor.peach,
-                                    Color(red: 1, green: 0.70, blue: 0.42), FleunceColor.orange, Color(red: 0.80, green: 0.68, blue: 0.93),
-                                    Color(red: 0.96, green: 0.42, blue: 0.35), Color(red: 0.99, green: 0.62, blue: 0.46), Color(red: 0.86, green: 0.75, blue: 0.95)])
-                    } else {
-                        LinearGradient(colors: [FleunceColor.butter, FleunceColor.orange], startPoint: .topLeading, endPoint: .bottomTrailing)
-                    }
-                        Ellipse().fill(.white.opacity(0.65)).frame(width: side * 0.48, height: side * 0.15).blur(radius: 13)
-                            .rotationEffect(.degrees(-28)).offset(x: -side * 0.17, y: -side * 0.28)
-                        Ellipse().stroke(FleunceColor.butter.opacity(0.48), lineWidth: 16).frame(width: side * 1.2, height: side * 0.5)
-                            .blur(radius: 12).rotationEffect(.degrees(-15)).offset(y: side * 0.54)
-                    }
-                    .mask(OrbShape(phase: phase, energy: e))
-                    .shadow(color: FleunceColor.orange.opacity(0.12), radius: 16, y: 10)
-                    .rotationEffect(.degrees(sin(phase * 0.5) * 3))
-                    .scaleEffect(1 + e * 0.045)
-                    .offset(y: reduceMotion ? 0 : sin(t * 0.9) * 4 - 5)
-                    Circle().fill(RadialGradient(colors: [.white, FleunceColor.peach, FleunceColor.orange.opacity(0.5)], center: .topLeading, startRadius: 0, endRadius: 12))
-                        .frame(width: 12, height: 12).offset(x: side * 0.55, y: -side * 0.24)
-                    Circle().fill(FleunceColor.peach).frame(width: 7, height: 7).offset(x: -side * 0.54, y: side * 0.26)
-                }.frame(width: side, height: side).frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-        }.accessibilityHidden(true)
+        EmptyView()
+    }
+}
+
+struct WhisperText: View {
+    var text: AttributedString
+    var isLarge: Bool = false
+    
+    var body: some View {
+        Text(text)
+            .font(.system(size: isLarge ? 28 : 17, weight: isLarge ? .bold : .medium, design: .rounded))
+            .multilineTextAlignment(.center)
+            .foregroundStyle(isLarge ? FluenceColor.ink : FluenceColor.secondary)
+            .animation(.easeInOut(duration: 0.25), value: String(text.characters))
     }
 }
 
@@ -112,7 +189,7 @@ struct RecallBars: View {
     let count: Int
     var body: some View {
         HStack(spacing: 4) {
-            ForEach(0..<3) { index in Capsule().fill(index < count ? FleunceColor.orange : FleunceColor.peach).frame(width: 18, height: 6) }
+            ForEach(0..<3) { index in Capsule().fill(index < count ? FluenceColor.accent : FluenceColor.secondary.opacity(0.3)).frame(width: 18, height: 5) }
         }.accessibilityLabel("\(count) of 3 recall bars")
     }
 }
@@ -122,10 +199,10 @@ struct PageHeading: View {
     var title: String
     var subtitle: String = ""
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(eyebrow.uppercased()).font(.system(.caption, design: .rounded, weight: .medium)).tracking(1.5).foregroundStyle(FleunceColor.secondary)
-            Text(title).font(.system(.largeTitle, design: .rounded, weight: .semibold)).tracking(-1).foregroundStyle(FleunceColor.ink)
-            if !subtitle.isEmpty { Text(subtitle).font(.subheadline).foregroundStyle(FleunceColor.secondary) }
+        VStack(alignment: .leading, spacing: 6) {
+            Text(eyebrow.uppercased()).font(.system(.caption, design: .rounded, weight: .bold)).tracking(1.2).foregroundStyle(FluenceColor.secondary)
+            Text(title).font(.system(.title2, design: .rounded, weight: .bold)).foregroundStyle(FluenceColor.ink)
+            if !subtitle.isEmpty { Text(subtitle).font(.subheadline).foregroundStyle(FluenceColor.secondary) }
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 }
